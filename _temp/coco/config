@@ -1,0 +1,33 @@
+use config::{Config, File};
+use std::collections::HashMap;
+
+#[derive(Debug, Deserialize)]
+struct ServerConfig {
+    server_address: String,
+    ports: Vec<String>,
+    error_pages: HashMap<String, String>,
+    client_body_size: usize,
+    routes: HashMap<String, Route>,
+}
+
+#[derive(Debug, Deserialize)]
+struct Route {
+    methods: Vec<String>,
+    cgi: String,
+}
+
+fn main() {
+    let mut settings = Config::default();
+    settings.merge(File::with_name("Settings")).unwrap();
+
+    let server_config: ServerConfig = settings.try_into().unwrap();
+    println!("{:#?}", server_config);
+}
+
+
+--------------------------------------------
+server_address = "127.0.0.1"
+ports = ["8080", "8081", "8082"]
+error_pages = { "404" = "/404.html", "500" = "/500.html" }
+client_body_size = 1024
+routes = { "/api" = { methods = ["GET", "POST"], cgi = "python3" } }
