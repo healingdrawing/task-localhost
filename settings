@@ -1,0 +1,18 @@
+# you should not play with this file without strong needs
+# this file always must be on the same level as executable
+
+[[servers]]
+server_name = "default"
+server_address = "127.0.0.1"
+ports = ["8080", "8081", "8082"]
+error_pages = { "404" = "/404.html", "500" = "/500.html" }
+client_body_size = 1024
+routes = { "/api" = { methods = ["GET", "POST"], cgi = "python3" } }
+
+[[servers]]
+server_name = "server2"
+server_address = "127.0.0.1"
+ports = ["8083", "8084", "8085"]
+error_pages = { "404" = "/404.html", "500" = "/500.html" }
+client_body_size = 2048
+routes = { "/api" = { methods = ["GET", "POST"], cgi = "python3" } }
