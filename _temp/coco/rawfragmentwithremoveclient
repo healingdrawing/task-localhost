@@ -1,0 +1,44 @@
+use mio::{Events, Interest, Poll, Token}; // Import the necessary items from the mio crate
+use mio::net::TcpStream; // Import the TcpStream type from the mio::net module
+use std::io::{self, Read, Write}; // Import the std::io module for I/O operations
+
+const CLIENT: Token = Token(0); // Define a constant for the client token
+
+fn main() -> io::Result<()> { // Define the main function
+  let mut client = TcpStream::connect("127.0.0.1:8080")?; // Connect to the server at 127.0.0.1:8080
+
+  let mut poll = Poll::new()?; // Create a new Poll instance
+  poll.registry().register(&mut client, CLIENT, Interest::READABLE)?; // Register the client with the Poll instance
+
+  let mut events = Events::with_capacity(128); // Create a new Events instance with a capacity of 128
+
+  loop { // Start an infinite loop
+      poll.poll(&mut events, None)?; // Poll for events
+
+      for event in events.iter() { // Iterate over the events
+          match event.token() {
+              CLIENT => {
+                let mut buffer = [0; 1024]; // Create a buffer for reading data
+                match client.read(&mut buffer) { // Try to read data from the client
+                    Ok(_) => {
+                        // Handle the data...
+                    },
+                    Err(error) => {
+                        // Handle the error...
+                        println!("Failed to read from client: {}", error);
+
+                        // Send an HTTP error response to the client
+                        let response = "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+                        client.write(response.as_bytes())?;
+
+                        // Close the socket and remove the client
+                        client.shutdown(std::net::Shutdown::Both)?;
+                        poll.registry().deregister(&mut client)?;
+                    },
+                }
+              },
+              _ => unreachable!(),
+          }
+      }
+  }
+}
