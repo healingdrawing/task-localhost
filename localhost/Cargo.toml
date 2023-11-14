@@ -8,4 +8,5 @@ edition = "2021"
 [dependencies]
 config = "0.13.3"
 serde = "1.0"
+http = "0.2.11"
 mio = { version = "0.8.9", features = ["net", "os-poll"] }
