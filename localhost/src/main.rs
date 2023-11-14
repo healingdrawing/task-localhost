@@ -269,12 +269,9 @@ fn gogogo(server_configs: Vec<ServerConfig>) {
   }
   
   use std::str::FromStr;
-  use std::convert::TryFrom;
   /// parse the request line into its components
   fn parse_request_line(request_line: &str) -> Result<(Method, Uri, Version), Box<dyn std::error::Error>> {
-    // Implement the parsing of the request line here
-    // Example: Split the request line into method, uri, and version
-    // Return the parsed components
+    
     let mut parts = request_line.trim().split_whitespace().into_iter();
     if parts.clone().count() != 3 {
       return Err("Invalid raw request line".into());
