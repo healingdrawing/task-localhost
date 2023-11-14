@@ -213,8 +213,7 @@ fn gogogo(server_configs: Vec<ServerConfig>) {
         None => { return Err("fucking rust inside for again".into()) },
       };
       
-      let fucking_rust:String = line2.clone();
-      let parts: Vec<String> = fucking_rust.splitn(2, ": ").map(|s| s.to_string()).collect();
+      let parts: Vec<String> = line2.splitn(2, ": ").map(|s| s.to_string()).collect();
       if parts.len() == 2 {
         let header_name = match HeaderName::from_lowercase(parts[0].as_bytes()) {
           Ok(v) => v,
@@ -243,8 +242,6 @@ fn gogogo(server_configs: Vec<ServerConfig>) {
     let binding = remaining_lines .join("\n");
     let remaining_bytes = binding.trim().as_bytes();
     
-    // remaining_bytes = remaining_bytes.trim_start_matches(|c| c == b' ' || c == b'\t');
-    
     body.extend_from_slice(remaining_bytes);
     
     // Construct the http::Request object
@@ -254,6 +251,8 @@ fn gogogo(server_configs: Vec<ServerConfig>) {
     .version(version)
     .body(body)?;
     
+    // try to fill the headers, because in builder it looks like there is no method
+    // to create headers from HeaderMap, but may be force replacement can be used too
     let request_headers = request.headers_mut();
     for (key,value) in headers{
       let header_name = match key {
