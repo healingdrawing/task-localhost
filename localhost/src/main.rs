@@ -194,7 +194,7 @@ fn gogogo(server_configs: Vec<ServerConfig>) {
       None => { return Err("fucking rust".into()) },
     };
     
-    let (method, uri, version) = parse_request_line(&request_line)?;
+    let (method, uri, version) = parse_request_line(&request_line).unwrap();
     
     // Parse the headers
     for line_index in 1..lines.len() {
@@ -254,6 +254,7 @@ fn gogogo(server_configs: Vec<ServerConfig>) {
     // try to fill the headers, because in builder it looks like there is no method
     // to create headers from HeaderMap, but may be force replacement can be used too
     let request_headers = request.headers_mut();
+    // request_headers.clear();//todo: not safe, maybe some default must present
     for (key,value) in headers{
       let header_name = match key {
         Some(v) => v,
@@ -267,11 +268,39 @@ fn gogogo(server_configs: Vec<ServerConfig>) {
     
   }
   
-  // Function to parse the request line into its components
+  use std::str::FromStr;
+  use std::convert::TryFrom;
+  /// parse the request line into its components
   fn parse_request_line(request_line: &str) -> Result<(Method, Uri, Version), Box<dyn std::error::Error>> {
     // Implement the parsing of the request line here
     // Example: Split the request line into method, uri, and version
     // Return the parsed components
-    unimplemented!()
+    let mut parts = request_line.trim().split_whitespace().into_iter();
+    if parts.clone().count() != 3 {
+      return Err("Invalid raw request line".into());
+    }
+    let method = parts.next().unwrap();
+    let uri = parts.next().unwrap();
+    let version = parts.next().unwrap();
+
+
+    let method = match Method::from_str(method) {
+      Ok(v) => v,
+      Err(_) => return Err(format!("Invalid method: {}",method).into()),
+    };
+
+    let uri = match Uri::from_str(uri) {
+      Ok(v) => v,
+      Err(_) => return Err(format!("Invalid uri: {}",uri).into()),
+    };
+
+    
+
+    match version {
+      "HTTP/1.1" => Version::HTTP_11,
+      _ => return Err(format!("Invalid version: {} . According to task requirements it must be HTTP/1.1 \"It is compatible with HTTP/1.1 protocol.\" ", version).into()),
+    };
+
+    Ok((method, uri, Version::HTTP_11))
   }
   
