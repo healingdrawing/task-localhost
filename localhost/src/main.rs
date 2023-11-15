@@ -58,6 +58,7 @@ struct Route {
   cgi: String,
 }
 
+#[derive(Debug)]
 struct Server {
   listener: TcpListener,
   // Add other fields as needed...
@@ -86,29 +87,38 @@ fn gogogo(server_configs: Vec<ServerConfig>) {
   }
   
   loop {
-    // poll.poll(&mut events, None).unwrap();
-    poll.poll(&mut events, Some(Duration::from_millis(1000))).unwrap(); // changes nothing
+    poll.poll(&mut events, None).unwrap();
+    // poll.poll(&mut events, Some(Duration::from_millis(1000))).unwrap(); // changes nothing
     
     for event in events.iter() {
+      
+      println!("event: {:?}", event);
+      
       match event.token() {
         token => {
           // Find the server associated with the token
           let server = servers.iter_mut().find(|s| s.listener.local_addr().unwrap().port() as usize == token.0).unwrap();
           
+          println!("server: {:?}", server);
+          
           // Accept the incoming connection
           let (mut stream, _) = server.listener.accept().unwrap();
           
+          println!("stream: {:?}", stream);
+          
           // Read the HTTP request from the client
           let mut buffer = read_with_timeout(&mut stream, Duration::from_millis(5000)) .unwrap(); //todo: manage it properly, server should never crash
+          
+          println!("Buffer size after read: {}", buffer.len());
           
           if buffer.is_empty() {
             
             println!("NO DATA RECEIVED, This is the fail place, because next is parsing of empty buffer");
           }else{
             println!("buffer is not empty");
-            println!("Raw incoming buffer: {:?}", buffer)
+            println!("Raw incoming buffer to string: {:?}", String::from_utf8(buffer.clone()));
           }
-
+          
           // TODO: Parse the HTTP request and handle it appropriately...
           match parse_request(buffer) {
             Ok(request) => {
@@ -130,11 +140,18 @@ fn gogogo(server_configs: Vec<ServerConfig>) {
 
 fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Result<Vec<u8>> {
   
+  println!("INSIDE read_with_timeout");
   // Start the timer
   let start_time = Instant::now();
+  println!("start_time: {:?}", start_time);
   
   // Read from the stream until timeout or EOF
   let mut buffer = Vec::new();
+  // let mut buf = Vec::with_capacity(1024);
+  let mut buf = [0; 1024];
+  println!("fresh buf len: {}", buf.len() );
+  // println!("fresh buf: {:?}", buf );
+  
   loop {
     // Check if the timeout has expired
     if start_time.elapsed() >= timeout {
@@ -143,18 +160,29 @@ fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Result<Ve
     }
     
     // Read from the stream
-    let mut buf = Vec::with_capacity(1024);
     match stream.read(&mut buf) {
       Ok(0) => {
         // EOF reached
+        println!("read EOF reached");
         break;
       },
       Ok(n) => {
         // Successfully read n bytes from stream
+        println!("attempt to read {} bytes from stream", n);
         buffer.extend_from_slice(&buf[..n]);
+        println!("after read buffer size: {}", buffer.len());
+        println!("after read buffer: {:?}", buffer);
+        println!("after read buffer to string: {:?}", String::from_utf8(buffer.clone()));
+        
+        // Check if the end of the stream has been reached
+        if n < buf.len() {
+          println!("read EOF reached relatively, because buffer not full after read");
+          break;
+        }
       },
       Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
         // Stream is not ready yet, try again later
+        // println!("= BANG! this crap happens...read would block");
         continue;
       },
       Err(e) => {
@@ -166,7 +194,7 @@ fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Result<Ve
   }
   
   println!("read {} bytes from stream", buffer.len());
-  println!("Raw incoming buffer: {:?}", buffer);
+  println!("Raw incoming buffer to string: {:?}", String::from_utf8(buffer.clone()));
   
   Ok(buffer)
 }
