@@ -268,14 +268,21 @@ fn parse_request(buffer: Vec<u8>) -> Result<Request<Vec<u8>>, Box<dyn std::error
     
     let parts: Vec<String> = line2.splitn(2, ": ").map(|s| s.to_string()).collect();
     if parts.len() == 2 {
-      let header_name = match HeaderName::from_lowercase(parts[0].as_bytes()) {
+      let header_name = match HeaderName::from_bytes(parts[0].as_bytes()) {
         Ok(v) => v,
         Err(_) => return Err("Invalid header name".into()),
       };
-      let value = parts[1].parse::<HeaderValue>();
+      println!("parsed header_name: {}", header_name);
+      println!("raw header value parts[1]: {}", parts[1]);
+      println!("raw header value len: {}", parts[1].len());
+      let value = HeaderValue::from_str( parts[1].trim());
       match value {
         Ok(v) => headers.insert(header_name, v),
-        Err(_) => return Err("Invalid header value".into()),
+        Err(e) =>
+        {
+          println!("{}", e);
+          return Err("Invalid header value".into())
+        },
       };
       
     }
