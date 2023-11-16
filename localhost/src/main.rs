@@ -146,57 +146,179 @@ fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Result<Ve
   println!("start_time: {:?}", start_time);
   
   // Read from the stream until timeout or EOF
-  let mut buffer = Vec::new();
+  let mut headers_buffer = Vec::new();
+  let mut body_buffer = Vec::new();
   // let mut buf = Vec::with_capacity(1024);
-  let mut buf = [0; 1024];
+  let mut buf = [0; 1];
   println!("fresh buf len: {}", buf.len() );
   // println!("fresh buf: {:?}", buf );
   
+  // collect request headers section
   loop {
     // Check if the timeout has expired
     if start_time.elapsed() >= timeout {
-      println!("read timed out");
-      return Err(io::Error::new(io::ErrorKind::TimedOut, "read timed out"));
+      println!("headers read timed out");
+      return Err(io::Error::new(io::ErrorKind::TimedOut, "headers read timed out"));
     }
     
-    // Read from the stream
-    match stream.read(&mut buf) {
-      Ok(0) => {
-        // EOF reached
-        println!("read EOF reached");
-        break;
-      },
-      Ok(n) => {
-        // Successfully read n bytes from stream
-        println!("attempt to read {} bytes from stream", n);
-        buffer.extend_from_slice(&buf[..n]);
-        println!("after read buffer size: {}", buffer.len());
-        println!("after read buffer: {:?}", buffer);
-        println!("after read buffer to string: {:?}", String::from_utf8(buffer.clone()));
-        
-        // Check if the end of the stream has been reached
-        if n < buf.len() {
-          println!("read EOF reached relatively, because buffer not full after read");
-          break;
-        }
-      },
+    match stream.read_exact(&mut buf) {
+      Ok(()) => headers_buffer.extend(buf.iter()),
       Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
         // Stream is not ready yet, try again later
-        // println!("= BANG! this crap happens...read would block");
+        println!("= headers ... read would block");
         continue;
       },
       Err(e) => {
         // Other error occurred
-        eprintln!("Error reading from stream: {}", e);
+        eprintln!("Error reading headers from stream: {}", e);
         return Err(e);
       },
     }
+    if headers_buffer.ends_with(b"\r\n\r\n") {
+      break;
+    }
   }
   
-  println!("read {} bytes from stream", buffer.len());
-  println!("Raw incoming buffer to string: {:?}", String::from_utf8(buffer.clone()));
+  let is_chunked = String::from_utf8_lossy(&headers_buffer).contains("Transfer-Encoding: chunked");
   
-  Ok(buffer)
+  // collect request body section
+  if is_chunked {
+    let mut chunk_size = 0;
+    let mut chunk_size_buffer = Vec::new();
+    
+    let mut chunk_buffer = Vec::new();
+    
+    loop { // read the chunk size
+      
+      // Check if the timeout has expired
+      if start_time.elapsed() >= timeout {
+        println!("chunk size body read timed out");
+        return Err(io::Error::new(io::ErrorKind::TimedOut, "chunk size body read timed out"));
+      }
+      
+      // Read from the stream one byte at a time
+      match stream.read_exact(&mut buf) {
+        Ok(()) => chunk_size_buffer.extend(buf.iter()),
+        Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+          // Stream is not ready yet, try again later
+          println!("= chunk size ... read would block");
+          continue;
+        },
+        Err(e) => {
+          // Other error occurred
+          eprintln!("Error reading chunk size from stream: {}", e);
+          return Err(e);
+        },
+      }
+      
+      // Check if the end of the chunk size has been reached
+      if chunk_size_buffer.ends_with(b"\r\n") {
+        // Parse the chunk size
+        let chunk_size_str = String::from_utf8_lossy(&chunk_size_buffer[..chunk_size_buffer.len() - 2]);
+        chunk_size = usize::from_str_radix(&chunk_size_str, 16).unwrap();
+        println!("chunk_size: {}", chunk_size);
+      }
+      
+      // Check if the end of the stream has been reached
+      if chunk_size == 0 {
+        println!("chunked body read EOF reached");
+        break;
+      } else { // there is a chunk to read, according to chunk_size
+        
+        loop { // read the chunk
+          
+          // Check if the timeout has expired
+          if start_time.elapsed() >= timeout {
+            println!("chunk body read timed out");
+            return Err(io::Error::new(io::ErrorKind::TimedOut, "chunk body read timed out"));
+          }
+          
+          // Read from the stream one byte at a time
+          match stream.read_exact(&mut buf) {
+            Ok(()) => chunk_buffer.extend(buf.iter()),
+            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+              // Stream is not ready yet, try again later
+              println!("= chunk ... read would block");
+              continue;
+            },
+            Err(e) => {
+              // Other error occurred
+              eprintln!("Error reading chunk from stream: {}", e);
+              return Err(e);
+            },
+          }
+          
+          // Check if the end of the chunk has been reached
+          if chunk_buffer.ends_with(b"\r\n") {
+            // Remove the trailing CRLF
+            chunk_buffer.truncate(chunk_buffer.len() - 2);
+            println!("chunk_buffer: {:?}", chunk_buffer);
+            println!("chunk_buffer to string: {:?}", String::from_utf8(chunk_buffer.clone()));
+            body_buffer.extend(chunk_buffer.clone());
+            
+            chunk_buffer.clear();
+            chunk_size_buffer.clear();
+            break;
+          }
+          else if chunk_buffer.len() - 2 > chunk_size //todo: check this
+          { // the chunk is broken, because it is bigger than chunk_size
+            return Err(io::Error::new(io::ErrorKind::InvalidData, "chunk is bigger than chunk_size"));
+          }
+          
+        }
+        
+      }
+    }
+    
+  }
+  else { // if request is not chunked
+    loop{
+      // Check if the timeout has expired
+      if start_time.elapsed() >= timeout {
+        println!("body read timed out");
+        return Err(io::Error::new(io::ErrorKind::TimedOut, "body read timed out"));
+      }
+      
+      // Read from the stream one byte at a time
+      match stream.read(&mut buf) {
+        Ok(0) => {
+          // EOF reached
+          println!("read EOF reached");
+          break;
+        },
+        Ok(n) => {
+          // Successfully read n bytes from stream
+          println!("attempt to read {} bytes from stream", n);
+          body_buffer.extend_from_slice(&buf[..n]);
+          println!("after read buffer size: {}", body_buffer.len());
+          println!("after read buffer: {:?}", body_buffer);
+          println!("after read buffer to string: {:?}", String::from_utf8(body_buffer.clone()));
+          // Check if the end of the stream has been reached
+          if n < buf.len() {
+            println!("read EOF reached relatively, because buffer not full after read");
+            break;
+          }
+        },
+        Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+          // Stream is not ready yet, try again later
+          // println!("= BANG! this crap happens...read would block");
+          continue;
+        },
+        Err(e) => {
+          // Other error occurred
+          eprintln!("Error reading from stream: {}", e);
+          return Err(e);
+        },
+      }
+
+    }
+  }
+  
+  
+  println!("read {} bytes from stream", body_buffer.len());
+  println!("Raw incoming buffer to string: {:?}", String::from_utf8(body_buffer.clone()));
+  
+  Ok(body_buffer)
 }
 
 
