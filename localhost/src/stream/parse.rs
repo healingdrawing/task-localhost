@@ -4,7 +4,7 @@ use std::error::Error;
 use http::{Request, Method, Uri, Version, HeaderMap, HeaderValue, HeaderName};
 
 /// Function to parse a raw HTTP request from a Vec<u8> buffer into an http::Request
-pub fn parse_raw_request(buffer: Vec<u8>) -> Result<Request<Vec<u8>>, Box<dyn Error>> {
+pub fn parse_raw_request(headers_buffer: Vec<u8>, body_buffer: Vec<u8>) -> Result<Request<Vec<u8>>, Box<dyn Error>> {
   
   if buffer.is_empty() {
     return Err("parse_raw_request: buffer is empty".into());

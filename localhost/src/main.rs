@@ -1,3 +1,6 @@
+mod debug;
+use debug:: try_recreate_file_according_to_value_of_debug_boolean;
+
 mod stream{
   pub mod read;
   pub mod parse;
@@ -19,7 +22,8 @@ use std::net::SocketAddr;
 
 fn main() {
   println!("Hello, world!");
-  
+  try_recreate_file_according_to_value_of_debug_boolean().unwrap();
+
   let mut config_path = env::current_exe().unwrap();
   config_path.pop(); // Remove the executable name from the path
   config_path.push("settings"); // Add the configuration file name to the path
@@ -113,7 +117,7 @@ fn gogogo(server_configs: Vec<ServerConfig>) {
           println!("stream: {:?}", stream);
           
           // Read the HTTP request from the client
-          let mut buffer = read_with_timeout(&mut stream, Duration::from_millis(5000)).unwrap(); //todo: manage it properly, server should never crash
+          let (mut headers_buffer,mut body_buffer) = read_with_timeout(&mut stream, Duration::from_millis(5000)).unwrap(); //todo: manage it properly, server should never crash
           
           println!("Buffer size after read: {}", buffer.len());
           

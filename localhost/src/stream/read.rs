@@ -3,7 +3,9 @@ use std::io::{self, Read};
 use mio::net::TcpStream;
 
 /// Read from the stream until timeout or EOF
-pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Result<Vec<u8>> {
+/// 
+/// returns a tuple of two vectors: (headers_buffer, body_buffer)
+pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Result<(Vec<u8>,Vec<u8>)> {
   todo!("INSIDE read_with_timeout. Implement double vec in result(headers,body), and so on");
   println!("INSIDE read_with_timeout");
   // Start the timer
@@ -11,14 +13,11 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Resul
   println!("start_time: {:?}", start_time);
   
   // Read from the stream until timeout or EOF
-  let mut headers_buffer = Vec::new();
-  let mut body_buffer = Vec::new();
-  // let mut buf = Vec::with_capacity(1024);
   let mut buf = [0; 1];
-  println!("fresh buf len: {}", buf.len() );
-  // println!("fresh buf: {:?}", buf );
   
   // collect request headers section
+  let mut headers_buffer = Vec::new();
+  
   loop {
     // Check if the timeout has expired
     if start_time.elapsed() >= timeout {
@@ -66,6 +65,8 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Resul
   let is_chunked = String::from_utf8_lossy(&headers_buffer).contains("Transfer-Encoding: chunked");
   
   // collect request body section
+  let mut body_buffer = Vec::new();
+  
   if is_chunked {
     println!("THE REQUEST IS CHUNKED: {}", is_chunked); //todo: remove later
     // let mut full = String::new();
@@ -84,31 +85,24 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Resul
       
       // Read from the stream one byte at a time
       match stream.read(&mut buf) {
-        Ok(0) => {
-          // EOF reached
-          println!("read EOF reached");
-          break;
-        },
-        Ok(n) => {
-          // Successfully read n bytes from stream
+        Ok(0) => { println!("read EOF reached"); break },
+        Ok(n) => { // Successfully read n bytes from stream
+          
           println!("attempt to read {} bytes from stream", n);
           sum_chunk_size_buffer.extend_from_slice(&buf[..n]);
           println!("after read sum chunk size buffer size: {}", sum_chunk_size_buffer.len());
           println!("after read sum chunk size buffer: {:?}", sum_chunk_size_buffer);
           println!("after read sum chunk size buffer to string: {:?}", String::from_utf8(sum_chunk_size_buffer.clone()));
+          
           // Check if the end of the stream has been reached
-          if n < buf.len() {
-            println!("read EOF reached relatively, because sum chunk size buffer not full after read");
-            break;
-          }
+          if n < buf.len() { println!("buffer not full, EOF reached"); break; }
         },
         Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
           // Stream is not ready yet, try again later
           // println!("= BANG! this crap happens...read would block");
           continue;
         },
-        Err(e) => {
-          // Other error occurred
+        Err(e) => { // Other error occurred
           eprintln!("Error reading chunk size from stream: {}", e);
           return Err(e);
         },
@@ -116,7 +110,7 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Resul
       
       if sum_chunk_size_buffer.ends_with(b"\r\n") {
         // Parse the sum chunk size
-        println!("sum_chunk_size_buffer: {:?}", sum_chunk_size_buffer);
+        println!("sum_chunk_size_buffer: {:?}", sum_chunk_size_buffer); //todo: remove later
         let sum_chunk_size_str = String::from_utf8_lossy(&sum_chunk_size_buffer).trim().to_string();
         println!("sum_chunk_size_str: {}", sum_chunk_size_str);
         let sum_chunk_size = usize::from_str_radix(&sum_chunk_size_str, 16).unwrap();
@@ -320,6 +314,6 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Resul
   println!("read {} bytes from stream", body_buffer.len());
   println!("Raw incoming buffer to string: {:?}", String::from_utf8(body_buffer.clone()));
   
-  Ok(body_buffer)
+  Ok((headers_buffer, body_buffer))
 }
 
