@@ -119,18 +119,19 @@ fn gogogo(server_configs: Vec<ServerConfig>) {
           // Read the HTTP request from the client
           let (mut headers_buffer,mut body_buffer) = read_with_timeout(&mut stream, Duration::from_millis(5000)).unwrap(); //todo: manage it properly, server should never crash
           
-          println!("Buffer size after read: {}", buffer.len());
+          println!("Buffer sizes after read: headers_buffer: {}, body_buffer: {}", headers_buffer.len(), body_buffer.len());
           
-          if buffer.is_empty() {
-            
-            println!("NO DATA RECEIVED, This is the fail place, because next is parsing of empty buffer");
+          if headers_buffer.is_empty() {
+            println!("NO DATA RECEIVED, empty headres_buffer");
+          }else if body_buffer.is_empty() {
+            println!("NO DATA RECEIVED, empty body_buffer");
           }else{
-            println!("buffer is not empty");
-            println!("Raw incoming buffer to string: {:?}", String::from_utf8(buffer.clone()));
+            println!("buffers are not empty");
+            println!("Raw buffres:\nheaders_buffer:\n=\n{}\n=\nbody_buffer:\n=\n{}\n=", String::from_utf8_lossy(&headers_buffer), String::from_utf8_lossy(&body_buffer));
           }
           
           // TODO: Parse the HTTP request and handle it appropriately...
-          match parse_raw_request(buffer) {
+          match parse_raw_request(headers_buffer, body_buffer) {
             Ok(request) => {
               // Handle the request and send a response
               handle_request(request, &mut stream);

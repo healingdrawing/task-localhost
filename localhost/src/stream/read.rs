@@ -6,7 +6,6 @@ use mio::net::TcpStream;
 /// 
 /// returns a tuple of two vectors: (headers_buffer, body_buffer)
 pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Result<(Vec<u8>,Vec<u8>)> {
-  todo!("INSIDE read_with_timeout. Implement double vec in result(headers,body), and so on");
   println!("INSIDE read_with_timeout");
   // Start the timer
   let start_time = Instant::now();
