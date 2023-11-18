@@ -145,6 +145,8 @@ fn parse_request_line(request_line: &str) -> Result<(Method, Uri, Version), Box<
     return Err(format!("Invalid version: {} . According to task requirements it must be HTTP/1.1 \"It is compatible with HTTP/1.1 protocol.\" ", version).into());
   }
 
-  println!("PARSED method: {:?}, uri: {:?}, version: {:?}", method, uri, version);
+  println!("PARSED method: {:?}, uri: {:?}, version: {:?}", method, uri, version); //todo: remove dev print
+  
   Ok((method, uri, Version::HTTP_11))
+
 }
