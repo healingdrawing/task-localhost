@@ -126,8 +126,8 @@ pub fn parse_raw_request(buffer: Vec<u8>) -> Result<Request<Vec<u8>>, Box<dyn st
 use std::str::FromStr;
 /// parse the request line into its components
 fn parse_request_line(request_line: &str) -> Result<(Method, Uri, Version), Box<dyn std::error::Error>> {
+  println!("raw request_line: {:?}", request_line); //todo: remove dev print
   
-  println!("raw request_line: {:?}", request_line);
   let parts:Vec<&str> = request_line.trim().split_whitespace().collect();
   if parts.len() != 3 {
     return Err(format!("Invalid raw request line: {:?}", parts).into());
@@ -135,27 +135,16 @@ fn parse_request_line(request_line: &str) -> Result<(Method, Uri, Version), Box<
 
   let (method, uri, version) = (parts[0], parts[1], parts[2]);
 
-  // let method = parts.next().unwrap();
-  // let uri = parts.next().unwrap();
-  // let version = parts.next().unwrap();
+  let method = Method::from_str(method)
+  .map_err(|e| format!("Invalid method: {} | {}", method, e))?;
   
+  let uri = Uri::from_str(uri)
+  .map_err(|e| format!("Invalid uri: {} | {}", uri, e))?;
   
-  let method = match Method::from_str(method) {
-    Ok(v) => v,
-    Err(_) => return Err(format!("Invalid method: {}",method).into()),
-  };
-  
-  let uri = match Uri::from_str(uri) {
-    Ok(v) => v,
-    Err(_) => return Err(format!("Invalid uri: {}",uri).into()),
-  };
-  
-  
-  
-  match version {
-    "HTTP/1.1" => Version::HTTP_11,
-    _ => return Err(format!("Invalid version: {} . According to task requirements it must be HTTP/1.1 \"It is compatible with HTTP/1.1 protocol.\" ", version).into()),
-  };
+  if version.to_ascii_uppercase() != "HTTP/1.1" {
+    return Err(format!("Invalid version: {} . According to task requirements it must be HTTP/1.1 \"It is compatible with HTTP/1.1 protocol.\" ", version).into());
+  }
+
   println!("PARSED method: {:?}, uri: {:?}, version: {:?}", method, uri, version);
   Ok((method, uri, Version::HTTP_11))
 }
