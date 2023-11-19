@@ -13,8 +13,9 @@ use crate::handlers::handle_::handle_request;
 #[derive(Debug, Deserialize)]
 pub struct ServerConfig {
   server_name: String,
-  server_address: String,
   ports: Vec<String>,
+  server_address: String,
+  default_file: String,
   error_pages: HashMap<String, String>,
   client_body_size: usize,
   routes: HashMap<String, Route>,
@@ -23,7 +24,6 @@ pub struct ServerConfig {
 #[derive(Debug, Deserialize)]
 struct Route {
   methods: Vec<String>,
-  cgi: String,
 }
 
 #[derive(Debug)]
