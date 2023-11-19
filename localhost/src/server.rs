@@ -80,6 +80,7 @@ pub fn run(server_configs: Vec<ServerConfig>) {
   
   for server in servers.iter_mut() {
     let token = Token(server.listener.local_addr().unwrap().port().into()); // Use the port number as the token
+    println!("token: {:?}", token);
     poll.registry().register(&mut server.listener, token, Interest::READABLE).unwrap();
   }
   

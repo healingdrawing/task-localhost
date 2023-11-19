@@ -14,7 +14,7 @@ routes = { "/api" = { methods = ["GET", "POST"] } }
 
 [[servers]]
 server_name = "server1"
-ports = ["8083", "8084", "8085"]
+ports = ["8082", "8083", "8084", "8085"]
 server_address = "127.0.0.1"
 default_file = "index1.html"
 error_pages = { "404" = "/404.html", "500" = "/500.html" }
