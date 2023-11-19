@@ -48,8 +48,11 @@ fn main() {
     Ok(config) => {
       let server_configs: Result<Vec<ServerConfig>, _> = config.get("servers");
       match server_configs {
-        Ok(server_configs) =>{ // configuration read successfully
+        Ok(mut server_configs) =>{ // configuration read successfully
           //todo: need to implement custom check(and perhaps dropout incorrect settings), as required audit. It is about wrong configurations in "settings" file. As always the 01-edu description is as clear as brain flow of the mindset handicap. So it is some extra brain fuck, which is better to solve in advance.
+
+          for sc in server_configs.iter_mut(){sc.check()}
+
           println!("{:#?}", server_configs); //todo: remove this dev print
           run(server_configs);
         },

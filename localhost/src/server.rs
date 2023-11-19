@@ -2,6 +2,7 @@ use mio::{Events, Interest, Poll, Token};
 use mio::net::TcpListener;
 use serde::Deserialize;
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::net::SocketAddr;
 use std::time::Duration;
 
@@ -19,6 +20,34 @@ pub struct ServerConfig {
   error_pages: HashMap<String, String>,
   client_body_size: usize,
   routes: HashMap<String, Route>,
+}
+
+impl ServerConfig {
+  pub fn check(&mut self){
+    self.check_ports();
+  }
+
+  /// drop out all ports not in 0..65535 range, also drop out all repeating of ports
+  fn check_ports(&mut self){
+    let old_ports = self.ports.clone();
+    let mut ports: HashSet<String> = HashSet::new();
+    for port in self.ports.iter(){
+      let port: u16 = match port.parse(){
+        Ok(v) => v,
+        Err(e) =>{
+          eprintln!("Config \"{}\" Failed to parse port: {} into u16", self.server_name, e);
+          continue;
+        }
+      };
+      ports.insert(port.to_string());
+    }
+    self.ports = ports.into_iter().collect();
+    if self.ports.len() != old_ports.len(){
+      eprintln!("=== Config \"{}\" ports changed\nfrom {:?}\n  to {:?}", self.server_name, old_ports, self.ports);
+    }
+    
+  }
+  
 }
 
 #[derive(Debug, Deserialize)]

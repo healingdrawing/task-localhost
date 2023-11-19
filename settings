@@ -1,9 +1,11 @@
 # you should not play with this file without strong needs
 # this file always must be on the same level as executable
+# the "default" server also will be used if no hits of other server ip:port happens
+# so DO NOT CHANGE THE NAME "default"
 
 [[servers]]
 server_name = "default"
-ports = ["8080", "8081", "8082"]
+ports = ["8080", "8081", "8082", "8082"]
 server_address = "127.0.0.1"
 default_file = "default.html"
 error_pages = { "404" = "/404.html", "500" = "/500.html" }
