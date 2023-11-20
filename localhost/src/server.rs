@@ -1,6 +1,7 @@
 use mio::{Events, Interest, Poll, Token};
 use mio::net::TcpListener;
 use serde::Deserialize;
+use core::num;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::net::SocketAddr;
@@ -26,7 +27,7 @@ impl ServerConfig {
   pub fn check(&mut self){
     self.check_ports();
   }
-
+  
   /// drop out all ports not in 0..65535 range, also drop out all repeating of ports
   fn check_ports(&mut self){
     let old_ports = self.ports.clone();
@@ -58,20 +59,50 @@ struct Route {
 #[derive(Debug)]
 struct Server {
   listener: TcpListener,
-  // Add other fields as needed...
+  token: Token,
   name: String, // to use "default" if request quality is as good as 01-edu tasks
+}
+
+/// create token usize from ip:port string
+fn ip_port_to_token(server: &Server) -> Result<usize, String>{
+  let addr = match server.listener.local_addr(){
+    Ok(v) => v.to_string(),
+    Err(e) => return Err(format!("Failed to get local_addr from server.listener: {}", e)),
+  };
+  let mut token_str = String::new();
+  // accumulate token_str from addr chars usize values
+  for c in addr.chars(){
+    let c_str = (c as usize).to_string();
+    token_str.push_str(&c_str);
+  }
+  
+  let token: usize = match token_str.parse(){
+    Ok(v) => v,
+    Err(e) => return Err(format!("Failed to parse token_str: {} into usize: {}", token_str, e)),
+  };
+  
+  Ok(token)
 }
 
 /// in exact run the server implementation, after all settings configured properly
 pub fn run(server_configs: Vec<ServerConfig>) {
   
+  let mut number = 0;
   let mut servers = Vec::new();
   for config in server_configs {
     for port in config.ports {
       let addr: SocketAddr = 
       format!("{}:{}", config.server_address, port).parse().unwrap();
-      let listener = TcpListener::bind(addr).unwrap();
-      servers.push(Server { listener, name: config.server_name.clone() });
+      println!("addr: {:?}", addr);
+      let listener = match TcpListener::bind(addr){
+        Ok(v) => v,
+        Err(e) => {
+          eprintln!("Failed to bind to socket address: {} | {}", addr, e);
+          continue;
+        },
+      };
+      number += 1;
+      servers.push(Server { listener, token: Token(number), name: config.server_name.clone() });
     }
   }
   
@@ -79,58 +110,56 @@ pub fn run(server_configs: Vec<ServerConfig>) {
   let mut events = Events::with_capacity(128);
   
   for server in servers.iter_mut() {
-    let token = Token(server.listener.local_addr().unwrap().port().into()); // Use the port number as the token
-    println!("token: {:?}", token);
-    poll.registry().register(&mut server.listener, token, Interest::READABLE).unwrap();
+    
+    println!("token: {:?}", server.token);
+    poll.registry().register(&mut server.listener, server.token, Interest::READABLE).unwrap();
   }
   
   loop {
     poll.poll(&mut events, None).unwrap();
-    // poll.poll(&mut events, Some(Duration::from_millis(1000))).unwrap(); // changes nothing
+    // poll.poll(&mut events, Some(Duration::from_millis(100))).unwrap(); // changes nothing
     
     for event in events.iter() {
       
       println!("event: {:?}", event);
       
-      match event.token() {
-        token => {
-          // Find the server associated with the token
-          let server = servers.iter_mut().find(|s| s.listener.local_addr().unwrap().port() as usize == token.0).unwrap();
-          
-          println!("server: {:?}", server);
-          
-          // Accept the incoming connection
-          let (mut stream, _) = server.listener.accept().unwrap();
-          
-          println!("stream: {:?}", stream);
-          
-          // Read the HTTP request from the client
-          let (mut headers_buffer,mut body_buffer) = read_with_timeout(&mut stream, Duration::from_millis(5000)).unwrap(); //todo: manage it properly, server should never crash
-          
-          println!("Buffer sizes after read: headers_buffer: {}, body_buffer: {}", headers_buffer.len(), body_buffer.len());
-          
-          if headers_buffer.is_empty() {
-            println!("NO DATA RECEIVED, empty headres_buffer");
-          }else if body_buffer.is_empty() {
-            println!("NO DATA RECEIVED, empty body_buffer");
-          }else{
-            println!("buffers are not empty");
-            println!("Raw buffres:\nheaders_buffer:\n=\n{}\n=\nbody_buffer:\n=\n{}\n=", String::from_utf8_lossy(&headers_buffer), String::from_utf8_lossy(&body_buffer));
-          }
-          
-          // TODO: Parse the HTTP request and handle it appropriately...
-          match parse_raw_request(headers_buffer, body_buffer) {
-            Ok(request) => {
-              // Handle the request and send a response
-              handle_request(request, &mut stream);
-            },
-            Err(e) => eprintln!("Failed to parse request: {}", e),
-          }
-          
-          
-        },
-        _ => unreachable!(),
+      let token = event.token();
+      
+      // Find the server associated with the token
+      let server = servers.iter_mut().find(|s| s.token.0 == token.0).unwrap();
+      
+      println!("server: {:?}", server);
+      
+      // Accept the incoming connection
+      let (mut stream, _) = server.listener.accept().unwrap();
+      
+      println!("stream: {:?}", stream);
+      
+      // Read the HTTP request from the client
+      let (mut headers_buffer,mut body_buffer) = read_with_timeout(&mut stream, Duration::from_millis(5000)).unwrap(); //todo: manage it properly, server should never crash
+      
+      println!("Buffer sizes after read: headers_buffer: {}, body_buffer: {}", headers_buffer.len(), body_buffer.len());
+      
+      if headers_buffer.is_empty() {
+        println!("NO DATA RECEIVED, empty headres_buffer");
+      }else if body_buffer.is_empty() {
+        println!("NO DATA RECEIVED, empty body_buffer");
+      }else{
+        println!("buffers are not empty");
+        println!("Raw buffres:\nheaders_buffer:\n=\n{}\n=\nbody_buffer:\n=\n{}\n=", String::from_utf8_lossy(&headers_buffer), String::from_utf8_lossy(&body_buffer));
       }
+      
+      // TODO: Parse the HTTP request and handle it appropriately...
+      match parse_raw_request(headers_buffer, body_buffer) {
+        Ok(request) => {
+          // Handle the request and send a response
+          handle_request(request, &mut stream);
+        },
+        Err(e) => eprintln!("Failed to parse request: {}", e),
+      }
+      
+      
+      
     }
   }
   

@@ -15,7 +15,7 @@ routes = { "/api" = { methods = ["GET", "POST"] } }
 [[servers]]
 server_name = "server1"
 ports = ["8082", "8083", "8084", "8085"]
-server_address = "127.0.0.1"
+server_address = "127.0.0.2"
 default_file = "index1.html"
 error_pages = { "404" = "/404.html", "500" = "/500.html" }
 client_body_size = 2048
