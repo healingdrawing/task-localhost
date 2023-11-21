@@ -4,6 +4,7 @@ use serde::Deserialize;
 use core::num;
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::error::Error;
 use std::net::SocketAddr;
 use std::time::Duration;
 
@@ -24,6 +25,7 @@ pub struct ServerConfig {
 }
 
 impl ServerConfig {
+  /// drop out all ports not in 0..65535 range, also drop out all repeating of ports
   pub fn check(&mut self){
     self.check_ports();
   }
@@ -60,7 +62,6 @@ struct Route {
 struct Server {
   listener: TcpListener,
   token: Token,
-  name: String, // to use "default" if request quality is as good as 01-edu tasks
 }
 
 /// create token usize from ip:port string
@@ -84,26 +85,58 @@ fn ip_port_to_token(server: &Server) -> Result<usize, String>{
   Ok(token)
 }
 
+/// get list of unique ports from server_configs, to use listen 0.0.0.0:port
+/// 
+/// and manage pseudo servers, because the task requires redirection
+/// 
+/// if no declared server name in request, so we need to use "default" server
+pub fn get_usize_unique_ports(server_configs: &Vec<ServerConfig>) -> Result<Vec<usize>, Box<dyn Error>>{
+  let mut ports: HashSet<usize> = HashSet::new();
+  for server_config in server_configs.iter(){
+    for port in server_config.ports.iter(){
+      let port: u16 = match port.parse(){
+        Ok(v) => v,
+        Err(e) => return Err(format!("Failed to parse port: {} into u16: {}", port, e).into()),
+      };
+      ports.insert(port as usize);
+    }
+  }
+  let ports: Vec<usize> = ports.into_iter().collect();
+  
+  if ports.len() < 1 {
+    return Err("Not enough correct ports declared in \"settings\" file".into());
+  }
+  
+  Ok(ports)
+}
+
 /// in exact run the server implementation, after all settings configured properly
 pub fn run(server_configs: Vec<ServerConfig>) {
   
+  let ports = match get_usize_unique_ports(&server_configs){
+    Ok(v) => v,
+    Err(e) => panic!("Failed to get_unique_ports: {}", e),
+  };
+  
+  // to listen on all interfaces, then redirect to pseudo servers by server_name like task requires
+  let server_address = "0.0.0.0";
+  
   let mut number = 0;
   let mut servers = Vec::new();
-  for config in server_configs {
-    for port in config.ports {
-      let addr: SocketAddr = 
-      format!("{}:{}", config.server_address, port).parse().unwrap();
-      println!("addr: {:?}", addr);
-      let listener = match TcpListener::bind(addr){
-        Ok(v) => v,
-        Err(e) => {
-          eprintln!("Failed to bind to socket address: {} | {}", addr, e);
-          continue;
-        },
-      };
-      number += 1;
-      servers.push(Server { listener, token: Token(number), name: config.server_name.clone() });
-    }
+  
+  for port in ports {
+    let addr: SocketAddr = 
+    format!("{}:{}", server_address, port).parse().unwrap();
+    println!("addr: {:?}", addr);
+    let listener = match TcpListener::bind(addr){
+      Ok(v) => v,
+      Err(e) => {
+        eprintln!("Failed to bind to socket address: {} | {}", addr, e);
+        continue;
+      },
+    };
+    number += 1;
+    servers.push(Server { listener, token: Token(port) });
   }
   
   let mut poll = Poll::new().unwrap();
