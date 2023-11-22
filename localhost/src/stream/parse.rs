@@ -49,9 +49,9 @@ pub fn parse_raw_request(headers_buffer: Vec<u8>, body_buffer: Vec<u8>) -> Resul
         Ok(v) => v,
         Err(e) => return Err(format!("Invalid header name: {}\n {}", parts[0], e).into()),
       };
-      println!("parsed header_name: {}", header_name);
-      println!("raw header value parts[1]: {}", parts[1]);
-      println!("raw header value len: {}", parts[1].len());
+      // println!("parsed header_name: {}", header_name); //todo: remove dev print
+      // println!("raw header value parts[1]: {}", parts[1]);
+      // println!("raw header value len: {}", parts[1].len());
       let value = HeaderValue::from_str( parts[1].trim());
       match value {
         Ok(v) => headers.insert(header_name, v),

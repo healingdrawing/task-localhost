@@ -179,12 +179,13 @@ pub fn run(server_configs: Vec<ServerConfig>) {
         println!("NO DATA RECEIVED, empty body_buffer");
       }else{
         println!("buffers are not empty");
-        println!("Raw buffres:\nheaders_buffer:\n=\n{}\n=\nbody_buffer:\n=\n{}\n=", String::from_utf8_lossy(&headers_buffer), String::from_utf8_lossy(&body_buffer));
+        println!("Raw buffers:\nheaders_buffer:\n=\n{}\n=\nbody_buffer:\n=\n{}\n=", String::from_utf8_lossy(&headers_buffer), String::from_utf8_lossy(&body_buffer));
       }
       
       // TODO: Parse the HTTP request and handle it appropriately...
       match parse_raw_request(headers_buffer, body_buffer) {
         Ok(request) => {
+          println!("request: {:?}", request);
           // Handle the request and send a response
           handle_request(request, &mut stream);
         },

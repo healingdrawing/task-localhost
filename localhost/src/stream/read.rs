@@ -32,11 +32,11 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Resul
       },
       Ok(n) => {
         // Successfully read n bytes from stream
-        println!("attempt to read {} bytes from stream", n);
+        // println!("attempt to read {} bytes from stream", n);
         headers_buffer.extend_from_slice(&buf[..n]);
-        println!("after read headers buffer size: {}", headers_buffer.len());
-        println!("after read headers buffer: {:?}", headers_buffer);
-        println!("after read headers buffer to string: {:?}", String::from_utf8(headers_buffer.clone()));
+        // println!("after read headers buffer size: {}", headers_buffer.len());
+        // println!("after read headers buffer: {:?}", headers_buffer);
+        // println!("after read headers buffer to string: {:?}", String::from_utf8(headers_buffer.clone()));
         // Check if the end of the stream has been reached
         if n < buf.len() {
           println!("read EOF reached relatively, because buffer not full after read");
@@ -87,11 +87,11 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Resul
         Ok(0) => { println!("read EOF reached"); break },
         Ok(n) => { // Successfully read n bytes from stream
           
-          println!("attempt to read {} bytes from stream", n);
+          // println!("attempt to read {} bytes from stream", n);
           sum_chunk_size_buffer.extend_from_slice(&buf[..n]);
-          println!("after read sum chunk size buffer size: {}", sum_chunk_size_buffer.len());
-          println!("after read sum chunk size buffer: {:?}", sum_chunk_size_buffer);
-          println!("after read sum chunk size buffer to string: {:?}", String::from_utf8(sum_chunk_size_buffer.clone()));
+          // println!("after read sum chunk size buffer size: {}", sum_chunk_size_buffer.len());
+          // println!("after read sum chunk size buffer: {:?}", sum_chunk_size_buffer);
+          // println!("after read sum chunk size buffer to string: {:?}", String::from_utf8(sum_chunk_size_buffer.clone()));
           
           // Check if the end of the stream has been reached
           if n < buf.len() { println!("buffer not full, EOF reached"); break; }
@@ -152,11 +152,11 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Resul
         },
         Ok(n) => {
           // Successfully read n bytes from stream
-          println!("attempt to read {} bytes from stream", n);
+          // println!("attempt to read {} bytes from stream", n);
           chunk_size_buffer.extend_from_slice(&buf[..n]);
-          println!("after read chunk size buffer size: {}", chunk_size_buffer.len());
-          println!("after read chunk size buffer: {:?}", chunk_size_buffer);
-          println!("after read chunk size buffer to string: {:?}", String::from_utf8(chunk_size_buffer.clone()));
+          // println!("after read chunk size buffer size: {}", chunk_size_buffer.len());
+          // println!("after read chunk size buffer: {:?}", chunk_size_buffer);
+          // println!("after read chunk size buffer to string: {:?}", String::from_utf8(chunk_size_buffer.clone()));
           // Check if the end of the stream has been reached
           if n < buf.len() {
             println!("read EOF reached relatively, because buffer not full after read");
@@ -208,11 +208,11 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Resul
               },
               Ok(n) => {
                 // Successfully read n bytes from stream
-                println!("attempt to read {} bytes from stream", n);
+                // println!("attempt to read {} bytes from stream", n);
                 chunk_buffer.extend_from_slice(&buf[..n]);
-                println!("after read chunk buffer size: {}", chunk_buffer.len());
-                println!("after read chunk buffer: {:?}", chunk_buffer);
-                println!("after read chunk buffer to string: {:?}", String::from_utf8(chunk_buffer.clone()));
+                // println!("after read chunk buffer size: {}", chunk_buffer.len());
+                // println!("after read chunk buffer: {:?}", chunk_buffer);
+                // println!("after read chunk buffer to string: {:?}", String::from_utf8(chunk_buffer.clone()));
                 // Check if the end of the stream has been reached
                 if n < buf.len() {
                   println!("read EOF reached relatively, because buffer not full after read");
@@ -283,11 +283,11 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Resul
         },
         Ok(n) => {
           // Successfully read n bytes from stream
-          println!("attempt to read {} bytes from stream", n);
+          // println!("attempt to read {} bytes from stream", n);
           body_buffer.extend_from_slice(&buf[..n]);
-          println!("after read buffer size: {}", body_buffer.len());
-          println!("after read buffer: {:?}", body_buffer);
-          println!("after read buffer to string: {:?}", String::from_utf8(body_buffer.clone()));
+          // println!("after read buffer size: {}", body_buffer.len());
+          // println!("after read buffer: {:?}", body_buffer);
+          // println!("after read buffer to string: {:?}", String::from_utf8(body_buffer.clone()));
           // Check if the end of the stream has been reached
           if n < buf.len() {
             println!("read EOF reached relatively, because buffer not full after read");
