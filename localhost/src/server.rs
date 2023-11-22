@@ -13,7 +13,7 @@ use crate::stream::parse::parse_raw_request;
 use crate::handlers::handle_::handle_request;
 
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct ServerConfig {
   server_name: String,
   ports: Vec<String>,
@@ -53,7 +53,7 @@ impl ServerConfig {
   
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 struct Route {
   methods: Vec<String>,
 }
@@ -121,7 +121,6 @@ pub fn run(server_configs: Vec<ServerConfig>) {
   // to listen on all interfaces, then redirect to pseudo servers by server_name like task requires
   let server_address = "0.0.0.0";
   
-  let mut number = 0;
   let mut servers = Vec::new();
   
   for port in ports {
@@ -135,8 +134,8 @@ pub fn run(server_configs: Vec<ServerConfig>) {
         continue;
       },
     };
-    number += 1;
     servers.push(Server { listener, token: Token(port) });
+
   }
   
   let mut poll = Poll::new().unwrap();
@@ -187,7 +186,7 @@ pub fn run(server_configs: Vec<ServerConfig>) {
         Ok(request) => {
           println!("request: {:?}", request);
           // Handle the request and send a response
-          handle_request(request, &mut stream);
+          handle_request(request, &mut stream, server_configs.clone());
         },
         Err(e) => eprintln!("Failed to parse request: {}", e),
       }
