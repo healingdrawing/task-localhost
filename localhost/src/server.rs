@@ -15,13 +15,13 @@ use crate::handlers::handle_::handle_request;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct ServerConfig {
-  server_name: String,
-  ports: Vec<String>,
-  server_address: String,
-  default_file: String,
-  error_pages: HashMap<String, String>,
-  client_body_size: usize,
-  routes: HashMap<String, Route>,
+  pub server_name: String,
+  pub ports: Vec<String>,
+  pub server_address: String,
+  pub default_file: String,
+  pub error_pages: HashMap<String, String>,
+  pub client_body_size: usize,
+  pub routes: HashMap<String, Route>,
 }
 
 impl ServerConfig {
@@ -54,7 +54,7 @@ impl ServerConfig {
 }
 
 #[derive(Debug, Deserialize, Clone)]
-struct Route {
+pub struct Route {
   methods: Vec<String>,
 }
 
