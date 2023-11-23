@@ -11,9 +11,17 @@ pub fn handle_request(request: Request<Vec<u8>>, stream: &mut TcpStream, server_
   // or use "default" , as task requires
   let mut server_config = server_configs[0].clone(); // default server config
   let request_server_host  = match request.headers().get("host"){
-    Some(value) => {value.to_str().unwrap().to_string()},
+    Some(value) => {
+      match value.to_str(){
+        Ok(v) => v.to_string(),
+        Err(e) => {
+          eprintln!("Failed to convert request host header value \"{:?}\" to str: {}.\n=> USE \"default\" server config with first port", value, e); //todo: remove dev print. Probably
+          server_config.server_name.clone() + ":" + &server_config.ports[0]
+        }
+      }
+    },
     None => { 
-      eprintln!("Fail to get request host, use \"default\" server config with first port");
+      eprintln!("Fail to get request host.\n=> USE \"default\" server config with first port"); //todo: remove dev print. Probably
       server_config.server_name.clone() + ":" + &server_config.ports[0]
      },
   };
