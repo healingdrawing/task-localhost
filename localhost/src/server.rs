@@ -124,9 +124,15 @@ pub fn run(server_configs: Vec<ServerConfig>) {
   let mut servers = Vec::new();
   
   for port in ports {
-    let addr: SocketAddr = 
-    format!("{}:{}", server_address, port).parse().unwrap();
-    println!("addr: {:?}", addr);
+    let addr: SocketAddr = match 
+    format!("{}:{}", server_address, port).parse(){
+      Ok(v) => v,
+      Err(e) => {
+        eprintln!("Failed to parse socket address: {} | {}", format!("{}:{}", server_address, port), e);
+        continue;
+      }
+    };
+    
     let listener = match TcpListener::bind(addr){
       Ok(v) => v,
       Err(e) => {
@@ -138,18 +144,33 @@ pub fn run(server_configs: Vec<ServerConfig>) {
 
   }
   
-  let mut poll = Poll::new().unwrap();
-  let mut events = Events::with_capacity(128);
+  let mut poll = match Poll::new(){
+    Ok(v) => v,
+    Err(e) => panic!("Failed to create Poll: {}", e),
+  };
+
+  let mut events = Events::with_capacity(1024);
   
   for server in servers.iter_mut() {
-    
-    println!("token: {:?}", server.token);
-    poll.registry().register(&mut server.listener, server.token, Interest::READABLE).unwrap();
+    match poll.registry().register(&mut server.listener, server.token, Interest::READABLE){
+      Ok(v) => v,
+      Err(e) => panic!("Failed to register server.listener: {}", e),
+    };
+
   }
   
+  println!("CONFIGURED:\n{:?}", servers);
+  println!("====================\n= START the server =\n====================");
+
   loop {
-    poll.poll(&mut events, None).unwrap();
     // poll.poll(&mut events, Some(Duration::from_millis(100))).unwrap(); // changes nothing
+    match poll.poll(&mut events, None){
+      Ok(v) => v,
+      Err(e) => {
+        eprint!("Failed to poll: {}", e);
+        continue;
+      },
+    };
     
     for event in events.iter() {
       
@@ -158,26 +179,45 @@ pub fn run(server_configs: Vec<ServerConfig>) {
       let token = event.token();
       
       // Find the server associated with the token
-      let server = servers.iter_mut().find(|s| s.token.0 == token.0).unwrap();
+      let server = match servers.iter_mut().find(|s| s.token.0 == token.0){
+        Some(v) => v,
+        None => {
+          eprintln!("Failed to find server by token: {}", token.0);
+          continue;
+        }
+      };
       
       println!("server: {:?}", server);
       
       // Accept the incoming connection
-      let (mut stream, _) = server.listener.accept().unwrap();
+      let (mut stream, _) = match server.listener.accept(){
+        Ok(v) => v,
+        Err(e) => {
+          eprintln!("Failed to accept incoming connection: {}", e);
+          continue;
+        }
+      };
       
-      println!("stream: {:?}", stream);
+      println!("stream: {:?}", stream); //todo: remove dev print
       
       // Read the HTTP request from the client
-      let (mut headers_buffer,mut body_buffer) = read_with_timeout(&mut stream, Duration::from_millis(5000)).unwrap(); //todo: manage it properly, server should never crash
+      let ( headers_buffer, body_buffer) = match
+      read_with_timeout(&mut stream, Duration::from_millis(5000)){
+        Ok(v) => v,
+        Err(e) => {
+          eprintln!("Failed to read from stream: {:?} {}", stream, e);
+          continue;
+        }
+      };
       
-      println!("Buffer sizes after read: headers_buffer: {}, body_buffer: {}", headers_buffer.len(), body_buffer.len());
+      println!("Buffer sizes after read: headers_buffer: {}, body_buffer: {}", headers_buffer.len(), body_buffer.len()); //todo: remove dev print
       
       if headers_buffer.is_empty() {
         println!("NO DATA RECEIVED, empty headres_buffer");
       }else if body_buffer.is_empty() {
         println!("NO DATA RECEIVED, empty body_buffer");
       }else{
-        println!("buffers are not empty");
+        println!("buffers are not empty"); //todo: remove dev print
         println!("Raw buffers:\nheaders_buffer:\n=\n{}\n=\nbody_buffer:\n=\n{}\n=", String::from_utf8_lossy(&headers_buffer), String::from_utf8_lossy(&body_buffer));
       }
       
