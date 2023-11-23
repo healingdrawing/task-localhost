@@ -1,3 +1,4 @@
+use std::error::Error;
 use std::time::{Instant, Duration};
 use std::io::{self, Read};
 use mio::net::TcpStream;
@@ -5,11 +6,11 @@ use mio::net::TcpStream;
 /// Read from the stream until timeout or EOF
 /// 
 /// returns a tuple of two vectors: (headers_buffer, body_buffer)
-pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Result<(Vec<u8>,Vec<u8>)> {
-  println!("INSIDE read_with_timeout");
+pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> Result<(Vec<u8>,Vec<u8>), Box<dyn Error>> {
+  println!("INSIDE read_with_timeout"); //todo: remove later
   // Start the timer
   let start_time = Instant::now();
-  println!("start_time: {:?}", start_time);
+  println!("start_time: {:?}", start_time); //todo: remove later
   
   // Read from the stream until timeout or EOF
   let mut buf = [0; 1];
@@ -20,8 +21,7 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Resul
   loop {
     // Check if the timeout has expired
     if start_time.elapsed() >= timeout {
-      println!("headers read timed out");
-      return Err(io::Error::new(io::ErrorKind::TimedOut, "headers read timed out"));
+      return Err(format!("headers read timed out").into());
     }
     
     match stream.read(&mut buf) {
@@ -50,8 +50,7 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Resul
       },
       Err(e) => {
         // Other error occurred
-        eprintln!("Error reading headers from stream: {}", e);
-        return Err(e);
+        return Err(format!("Error reading headers from stream {}", e).into());
       },
     }
     
@@ -78,8 +77,7 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Resul
     loop { // skip the first chunk size line which is sum of all chunks
       // Check if the timeout has expired
       if start_time.elapsed() >= timeout {
-        println!("sum chunk size body read timed out");
-        return Err(io::Error::new(io::ErrorKind::TimedOut, "sum chunk size body read timed out"));
+        return Err("sum chunk size body read timed out".into());
       }
       
       // Read from the stream one byte at a time
@@ -102,8 +100,7 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Resul
           continue;
         },
         Err(e) => { // Other error occurred
-          eprintln!("Error reading chunk size from stream: {}", e);
-          return Err(e);
+          return Err(format!("Error reading chunk size from stream: {}", e).into());
         },
       }
       
@@ -111,14 +108,17 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Resul
         // Parse the sum chunk size
         println!("sum_chunk_size_buffer: {:?}", sum_chunk_size_buffer); //todo: remove later
         let sum_chunk_size_str = String::from_utf8_lossy(&sum_chunk_size_buffer).trim().to_string();
-        println!("sum_chunk_size_str: {}", sum_chunk_size_str);
-        let sum_chunk_size = usize::from_str_radix(&sum_chunk_size_str, 16).unwrap();
-        println!("sum chunk_size: {}", sum_chunk_size);
+        println!("sum_chunk_size_str: {}", sum_chunk_size_str); //todo: remove later
+        let sum_chunk_size = match usize::from_str_radix(&sum_chunk_size_str, 16){
+          Ok(v) => v,
+          Err(e) => return Err(format!("Failed to parse sum_chunk_size_str: {}\n {}", sum_chunk_size_str, e).into())
+        };
+        println!("sum chunk_size: {}", sum_chunk_size); //todo: remove later
         
         // Check if the end of the stream has been reached
         if sum_chunk_size == 0
         {
-          return Err(io::Error::new(io::ErrorKind::InvalidData, "sum chunk size is zero"));//todo: check this
+          return Err("sum_chunk_size == 0".into());
         }
         break;
         
@@ -139,8 +139,7 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Resul
       
       // Check if the timeout has expired
       if start_time.elapsed() >= timeout {
-        println!("chunk size body read timed out");
-        return Err(io::Error::new(io::ErrorKind::TimedOut, "chunk size body read timed out"));
+        return Err("chunk size body read timed out".into())
       }
       
       // Read from the stream one byte at a time
@@ -170,8 +169,7 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Resul
         },
         Err(e) => {
           // Other error occurred
-          eprintln!("Error reading chunk size from stream: {}", e);
-          return Err(e);
+          return Err(format!("Error reading chunk size from stream: {}", e).into());
         },
       }
       
@@ -181,8 +179,11 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Resul
         // Parse the chunk size
         println!("chunk_size_buffer: {:?}", chunk_size_buffer);
         let chunk_size_str = String::from_utf8_lossy(&chunk_size_buffer).trim().to_string();
-        chunk_size = usize::from_str_radix(&chunk_size_str, 16).unwrap();
-        println!("chunk_size: {}", chunk_size);
+        chunk_size = match usize::from_str_radix(&chunk_size_str, 16){
+          Ok(v) => v,
+          Err(e) => return Err(format!("Failed to parse chunk_size_str: {}\n {}", chunk_size_str, e).into())
+        };
+        println!("chunk_size: {}", chunk_size); //todo: remove later
         
         
         // Check if the end of the stream has been reached
@@ -196,7 +197,7 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Resul
             // Check if the timeout has expired
             if start_time.elapsed() >= timeout {
               println!("chunk body read timed out");
-              return Err(io::Error::new(io::ErrorKind::TimedOut, "chunk body read timed out"));
+              return Err("chunk body read timed out".into());
             }
             
             // Read from the stream one byte at a time
@@ -226,8 +227,7 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Resul
               },
               Err(e) => {
                 // Other error occurred
-                eprintln!("Error reading chunk from stream: {}", e);
-                return Err(e);
+                return Err(format!("Error reading chunk from stream: {}", e).into());
               },
             }
             
@@ -254,7 +254,7 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Resul
               println!("chunk_buffer to string: {:?}", String::from_utf8(chunk_buffer.clone()));
               println!("chunk_buffer len: {}", chunk_buffer.len());
               println!("chunk_size: {}", chunk_size);
-              return Err(io::Error::new(io::ErrorKind::InvalidData, "chunk is bigger than chunk_size"));
+              return Err("chunk is bigger than chunk_size".into());
             }
             
           }
@@ -271,7 +271,7 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Resul
       // Check if the timeout has expired
       if start_time.elapsed() >= timeout {
         println!("body read timed out");
-        return Err(io::Error::new(io::ErrorKind::TimedOut, "body read timed out"));
+        return Err(format!("body read timed out").into());
       }
       
       // Read from the stream one byte at a time
@@ -301,8 +301,7 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Resul
         },
         Err(e) => {
           // Other error occurred
-          eprintln!("Error reading from stream: {}", e);
-          return Err(e);
+          return Err(format!("Error reading from stream: {:?} {}", stream, e).into());
         },
       }
       
@@ -310,7 +309,7 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> io::Resul
   }
   
   
-  println!("read {} bytes from stream", body_buffer.len());
+  println!("read {} bytes from stream", body_buffer.len()); //todo: remove dev print
   println!("Raw incoming buffer to string: {:?}", String::from_utf8(body_buffer.clone()));
   
   Ok((headers_buffer, body_buffer))
