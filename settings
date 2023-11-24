@@ -1,7 +1,7 @@
 # you should not play with this file without strong needs
 # this file always must be on the same level as executable
 # the "default" server also will be used if no hits of other server ip:port happens
-# so DO NOT CHANGE THE NAME "default"
+# so DO NOT CHANGE THE "default"
 
 [[servers]]
 server_name = "default"
