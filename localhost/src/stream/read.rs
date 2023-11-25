@@ -3,6 +3,8 @@ use std::time::{Instant, Duration};
 use std::io::{self, Read};
 use mio::net::TcpStream;
 
+use crate::debug::append_to_file;
+
 /// Read from the stream until timeout or EOF
 /// 
 /// returns a tuple of two vectors: (headers_buffer, body_buffer)
@@ -60,6 +62,8 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> Result<(V
     }
   }
   
+  println!("headers_buffer: {:?}", String::from_utf8_lossy(headers_buffer.as_slice()));//todo: remove later
+
   let is_chunked = String::from_utf8_lossy(&headers_buffer).contains("Transfer-Encoding: chunked");
   
   // collect request body section
@@ -267,11 +271,26 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> Result<(V
     
   }
   else { // if request is not chunked
+    // not clear way to manage not clear standard.
+    // To manage cases when there is unchunked body, but
+    // without Content-Length header(because this header is not mandatory),
+    // try to implement the second timeout for body read in this case.
+    // it will be x5 times shorter than the timeout incoming parameter.
+
+    let dirty_timeout = timeout / 5;
+    let dirty_start_time = Instant::now();
+    let content_length_header_not_found = !String::from_utf8_lossy(&headers_buffer).contains("Content-Length: ");
+
     println!("THE REQUEST IS UNCHUNKED: is_chunked {}", is_chunked); //todo: remove later
     loop{
       // Check if the timeout has expired
       if start_time.elapsed() >= timeout {
         println!("body read timed out");
+        return Err(format!("body read timed out").into());
+      }
+
+      if content_length_header_not_found && dirty_start_time.elapsed() >= dirty_timeout {
+        println!("dirty body read timed out.\n = File: {}, Line: {}, Column: {}", file!(), line!(), column!());
         return Err(format!("body read timed out").into());
       }
       
@@ -297,7 +316,9 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> Result<(V
         },
         Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
           // Stream is not ready yet, try again later
-          // println!("= BANG! this crap happens...read would block");
+          //todo: this fires also when no body is present. need fix
+          append_to_file("= BANG! this crap happens...read would block");
+          append_to_file(&e.to_string());
           continue;
         },
         Err(e) => {

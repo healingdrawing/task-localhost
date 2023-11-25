@@ -16,5 +16,8 @@ Cargo.lock
 # Ignore macOS directory attributes
 .DS_Store
 
+# ignore debug.txt log file, because it is giant usually
+debug.txt
+
 # Ignore the executable
 runme
