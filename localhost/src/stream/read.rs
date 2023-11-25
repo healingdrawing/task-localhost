@@ -267,6 +267,7 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> Result<(V
     
   }
   else { // if request is not chunked
+    println!("THE REQUEST IS UNCHUNKED: is_chunked {}", is_chunked); //todo: remove later
     loop{
       // Check if the timeout has expired
       if start_time.elapsed() >= timeout {

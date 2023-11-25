@@ -4,6 +4,7 @@ use std::io:: Write;
 
 use crate::server::ServerConfig;
 use crate::handlers::handle_cgi::handle_cgi_request;
+use crate::stream::write::write_response_into_stream;
 
 /// just for test
 pub fn handle_request(request: Request<Vec<u8>>, stream: &mut TcpStream, server_configs: Vec<ServerConfig>) {
@@ -44,7 +45,7 @@ pub fn handle_request(request: Request<Vec<u8>>, stream: &mut TcpStream, server_
   }
   println!("CHOOSEN server_config: {:?}", server_config.clone()); //todo: remove dev print
 
-  todo!("handle_request: implement the logic. but first refactor to handle unwrap() more safe. to prevent panics");
+  // todo!("handle_request: implement the logic. but first refactor to handle unwrap() more safe. to prevent panics");
 
   // try to manage the cgi request case separately.
   let path = request.uri().path();
@@ -65,13 +66,10 @@ pub fn handle_request(request: Request<Vec<u8>>, stream: &mut TcpStream, server_
     }
   };
 
-  // For simplicity, just send a "Hello, World!" response
-  // let response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nHello, World!".as_bytes();
-
-  match stream.write_all(response.body()){
+  match write_response_into_stream(stream, response){
     Ok(_) => println!("Response sent"),
     Err(e) => eprintln!("Failed to send response: {}", e),
-  };
+  }
   
   match stream.flush(){
     Ok(_) => println!("Response flushed"),
