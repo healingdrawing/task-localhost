@@ -43,7 +43,7 @@ fn main() {
     Err(e) => println!("debug file recreation failed: {}", e),
   }
   
-  // also use for cgi and so on
+  // manage settings, cgi and so on
   let zero_path_buf = match get_zero_path(){
     Ok(v) => v,
     Err(e) => panic!("Failed to manage current exe path: {}", e),
@@ -53,6 +53,11 @@ fn main() {
     None => panic!("Failed to convert zero_path to str"),
   }
   .to_string();
+  // set PATH_INFO here to check inside cgi, as task requires.
+  // it is dumb(python3 can manage it + no need reload server after changes in script).
+  // Since we use python3, anyways the process will be slowdowned by this,
+  // so no reason to do this using rust. Easier just send it into script as argument.
+  env::set_var("PATH_INFO", zero_path.clone()); //todo: can be unsafe
 
   let mut config_path = zero_path_buf.clone();
   config_path.push("settings"); // Add the configuration file name to the path
