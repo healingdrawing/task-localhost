@@ -43,10 +43,18 @@ fn main() {
     Err(e) => println!("debug file recreation failed: {}", e),
   }
   
-  let mut config_path = match get_zero_path(){
+  // also use for cgi and so on
+  let zero_path_buf = match get_zero_path(){
     Ok(v) => v,
     Err(e) => panic!("Failed to manage current exe path: {}", e),
   };
+  let zero_path:String = match zero_path_buf.to_str(){
+    Some(v) => v,
+    None => panic!("Failed to convert zero_path to str"),
+  }
+  .to_string();
+
+  let mut config_path = zero_path_buf.clone();
   config_path.push("settings"); // Add the configuration file name to the path
   
   let mut settings = config::Config::builder();
@@ -70,7 +78,7 @@ fn main() {
           for sc in server_configs.iter_mut(){sc.check()}
 
           println!("{:#?}", server_configs); //todo: remove this dev print
-          run(server_configs);//todo: looks like need send exe_path to run() to manage the config, cgi, etc folders
+          run( zero_path ,server_configs);//todo: looks like need send exe_path to run() to manage the config, cgi, etc folders
         },
         Err(e) => eprintln!("Failed to convert settings into Vec<ServerConfig>: {}", e),
       }

@@ -1,13 +1,19 @@
 use http::{Request, Response};
 use mio::net::TcpStream;
 use std::io:: Write;
+use std::path::PathBuf;
 
 use crate::server::ServerConfig;
 use crate::handlers::handle_cgi::handle_cgi_request;
 use crate::stream::write::write_response_into_stream;
 
 /// just for test
-pub fn handle_request(request: Request<Vec<u8>>, stream: &mut TcpStream, server_configs: Vec<ServerConfig>) {
+pub fn handle_request(
+  zero_path: String,
+  request: Request<Vec<u8>>,
+  stream: &mut TcpStream,
+  server_configs: Vec<ServerConfig>
+) {
 
   // choose the server config, based on the server_name and port pair of the request,
   // or use "default" , as task requires
@@ -54,8 +60,9 @@ pub fn handle_request(request: Request<Vec<u8>>, stream: &mut TcpStream, server_
   let response:Response<Vec<u8>> = match parts.as_slice(){
     ["", "cgi", "useless.py", file_path @ ..] => {
       handle_cgi_request(
-        file_path.join("/"),
+        zero_path,
         "useless.py".to_string(),
+        file_path.join(&std::path::MAIN_SEPARATOR.to_string()),
         request,
         server_config,
       )

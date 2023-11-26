@@ -6,6 +6,8 @@ pub fn write_response_into_stream(stream: &mut TcpStream, response: Response<Vec
   
   println!("=== write_response_into_stream: {:?}", response); //todo: remove dev print
 
+  println!("response body string: {:?}", std::str::from_utf8(&response.body()).unwrap()); //todo: remove dev print
+
   //todo: here probably some check for the response code, and if it is not 200, then write the error response into the stream, according to the prebuilded error pages in the server_config. Not implemented yet. Also extend function incoming parameters with server_config, to get the error pages from it. NOT LOOKS NICE, NEED RETHINK IT.
   
   // the response code is 200, so write the response into the stream
@@ -50,6 +52,7 @@ pub fn write_response_into_stream(stream: &mut TcpStream, response: Response<Vec
   // Write the status line, headers, and body to the stream
   stream.write_all(status_line.as_bytes())?;
   stream.write_all(headers.as_bytes())?;
+  stream.write_all(b"\r\n")?; // without this string curl will show nothing
   stream.write_all(&body_bytes)?;
   
   Ok(())
