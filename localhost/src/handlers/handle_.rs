@@ -80,6 +80,6 @@ pub fn handle_request(request: Request<Vec<u8>>, stream: &mut TcpStream, server_
 
 /// todo: remove dev gap
 fn dummy_200_response() -> Response<Vec<u8>>{
-  let response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nHello, World! dummy_200_response";
+  let response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nHello, World! dummy_200_response\n\n";
   Response::new(response.as_bytes().to_vec())
 }

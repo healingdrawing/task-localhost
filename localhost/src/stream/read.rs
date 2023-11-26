@@ -23,7 +23,7 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> Result<(V
   loop {
     // Check if the timeout has expired
     if start_time.elapsed() >= timeout {
-      return Err(format!("headers read timed out").into());
+      return Err(format!("[400] headers read timed out").into());
     }
     
     match stream.read(&mut buf) {
@@ -52,7 +52,7 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> Result<(V
       },
       Err(e) => {
         // Other error occurred
-        return Err(format!("Error reading headers from stream {}", e).into());
+        return Err(format!("[400] Error reading headers from stream {}", e).into());
       },
     }
     
@@ -63,7 +63,7 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> Result<(V
   }
   
   println!("headers_buffer: {:?}", String::from_utf8_lossy(headers_buffer.as_slice()));//todo: remove later
-
+  
   let is_chunked = String::from_utf8_lossy(&headers_buffer).contains("Transfer-Encoding: chunked");
   
   // collect request body section
@@ -81,7 +81,7 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> Result<(V
     loop { // skip the first chunk size line which is sum of all chunks
       // Check if the timeout has expired
       if start_time.elapsed() >= timeout {
-        return Err("sum chunk size body read timed out".into());
+        return Err("[400] sum chunk size body read timed out".into());
       }
       
       // Read from the stream one byte at a time
@@ -104,7 +104,7 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> Result<(V
           continue;
         },
         Err(e) => { // Other error occurred
-          return Err(format!("Error reading chunk size from stream: {}", e).into());
+          return Err(format!("[400] Error reading chunk size from stream: {}", e).into());
         },
       }
       
@@ -115,14 +115,14 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> Result<(V
         println!("sum_chunk_size_str: {}", sum_chunk_size_str); //todo: remove later
         let sum_chunk_size = match usize::from_str_radix(&sum_chunk_size_str, 16){
           Ok(v) => v,
-          Err(e) => return Err(format!("Failed to parse sum_chunk_size_str: {}\n {}", sum_chunk_size_str, e).into())
+          Err(e) => return Err(format!("[400] Failed to parse sum_chunk_size_str: {}\n {}", sum_chunk_size_str, e).into())
         };
         println!("sum chunk_size: {}", sum_chunk_size); //todo: remove later
         
         // Check if the end of the stream has been reached
         if sum_chunk_size == 0
         {
-          return Err("sum_chunk_size == 0".into());
+          return Err("[400] chunked body with zero size".into());
         }
         break;
         
@@ -143,7 +143,7 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> Result<(V
       
       // Check if the timeout has expired
       if start_time.elapsed() >= timeout {
-        return Err("chunk size body read timed out".into())
+        return Err("[400] chunk size body read timed out".into())
       }
       
       // Read from the stream one byte at a time
@@ -173,7 +173,7 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> Result<(V
         },
         Err(e) => {
           // Other error occurred
-          return Err(format!("Error reading chunk size from stream: {}", e).into());
+          return Err(format!("[400] Error reading chunk size from stream: {}", e).into());
         },
       }
       
@@ -185,7 +185,7 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> Result<(V
         let chunk_size_str = String::from_utf8_lossy(&chunk_size_buffer).trim().to_string();
         chunk_size = match usize::from_str_radix(&chunk_size_str, 16){
           Ok(v) => v,
-          Err(e) => return Err(format!("Failed to parse chunk_size_str: {}\n {}", chunk_size_str, e).into())
+          Err(e) => return Err(format!("[400] Failed to parse chunk_size_str: {}\n {}", chunk_size_str, e).into())
         };
         println!("chunk_size: {}", chunk_size); //todo: remove later
         
@@ -200,8 +200,8 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> Result<(V
             
             // Check if the timeout has expired
             if start_time.elapsed() >= timeout {
-              println!("chunk body read timed out");
-              return Err("chunk body read timed out".into());
+              println!("chunk body read timed out"); //todo: remove later
+              return Err("[400] chunk body read timed out".into());
             }
             
             // Read from the stream one byte at a time
@@ -231,7 +231,7 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> Result<(V
               },
               Err(e) => {
                 // Other error occurred
-                return Err(format!("Error reading chunk from stream: {}", e).into());
+                return Err(format!("[400] Error reading chunk from stream: {}", e).into());
               },
             }
             
@@ -258,7 +258,7 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> Result<(V
               println!("chunk_buffer to string: {:?}", String::from_utf8(chunk_buffer.clone()));
               println!("chunk_buffer len: {}", chunk_buffer.len());
               println!("chunk_size: {}", chunk_size);
-              return Err("chunk is bigger than chunk_size".into());
+              return Err("[400] chunk is bigger than chunk_size".into());
             }
             
           }
@@ -277,21 +277,29 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> Result<(V
     // try to implement the second timeout for body read in this case.
     // it will be x5 times shorter than the timeout incoming parameter.
 
+    // todo: implement the check that buffer lentgh  is equal to Content-Length header value, then break the loop, to prevent timeout
+    
     let dirty_timeout = timeout / 5;
     let dirty_start_time = Instant::now();
     let content_length_header_not_found = !String::from_utf8_lossy(&headers_buffer).contains("Content-Length: ");
-
+    
     println!("THE REQUEST IS UNCHUNKED: is_chunked {}", is_chunked); //todo: remove later
     loop{
       // Check if the timeout has expired
       if start_time.elapsed() >= timeout {
         println!("body read timed out");
-        return Err(format!("body read timed out").into());
+        return Err(format!("[400] body read timed out").into());
       }
-
-      if content_length_header_not_found && dirty_start_time.elapsed() >= dirty_timeout {
-        println!("dirty body read timed out.\n = File: {}, Line: {}, Column: {}", file!(), line!(), column!());
-        return Err(format!("body read timed out").into());
+      
+      if content_length_header_not_found
+      && dirty_start_time.elapsed() >= dirty_timeout
+      {
+        if body_buffer.len() == 0{
+          break; // let is say that there is no body in this case, so continue
+        } else {
+          println!("dirty body read timed out.\n = File: {}, Line: {}, Column: {}", file!(), line!(), column!()); //todo: remove later
+          return Err(format!("[400] dirty body read timed out").into());
+        }
       }
       
       // Read from the stream one byte at a time
@@ -303,11 +311,11 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> Result<(V
         },
         Ok(n) => {
           // Successfully read n bytes from stream
-          // println!("attempt to read {} bytes from stream", n);
+          println!("attempt to read {} bytes from stream", n);
           body_buffer.extend_from_slice(&buf[..n]);
-          // println!("after read buffer size: {}", body_buffer.len());
-          // println!("after read buffer: {:?}", body_buffer);
-          // println!("after read buffer to string: {:?}", String::from_utf8(body_buffer.clone()));
+          println!("after read buffer size: {}", body_buffer.len());
+          println!("after read buffer: {:?}", body_buffer);
+          println!("after read buffer to string: {:?}", String::from_utf8(body_buffer.clone()));
           // Check if the end of the stream has been reached
           if n < buf.len() {
             println!("read EOF reached relatively, because buffer not full after read");
@@ -323,13 +331,12 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> Result<(V
         },
         Err(e) => {
           // Other error occurred
-          return Err(format!("Error reading from stream: {:?} {}", stream, e).into());
+          return Err(format!("[400] Error reading from stream: {:?} {}", stream, e).into());
         },
       }
       
     }
   }
-  
   
   println!("read {} bytes from stream", body_buffer.len()); //todo: remove dev print
   println!("Raw incoming buffer to string: {:?}", String::from_utf8(body_buffer.clone()));
