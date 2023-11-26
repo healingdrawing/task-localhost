@@ -276,22 +276,53 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> Result<(V
     // without Content-Length header(because this header is not mandatory),
     // try to implement the second timeout for body read in this case.
     // it will be x5 times shorter than the timeout incoming parameter.
-
+    
     // todo: implement the check that buffer lentgh  is equal to Content-Length header value, then break the loop, to prevent timeout
     
     let dirty_timeout = timeout / 5;
     let dirty_start_time = Instant::now();
     let content_length_header_not_found = !String::from_utf8_lossy(&headers_buffer).contains("Content-Length: ");
     
+    let content_length = if content_length_header_not_found {
+      0_usize
+    } else {
+      // extract content length from headers_buffer and parse it to usize
+      let headers_buffer_slice = headers_buffer.as_slice();
+      let headers_str = String::from_utf8_lossy(headers_buffer_slice);
+      let content_length_header = 
+      headers_str.split("\r\n").find(|&s| s.starts_with("Content-Length: "));
+      
+      let content_length_str = match content_length_header {
+        Some(v) => v.trim_start_matches("Content-Length: "),
+        None => {"0"} // help to content_length to be
+      };
+      
+      match content_length_str.parse() {
+        Ok(v) => v,
+        Err(e) => return Err(format!("[400] Failed to parse content_length_str: {}\n {}", content_length_str, e).into())
+      }
+    };
+    
     println!("THE REQUEST IS UNCHUNKED: is_chunked {}", is_chunked); //todo: remove later
     loop{
+      // check the body_buffer length
+      if content_length > 0{
+        if body_buffer.len() == content_length{
+          println!("body_buffer.len() == content_length. mission complete"); //todo: remove later
+          break;
+        } else if body_buffer.len() > content_length{
+          println!("body_buffer.len() > content_length"); //todo: remove later
+          return Err(format!("[400] body_buffer.len() > content_length").into());
+        }
+      }
+
       // Check if the timeout has expired
       if start_time.elapsed() >= timeout {
         println!("body read timed out");
         return Err(format!("[400] body read timed out").into());
       }
       
-      if content_length_header_not_found
+      if content_length_header_not_found // potentilal case of dirty body
       && dirty_start_time.elapsed() >= dirty_timeout
       {
         if body_buffer.len() == 0{
@@ -324,7 +355,7 @@ pub fn read_with_timeout(stream: &mut TcpStream, timeout: Duration) -> Result<(V
         },
         Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
           // Stream is not ready yet, try again later
-          //todo: this fires also when no body is present. need fix
+          // this fires also when stream is read to the end. Fixed above
           append_to_file("= BANG! this crap happens...read would block");
           append_to_file(&e.to_string());
           continue;
