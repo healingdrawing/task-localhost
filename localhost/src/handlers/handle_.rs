@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 use crate::server::ServerConfig;
 use crate::handlers::handle_cgi::handle_cgi_request;
-use crate::stream::write::write_response_into_stream;
+use crate::stream::write_::write_response_into_stream;
 
 /// just for test
 pub fn handle_request(

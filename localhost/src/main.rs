@@ -7,7 +7,8 @@ use server::{ServerConfig, run};
 pub mod stream{
   pub mod read;
   pub mod parse;
-  pub mod write;
+  pub mod write_;
+  pub mod write_error;
 }
 
 pub mod handlers{
