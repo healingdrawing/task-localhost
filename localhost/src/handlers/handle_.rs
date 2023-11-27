@@ -14,7 +14,7 @@ pub fn handle_request(
   stream: &mut TcpStream,
   server_configs: Vec<ServerConfig>
 ) {
-
+  
   // choose the server config, based on the server_name and port pair of the request,
   // or use "default" , as task requires
   let mut server_config = server_configs[0].clone(); // default server config
@@ -31,9 +31,9 @@ pub fn handle_request(
     None => { 
       eprintln!("Fail to get request host.\n=> USE \"default\" server config with first port"); //todo: remove dev print. Probably
       server_config.server_name.clone() + ":" + &server_config.ports[0]
-     },
+    },
   };
-
+  
   // iterate server configs and the matching one will be used, two variants possible:
   // match serverconfig.server_name + ":" + &serverconfig.ports[x](for each port) == request_server_host
   // match server_config.server_address + ":" + &server_config.ports[x](for each port) == request_server_host
@@ -50,13 +50,13 @@ pub fn handle_request(
     }
   }
   println!("CHOOSEN server_config: {:?}", server_config.clone()); //todo: remove dev print
-
+  
   // todo!("handle_request: implement the logic. but first refactor to handle unwrap() more safe. to prevent panics");
-
+  
   // try to manage the cgi request case separately.
   let path = request.uri().path();
   let parts: Vec<&str> = path.split('/').collect();
-
+  
   let response:Response<Vec<u8>> = match parts.as_slice(){
     ["", "cgi", "useless.py", file_path @ ..] => {
       handle_cgi_request(
@@ -72,7 +72,7 @@ pub fn handle_request(
       dummy_200_response()
     }
   };
-
+  
   match write_response_into_stream(stream, response){
     Ok(_) => println!("Response sent"),
     Err(e) => eprintln!("Failed to send response: {}", e),
@@ -82,7 +82,12 @@ pub fn handle_request(
     Ok(_) => println!("Response flushed"),
     Err(e) => eprintln!("Failed to flush response: {}", e),
   };
-
+  
+  match stream.shutdown(std::net::Shutdown::Both) {
+    Ok(_) => println!("Connection closed successfully"),
+    Err(e) => eprintln!("Failed to close connection: {}", e),
+  }
+  
 }
 
 /// todo: remove dev gap
