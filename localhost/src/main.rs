@@ -27,6 +27,8 @@ use config::{ConfigError, File, FileFormat};
 
 use std::process::{Command, Stdio};
 
+use crate::files::check::all_files_exists;
+
 /// get exe path and cut off exe name. to manage the config, cgi, etc folders
 pub fn get_zero_path() -> Result<PathBuf, Box<dyn Error>>{
   let mut exe_path = match env::current_exe(){
@@ -91,6 +93,9 @@ fn main() {
         Ok(mut server_configs) =>{ // configuration read successfully
 
           for sc in server_configs.iter_mut(){sc.check()}
+          if !all_files_exists(&server_configs){
+            panic!("Not all required for server config files exists");
+          };
 
           println!("{:#?}", server_configs); //todo: remove this dev print
           run( zero_path ,server_configs);//todo: looks like need send exe_path to run() to manage the config, cgi, etc folders

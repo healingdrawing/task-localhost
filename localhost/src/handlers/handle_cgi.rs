@@ -31,7 +31,13 @@ pub fn handle_cgi_request(
 
   let result = match &output{
     Ok(v) => match std::str::from_utf8(&v.stdout){
-      Ok(v) => v,
+      Ok(v) => {
+        if v.trim() == ""{
+          "Empty output from cgi python3 script"
+        } else {
+          v
+        }
+      },
       Err(e) => {
         let error_message = "Failed to convert cgi output to str. ".to_owned() + &e.to_string();
         Box::leak(error_message.into_boxed_str())

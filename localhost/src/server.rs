@@ -19,9 +19,10 @@ pub struct ServerConfig {
   pub server_name: String,
   pub ports: Vec<String>,
   pub server_address: String,
-  pub default_file: String,
-  pub error_pages: HashMap<String, String>,
   pub client_body_size: usize,
+  pub static_files_prefix: String,
+  pub default_file: String,
+  pub error_pages_prefix: String,
   pub routes: HashMap<String, Route>,
 }
 

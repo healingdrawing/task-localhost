@@ -7,16 +7,18 @@
 server_name = "default"
 ports = ["8080", "8081", "8082", "8082"]
 server_address = "127.0.0.1"
-default_file = "default.html"
-error_pages = { "400" = "/400.html", "403" = "/403.html", "404" = "/404.html", "405" = "/405.html", "413" = "/413.html", "500" = "/500.html" }
 client_body_size = 1024
+static_files_prefix = "default"
+default_file = "default.html"
+error_pages_prefix = "default/error"
 routes = { "/api" = { methods = ["GET", "POST"] } }
 
 [[servers]]
 server_name = "server1"
 ports = ["8082", "8083", "8084", "8085"]
 server_address = "127.0.0.2"
-default_file = "index.html"
-error_pages = { "400" = "/400_1.html", "403" = "/403_1.html", "404" = "/404_1.html", "405" = "/405_1.html", "413" = "/413_1.html", "500" = "/500_1.html" }
 client_body_size = 2048
+static_files_prefix = "site1"
+default_file = "index.html"
+error_pages_prefix = "site1/error"
 routes = { "/api" = { methods = ["GET", "POST", "DELETE"] } }
