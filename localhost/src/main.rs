@@ -16,6 +16,11 @@ pub mod handlers{
   pub mod handle_cgi;
 }
 
+pub mod files{
+  pub mod check;
+}
+use files::check::dummy_check_file_path;
+
 use std::{env, path::PathBuf};
 use std::error::Error;
 use config::{ConfigError, File, FileFormat};
@@ -39,6 +44,10 @@ pub fn get_zero_path() -> Result<PathBuf, Box<dyn Error>>{
 
 fn main() {
   println!("Hello, world!");
+
+  dummy_check_file_path(); //todo: remove this dev print
+
+
   match try_recreate_file_according_to_value_of_debug_boolean(){
     Ok(_) => println!("debug file recreated"),
     Err(e) => println!("debug file recreation failed: {}", e),
