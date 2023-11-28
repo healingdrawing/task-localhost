@@ -16,6 +16,8 @@ Cargo.lock
 # Ignore macOS directory attributes
 .DS_Store
 
+.vscode/
+
 # ignore debug.txt log file, because it is giant usually
 debug.txt
 
