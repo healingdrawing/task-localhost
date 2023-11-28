@@ -112,8 +112,6 @@ pub fn write_response_into_stream(stream: &mut TcpStream, response: Response<Vec
     }
   };
   
-  // todo: next refactor to manage ? operators above more safe. to prevent panics
-  
   Ok(())
 }
 
