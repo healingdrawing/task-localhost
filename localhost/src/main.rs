@@ -17,6 +17,7 @@ pub mod handlers{
 }
 
 pub mod files{
+  pub mod add_static;
   pub mod check;
 }
 use files::check::dummy_check_file_path;
@@ -27,6 +28,7 @@ use config::{ConfigError, File, FileFormat};
 
 use std::process::{Command, Stdio};
 
+use crate::files::add_static::add_static_files_to_server_configs;
 use crate::files::check::all_files_exists;
 
 /// get exe path and cut off exe name. to manage the config, cgi, etc folders
@@ -46,10 +48,10 @@ pub fn get_zero_path() -> Result<PathBuf, Box<dyn Error>>{
 
 fn main() {
   println!("Hello, world!");
-
+  
   dummy_check_file_path(); //todo: remove this dev print
-
-
+  
+  
   match try_recreate_file_according_to_value_of_debug_boolean(){
     Ok(_) => println!("debug file recreated"),
     Err(e) => println!("debug file recreation failed: {}", e),
@@ -70,7 +72,7 @@ fn main() {
   // Since we use python3, anyways the process will be slowdowned by this,
   // so no reason to do this using rust. Easier just send it into script as argument.
   env::set_var("PATH_INFO", zero_path.clone()); //todo: can be unsafe
-
+  
   let mut config_path = zero_path_buf.clone();
   config_path.push("settings"); // Add the configuration file name to the path
   
@@ -91,12 +93,20 @@ fn main() {
       let server_configs: Result<Vec<ServerConfig>, _> = config.get("servers");
       match server_configs {
         Ok(mut server_configs) =>{ // configuration read successfully
-
+          
+          // clean up server_configs
           for sc in server_configs.iter_mut(){sc.check()}
+          // check if all required by task files exists
           if !all_files_exists(&server_configs){
             panic!("Not all required for server config files exists");
           };
-
+          
+          //todo: call/implement add static files to server_configs
+          match add_static_files_to_server_configs(&mut server_configs){
+            Ok(_) => println!("static files added to server configs, with method GET"),
+            Err(e) => panic!("Failed to add static files to server configs: {}", e),
+          };
+          
           println!("{:#?}", server_configs); //todo: remove this dev print
           run( zero_path ,server_configs);//todo: looks like need send exe_path to run() to manage the config, cgi, etc folders
         },

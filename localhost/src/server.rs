@@ -57,7 +57,7 @@ impl ServerConfig {
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Route {
-  methods: Vec<String>,
+  pub methods: Vec<String>,
 }
 
 #[derive(Debug)]
