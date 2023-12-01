@@ -23,7 +23,7 @@ pub struct ServerConfig {
   pub static_files_prefix: String,
   pub default_file: String,
   pub error_pages_prefix: String,
-  pub routes: HashMap<String, Route>,
+  pub routes: HashMap<String, Vec<String>>,
 }
 
 impl ServerConfig {
@@ -55,10 +55,10 @@ impl ServerConfig {
   
 }
 
-#[derive(Debug, Deserialize, Clone)]
-pub struct Route {
-  pub methods: Vec<String>,
-}
+// #[derive(Debug, Deserialize, Clone)]
+// pub struct Route {
+//   pub methods: Vec<String>,
+// }
 
 #[derive(Debug)]
 struct Server {

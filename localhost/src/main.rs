@@ -1,5 +1,8 @@
 mod debug;
-use debug:: try_recreate_file_according_to_value_of_debug_boolean;
+use debug:: {
+  try_recreate_file_according_to_value_of_debug_boolean,
+  create_something_in_uploads_folder
+};
 
 mod server;
 use server::{ServerConfig, run};
@@ -51,10 +54,14 @@ fn main() {
   
   dummy_check_file_path(); //todo: remove this dev print
   
-  
+  match create_something_in_uploads_folder(){
+    Ok(_) => println!("\"something\" created in uploads folder"),
+    Err(e) => panic!("\"something\" creation failed: {}", e),
+  };
+
   match try_recreate_file_according_to_value_of_debug_boolean(){
     Ok(_) => println!("debug file recreated"),
-    Err(e) => println!("debug file recreation failed: {}", e),
+    Err(e) => panic!("debug file recreation failed: {}", e),
   }
   
   // manage settings, cgi and so on

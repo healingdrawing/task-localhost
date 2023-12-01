@@ -3,7 +3,7 @@ use std::error::Error;
 
 use walkdir::WalkDir;
 
-use crate::server::{ServerConfig, Route};
+use crate::server::ServerConfig;
 
 /// add static files to server configs routes, with method GET
 pub fn add_static_files_to_server_configs(server_configs: &mut Vec<ServerConfig>) -> Result<(), Box<dyn Error>>{
@@ -27,9 +27,8 @@ pub fn add_static_files_to_server_configs(server_configs: &mut Vec<ServerConfig>
         None => panic!("Failed to convert file path to str. Static file path: {}", file_path.display()),
       };
     
-      let value = Route{
-        methods: vec!["GET".to_owned()],
-      };
+      let value = vec!["GET".to_owned()];
+
       routes.insert(key, value);
 
       // get the file name

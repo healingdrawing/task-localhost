@@ -21,4 +21,15 @@ pub fn append_to_file(data: &str) -> io::Result<()> {
     writeln!(writer, "{}", data)?;
   }
   Ok(())
+
+}
+
+/// create a file with name "something" inside uploads folder,
+/// 
+/// to allow the user remove this file using DELETE method
+/// 
+/// as audit question requires
+pub fn create_something_in_uploads_folder() -> io::Result<()> {
+  File::create("uploads/something")?; 
+  Ok(())
 }

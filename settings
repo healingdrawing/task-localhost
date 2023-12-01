@@ -11,7 +11,7 @@ client_body_size = 1024
 static_files_prefix = "default"
 default_file = "default.html"
 error_pages_prefix = "default/error"
-routes = { "/api" = { methods = ["GET", "POST"] } }
+routes = { "redirect.html" = ["GET", "POST"] }
 
 [[servers]]
 server_name = "server1"
@@ -21,4 +21,4 @@ client_body_size = 2048
 static_files_prefix = "site1"
 default_file = "index.html"
 error_pages_prefix = "site1/error"
-routes = { "/api" = { methods = ["GET", "POST", "DELETE"] } }
+routes = { "redirect.html" = ["GET", "POST", "DELETE"] }
