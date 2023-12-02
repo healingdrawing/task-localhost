@@ -17,6 +17,8 @@ pub mod stream{
 pub mod handlers{
   pub mod handle_;
   pub mod handle_cgi;
+  pub mod handle_all;
+  pub mod response_;
 }
 
 pub mod files{

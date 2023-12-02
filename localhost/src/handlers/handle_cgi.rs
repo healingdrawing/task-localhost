@@ -9,7 +9,7 @@ use crate::server::ServerConfig;
 /// unsafe potentially , because you can pass any path to the script using
 /// 
 /// cgi/useless.py//some/path/here. but in exact this case allow only to check
-pub fn handle_cgi_request(
+pub fn handle_cgi(
   zero_path: String,
   script_file_name: String,
   check_file_path: String,
