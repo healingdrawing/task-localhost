@@ -14,7 +14,7 @@ error_pages_prefix = "default/error"
 routes = { "redirect.html" = ["GET", "POST"] }
 
 [[servers]]
-server_name = "server1"
+server_name = "mega.company"
 ports = ["8082", "8083", "8084", "8085"]
 server_address = "127.0.0.2"
 client_body_size = 2048

@@ -8,7 +8,15 @@ pub fn write_response_into_stream(stream: &mut TcpStream, response: Response<Vec
   
   println!("=== write_response_into_stream: {:?}", response); //todo: remove dev print
   
-  println!("response body string: {:?}", std::str::from_utf8(&response.body()).unwrap()); //todo: remove dev print
+  println!("response body string: {:?}",
+  match std::str::from_utf8(&response.body().clone()){
+    Ok(v) => v,
+    Err(e) => {
+      eprintln!("Failed to convert response body to str: {}", e);
+      "Looks like the response body is not utf8 string"
+    }
+  }
+); //todo: remove dev print
   
   // Break down the response into its parts
   let (parts, body) = response.into_parts();

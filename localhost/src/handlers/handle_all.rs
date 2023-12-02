@@ -2,7 +2,10 @@ use std::path::{Path, PathBuf};
 
 use http::{Response, Request};
 
-use crate::{server::ServerConfig, handlers::response_::response_default_static_file};
+use crate::handlers::response_500::custom_response_500;
+use crate::server::{ServerConfig, self};
+use crate::handlers::response_::response_default_static_file;
+use crate::handlers::response_4xx::custom_response_4xx;
 
 
 /// handle all requests, except cgi.
@@ -28,23 +31,78 @@ pub fn handle_all(
   let absolute_path = zero_path_buf.join(relative_static_site_path);
   println!("absolute_path {:?}", absolute_path);
   
-  let parts: Vec<&str> = path.split('/').collect();
-  
-  // check if path is directory, then return default file
+  // check if path is directory, then return default file as task requires
   if path.ends_with("/") || absolute_path.is_dir() {
-    // return default file in response
-    let response = response_default_static_file(
+    return response_default_static_file( zero_path_buf, request, server_config, );
+  } else if !absolute_path.is_file() {
+    return custom_response_500(zero_path_buf, request, server_config)
+  } // check if file exists or return 500, because before server start, all files checked, so it is server error. The "uploads" folder managed separately with 404
+  
+  
+  let parts: Vec<&str> = path.split('/').collect();
+  println!("=== parts {:?}", parts); // todo: remove dev prints
+  
+  // check if path is inside routes, then get methods allowed for this path
+  let allowed_methods = match server_config.routes.get(path){
+    Some(v) => {v},
+    None => {
+       return custom_response_4xx(
+        http::StatusCode::NOT_FOUND,
+        zero_path_buf,
+        request,
+        server_config,
+       )
+    }
+  };
+
+  // check if method is allowed for this path or return 405
+  let request_method_string = request.method().to_string();
+  if !allowed_methods.contains(&request_method_string){
+    return custom_response_4xx(
+      http::StatusCode::METHOD_NOT_ALLOWED,
       zero_path_buf,
       request,
       server_config,
-    );
-    return response;
+    )
   }
-  
-  let result = "DEV GAP";
-  let body = format!("Hello from Rust and Python3: {}\n\n", result);
-  let mut response = Response::new(body.as_bytes().to_vec());
-  response.headers_mut().insert("Content-Type", "text/plain".parse().unwrap());
+
+  // read the file. if error, then return error 500 response
+  let file_content = match std::fs::read(absolute_path.clone()){
+    Ok(v) => v,
+    Err(e) => {
+      eprintln!("Failed to read file: {}", e); //todo: remove dev print
+      return custom_response_500(zero_path_buf, request, server_config)
+    }
+  };
+
+  let mut response = match Response::builder()
+  .status(200)
+  .body(file_content)
+  {
+    Ok(v) => v,
+    Err(e) => {
+      eprintln!("Failed to create response with file: {}", e);
+      return custom_response_500(zero_path_buf, request, server_config)
+    }
+  };
+
+  // get file mime type using mime_guess, or use the text/plain
+  let mime_type = match mime_guess::from_path(absolute_path.clone()).first(){
+    Some(v) => v.to_string(),
+    None => "text/plain".to_string(),
+  };
+  println!("mime_type {}", mime_type); //todo: remove dev print
+
+  response.headers_mut().insert(
+    "Content-Type",
+    match mime_type.parse(){
+      Ok(v) => v,
+      Err(e) => {
+        eprintln!("Failed to parse mime type: {}", e);
+        "text/plain".parse().unwrap()
+      }
+    }
+  );
   
   response
   

@@ -8,8 +8,8 @@ use crate::handlers::response_500::custom_response_500;
 const ALLOWED_4XX_STATUS_CODES: [StatusCode; 5] = [
   StatusCode::BAD_REQUEST,
   StatusCode::FORBIDDEN,
-  StatusCode::NOT_FOUND,
-  StatusCode::METHOD_NOT_ALLOWED,
+  StatusCode::NOT_FOUND, //managed inside handle_all
+  StatusCode::METHOD_NOT_ALLOWED, //managed inside handle_all
   StatusCode::PAYLOAD_TOO_LARGE,
 ];
 /// return custom 4xx error response.

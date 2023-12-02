@@ -35,6 +35,8 @@ pub fn handle_request(
     },
   };
   
+  println!("REQUEST_SERVER_HOST: {}", request_server_host); //todo: remove dev print
+
   // iterate server configs and the matching one will be used, two variants possible:
   // match serverconfig.server_name + ":" + &serverconfig.ports[x](for each port) == request_server_host
   // match server_config.server_address + ":" + &server_config.ports[x](for each port) == request_server_host
@@ -43,8 +45,11 @@ pub fn handle_request(
     let server_address = config.server_address.to_owned();
     for port in config.ports.clone(){
       let name_port_host = server_name.to_owned() + ":" + &port;
+      // println!("NAME_PORT_HOST: {}", name_port_host); //todo: remove dev print
       let address_port_host = server_address.to_owned() + ":" + &port;
-      if name_port_host == request_server_host || address_port_host == request_server_host{
+      if name_port_host == request_server_host
+      || address_port_host == request_server_host
+      {
         server_config = config.clone();
         break;
       }
@@ -71,6 +76,10 @@ pub fn handle_request(
         request,
         server_config,
       )
+    },
+    ["", "uploads", file_path @ ..] => {
+      //todo :implement the response for uploads case. GET, POST, DELETE
+      dummy_200_response()
     },
     _ => {
       // todo : implement the response for other cases

@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 config = "0.13.3"
 http = "0.2.11"
+mime_guess = "2.0"
 mio = { version = "0.8.9", features = ["net", "os-poll"] }
 serde = "1.0"
 walkdir = "2"
