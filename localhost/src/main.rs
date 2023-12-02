@@ -19,6 +19,8 @@ pub mod handlers{
   pub mod handle_cgi;
   pub mod handle_all;
   pub mod response_;
+  pub mod response_500;
+  pub mod response_4xx;
 }
 
 pub mod files{
@@ -117,7 +119,7 @@ fn main() {
           };
           
           println!("{:#?}", server_configs); //todo: remove this dev print
-          run( zero_path ,server_configs);//todo: looks like need send exe_path to run() to manage the config, cgi, etc folders
+          run( zero_path_buf ,server_configs);//todo: looks like need send exe_path to run() to manage the config, cgi, etc folders
         },
         Err(e) => eprintln!("Failed to convert settings into Vec<ServerConfig>: {}", e),
       }

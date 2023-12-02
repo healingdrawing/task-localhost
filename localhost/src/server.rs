@@ -113,7 +113,7 @@ pub fn get_usize_unique_ports(server_configs: &Vec<ServerConfig>) -> Result<Vec<
 }
 
 /// in exact run the server implementation, after all settings configured properly
-pub fn run(zero_path:String ,server_configs: Vec<ServerConfig>) {
+pub fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
   
   let ports = match get_usize_unique_ports(&server_configs){
     Ok(v) => v,
@@ -228,7 +228,7 @@ pub fn run(zero_path:String ,server_configs: Vec<ServerConfig>) {
         Ok(request) => {
           println!("request: {:?}", request);
           // Handle the request and send a response
-          handle_request(zero_path.clone(), request, &mut stream, server_configs.clone());
+          handle_request(zero_path_buf.clone(), request, &mut stream, server_configs.clone());
         },
         Err(e) => eprintln!("Failed to parse request: {}", e),
       }

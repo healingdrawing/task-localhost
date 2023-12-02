@@ -10,7 +10,7 @@ use crate::stream::write_::write_response_into_stream;
 
 /// just for test
 pub fn handle_request(
-  zero_path: String,
+  zero_path_buf: PathBuf,
   request: Request<Vec<u8>>,
   stream: &mut TcpStream,
   server_configs: Vec<ServerConfig>
@@ -65,7 +65,7 @@ pub fn handle_request(
   let response:Response<Vec<u8>> = match parts.as_slice(){
     ["", "cgi", "useless.py", file_path @ ..] => {
       handle_cgi(
-        zero_path,
+        zero_path_buf,
         "useless.py".to_string(),
         file_path.join(&std::path::MAIN_SEPARATOR.to_string()),
         request,
@@ -74,7 +74,7 @@ pub fn handle_request(
     },
     _ => {
       // todo : implement the response for other cases
-      handle_all( zero_path, request, server_config, )
+      handle_all( zero_path_buf, request, server_config, )
       // dummy_200_response()
     }
   };

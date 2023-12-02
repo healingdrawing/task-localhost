@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use http::{Response, Request};
 
@@ -8,9 +8,10 @@ use crate::{server::ServerConfig, handlers::response_::response_default_static_f
 /// handle all requests, except cgi.
 /// 
 /// Also, in case of uri is directory, the task requires to return default file,
-/// according to server config. So in this case, there is no need to check the method.
+/// according to server config. So in this case, there is no need to check the method,
+/// allowed for route.
 pub fn handle_all(
-  zero_path: String,
+  zero_path_buf: PathBuf,
   request: Request<Vec<u8>>,
   server_config: ServerConfig,
 ) -> Response<Vec<u8>>{
@@ -24,7 +25,7 @@ pub fn handle_all(
   // path to site folder in static folder
   let relative_static_site_path = format!("static/{}/{}", server_config.static_files_prefix, path);
   println!("relative_static_site_path {}", relative_static_site_path);
-  let absolute_path = Path::new(&zero_path).join(relative_static_site_path);
+  let absolute_path = zero_path_buf.join(relative_static_site_path);
   println!("absolute_path {:?}", absolute_path);
   
   let parts: Vec<&str> = path.split('/').collect();
@@ -33,7 +34,7 @@ pub fn handle_all(
   if path.ends_with("/") || absolute_path.is_dir() {
     // return default file in response
     let response = response_default_static_file(
-      absolute_path,
+      zero_path_buf,
       request,
       server_config,
     );

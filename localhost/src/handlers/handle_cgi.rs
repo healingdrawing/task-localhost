@@ -10,7 +10,7 @@ use crate::server::ServerConfig;
 /// 
 /// cgi/useless.py//some/path/here. but in exact this case allow only to check
 pub fn handle_cgi(
-  zero_path: String,
+  zero_path_buf: PathBuf,
   script_file_name: String,
   check_file_path: String,
   request: Request<Vec<u8>>,
@@ -18,7 +18,7 @@ pub fn handle_cgi(
 ) -> Response<Vec<u8>>{
   println!("\n\nhandle_cgi_request: check_file_path: {:?}", check_file_path); //todo: remove dev print
   
-  println!("zero_path: {:?}", zero_path); //todo: remove dev print
+  println!("zero_path_buf: {:?}", zero_path_buf); //todo: remove dev print
 
   let script_path = "cgi/".to_owned() + &script_file_name;
   println!("script_path: {:?}", script_path); //todo: remove dev print
