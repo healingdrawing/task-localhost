@@ -1,6 +1,6 @@
 use std::{fs::{File, OpenOptions}, io::{self, Write}};
 
-pub const DEBUG: bool = true; //set to false to disable debug.txt stuff
+pub const DEBUG: bool = false; //set to false to disable debug.txt stuff
 
 pub const DEBUG_FILE: &str = "debug.txt";
 
