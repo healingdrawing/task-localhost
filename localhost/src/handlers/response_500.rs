@@ -2,11 +2,11 @@ use std::path::PathBuf;
 
 use http::{Response, Request, StatusCode};
 
-use crate::server::ServerConfig;
+use crate::server::core::ServerConfig;
 
 /// last point, if custom error 500 response failed
 fn hardcoded_response_500(
-  request: Request<Vec<u8>>,
+  request: &Request<Vec<u8>>,
 ) -> Response<Vec<u8>>{
   let body = "Hardcoded status 500. Internal Server Error. Custom error 500 response failed. \n\n".as_bytes().to_vec();
   
@@ -29,8 +29,8 @@ fn hardcoded_response_500(
 /// return custom 500 error response.
 /// if error happens, then return hardcoded response with 500 status code
 pub fn custom_response_500(
+  request: &Request<Vec<u8>>,
   zero_path_buf: PathBuf,
-  request: Request<Vec<u8>>,
   server_config: ServerConfig,
 ) -> Response<Vec<u8>>{
   let error_page_path = zero_path_buf.join("static").join(server_config.error_pages_prefix.clone()).join("500.html");

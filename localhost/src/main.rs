@@ -4,14 +4,20 @@ use debug:: {
   create_something_in_uploads_folder
 };
 
-mod server;
-use server::{ServerConfig, run};
+pub mod server{
+  pub mod find;
+  pub mod core;
+  pub mod flow;
+}
+use server::core::ServerConfig;
+use server::flow::run;
 
 pub mod stream{
   pub mod read;
   pub mod parse;
   pub mod write_;
   pub mod write_error;
+  pub mod errors;
 }
 
 pub mod handlers{
@@ -104,7 +110,9 @@ fn main() {
       let server_configs: Result<Vec<ServerConfig>, _> = config.get("servers");
       match server_configs {
         Ok(mut server_configs) =>{ // configuration read successfully
-          
+          // check if at least one server config exists
+          if server_configs.len() == 0{ panic!("No correct server configs"); }
+
           // clean up server_configs
           for sc in server_configs.iter_mut(){sc.check()}
           // check if all required by task files exists

@@ -1,6 +1,6 @@
 use std::{path::Path, f32::consts::E};
 
-use crate::server::ServerConfig;
+use crate::server::core::ServerConfig;
 
 //ok it works
 pub fn dummy_check_file_path(){

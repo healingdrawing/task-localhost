@@ -1,3 +1,4 @@
+use http::StatusCode;
 use mio::{Events, Interest, Poll, Token};
 use mio::net::TcpListener;
 use serde::Deserialize;
@@ -5,112 +6,22 @@ use core::num;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::error::Error;
+use std::io::Write;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::time::Duration;
 
-use crate::stream::read::read_with_timeout;
-use crate::stream::parse::parse_raw_request;
+use crate::handlers::response_4xx::{self, custom_response_4xx};
 use crate::handlers::handle_::handle_request;
 
+use crate::server::core::{get_usize_unique_ports, Server};
+use crate::server::core::ServerConfig;
 
-#[derive(Debug, Deserialize, Clone)]
-pub struct ServerConfig {
-  pub server_name: String,
-  pub ports: Vec<String>,
-  pub server_address: String,
-  pub client_body_size: usize,
-  pub static_files_prefix: String,
-  pub default_file: String,
-  pub error_pages_prefix: String,
-  pub routes: HashMap<String, Vec<String>>,
-}
+use crate::server::find::server_config;
+use crate::stream::read::read_with_timeout;
+use crate::stream::parse::parse_raw_request;
+use crate::stream::write_::write_response_into_stream;
 
-impl ServerConfig {
-  /// drop out all ports not in 0..65535 range, also drop out all repeating of ports
-  pub fn check(&mut self){
-    self.check_ports();
-  }
-  
-  /// drop out all ports not in 0..65535 range, also drop out all repeating of ports
-  fn check_ports(&mut self){
-    let old_ports = self.ports.clone();
-    let mut ports: HashSet<String> = HashSet::new();
-    for port in self.ports.iter(){
-      let port: u16 = match port.parse(){
-        Ok(v) => v,
-        Err(e) =>{
-          eprintln!("Config \"{}\" Failed to parse port: {} into u16", self.server_name, e);
-          continue;
-        }
-      };
-      ports.insert(port.to_string());
-    }
-    self.ports = ports.into_iter().collect();
-    if self.ports.len() != old_ports.len(){
-      eprintln!("=== Config \"{}\" ports changed\nfrom {:?}\n  to {:?}", self.server_name, old_ports, self.ports);
-    }
-    
-  }
-  
-}
-
-// #[derive(Debug, Deserialize, Clone)]
-// pub struct Route {
-//   pub methods: Vec<String>,
-// }
-
-#[derive(Debug)]
-struct Server {
-  listener: TcpListener,
-  token: Token,
-}
-
-/// create token usize from ip:port string
-fn ip_port_to_token(server: &Server) -> Result<usize, String>{
-  let addr = match server.listener.local_addr(){
-    Ok(v) => v.to_string(),
-    Err(e) => return Err(format!("Failed to get local_addr from server.listener: {}", e)),
-  };
-  let mut token_str = String::new();
-  // accumulate token_str from addr chars usize values
-  for c in addr.chars(){
-    let c_str = (c as usize).to_string();
-    token_str.push_str(&c_str);
-  }
-  
-  let token: usize = match token_str.parse(){
-    Ok(v) => v,
-    Err(e) => return Err(format!("Failed to parse token_str: {} into usize: {}", token_str, e)),
-  };
-  
-  Ok(token)
-}
-
-/// get list of unique ports from server_configs, to use listen 0.0.0.0:port
-/// 
-/// and manage pseudo servers, because the task requires redirection
-/// 
-/// if no declared server name in request, so we need to use "default" server
-pub fn get_usize_unique_ports(server_configs: &Vec<ServerConfig>) -> Result<Vec<usize>, Box<dyn Error>>{
-  let mut ports: HashSet<usize> = HashSet::new();
-  for server_config in server_configs.iter(){
-    for port in server_config.ports.iter(){
-      let port: u16 = match port.parse(){
-        Ok(v) => v,
-        Err(e) => return Err(format!("Failed to parse port: {} into u16: {}", port, e).into()),
-      };
-      ports.insert(port as usize);
-    }
-  }
-  let ports: Vec<usize> = ports.into_iter().collect();
-  
-  if ports.len() < 1 {
-    return Err("Not enough correct ports declared in \"settings\" file".into());
-  }
-  
-  Ok(ports)
-}
 
 /// in exact run the server implementation, after all settings configured properly
 pub fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
@@ -202,13 +113,18 @@ pub fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
       
       println!("stream: {:?}", stream); //todo: remove dev print
       
+      //todo: refactor to create buffers here and fill them with read_with_timeout instead of creating buffers in read_with_timeout
+
+      let timeout = Duration::from_millis(5000);
+      let mut headers_buffer: Vec<u8> = Vec::new();
+      let mut body_buffer: Vec<u8> = Vec::new();
+
       // Read the HTTP request from the client
-      let ( headers_buffer, body_buffer) = match
-      read_with_timeout(&mut stream, Duration::from_millis(5000)){
+      match
+      read_with_timeout( timeout, &mut stream, &mut headers_buffer, &mut body_buffer ){
         Ok(v) => v,
         Err(e) => {
           eprintln!("Failed to read from stream: {:?} {}", stream, e);
-          continue;
         }
       };
       
@@ -223,16 +139,63 @@ pub fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
         println!("Raw buffers:\nheaders_buffer:\n=\n{}\n=\nbody_buffer:\n=\n{}\n=", String::from_utf8_lossy(&headers_buffer), String::from_utf8_lossy(&body_buffer));
       }
       
-      // TODO: Parse the HTTP request and handle it appropriately...
-      match parse_raw_request(headers_buffer, body_buffer) {
-        Ok(request) => {
-          println!("request: {:?}", request);
-          // Handle the request and send a response
-          handle_request(zero_path_buf.clone(), request, &mut stream, server_configs.clone());
+      let request = match parse_raw_request(headers_buffer, body_buffer) {
+        Ok(request) => request,
+        Err(e) => {
+          eprintln!("Failed to parse request: {}", e);
+          //todo: send 400 response some way
+          continue;
+        }
+      };
+      println!("request: {:?}", request);
+
+      //todo: implement chose server_config based on request host header
+      let server_config = server_config(&request, server_configs.clone());
+
+      // Handle the request and send a response
+      // handle_request(zero_path_buf.clone(), request, &mut stream, server_configs.clone());
+
+      let response = match handle_request(
+        &request,
+        zero_path_buf.clone(),
+        server_config.clone()
+      ){
+        Ok(v) => v,
+        Err(e) => {
+          eprintln!("Failed to handle request: {}", e);
+          //todo: send 400 response some way
+          custom_response_4xx(
+            &request,
+            StatusCode::BAD_REQUEST,
+            zero_path_buf.clone(),
+            server_config)
+          
+        }
+      };
+      
+      match write_response_into_stream(&mut stream, response){
+        Ok(_) => println!("Response sent"),
+        Err(e) => {
+          eprintln!("Failed to send response: {}", e)
+          //todo: remove the stream from poll registry some way
         },
-        Err(e) => eprintln!("Failed to parse request: {}", e),
       }
       
+      match stream.flush(){
+        Ok(_) => println!("Response flushed"),
+        Err(e) => {
+          eprintln!("Failed to flush response: {}", e)
+          //todo: remove the stream from poll registry some way
+        },
+      };
+      
+      match stream.shutdown(std::net::Shutdown::Both) {
+        Ok(_) => println!("Connection closed successfully"),
+        Err(e) => {
+          eprintln!("Failed to close connection: {}", e)
+          //todo: remove the stream from poll registry some way
+        },
+      }
       
       
     }

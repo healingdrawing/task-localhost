@@ -3,7 +3,7 @@ use std::error::Error;
 
 use walkdir::WalkDir;
 
-use crate::server::ServerConfig;
+use crate::server::core::ServerConfig;
 
 /// add static files to server configs routes, with method GET. Skip already existing routes, so preserve the methods allowed for routes, set in settings.
 pub fn add_static_files_to_server_configs(server_configs: &mut Vec<ServerConfig>) -> Result<(), Box<dyn Error>>{

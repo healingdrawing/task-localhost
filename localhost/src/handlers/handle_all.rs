@@ -1,9 +1,9 @@
 use std::path::{Path, PathBuf};
 
-use http::{Response, Request};
+use http::{Response, Request, StatusCode};
 
 use crate::handlers::response_500::custom_response_500;
-use crate::server::{ServerConfig, self};
+use crate::server::core::{ServerConfig, self};
 use crate::handlers::response_::response_default_static_file;
 use crate::handlers::response_4xx::custom_response_4xx;
 
@@ -15,7 +15,7 @@ use crate::handlers::response_4xx::custom_response_4xx;
 /// allowed for route.
 pub fn handle_all(
   zero_path_buf: PathBuf,
-  request: Request<Vec<u8>>,
+  request: &Request<Vec<u8>>,
   server_config: ServerConfig,
 ) -> Response<Vec<u8>>{
   // todo: refactor path check to os separator instead of hardcoding of / ... probably
@@ -35,7 +35,10 @@ pub fn handle_all(
   if path.ends_with("/") || absolute_path.is_dir() {
     return response_default_static_file( zero_path_buf, request, server_config, );
   } else if !absolute_path.is_file() {
-    return custom_response_500(zero_path_buf, request, server_config)
+    return custom_response_500(
+      request, 
+      zero_path_buf, 
+      server_config)
   } // check if file exists or return 500, because before server start, all files checked, so it is server error. The "uploads" folder managed separately with 404
   
   
@@ -47,9 +50,9 @@ pub fn handle_all(
     Some(v) => {v},
     None => {
        return custom_response_4xx(
+        request,
         http::StatusCode::NOT_FOUND,
         zero_path_buf,
-        request,
         server_config,
        )
     }
@@ -59,9 +62,9 @@ pub fn handle_all(
   let request_method_string = request.method().to_string();
   if !allowed_methods.contains(&request_method_string){
     return custom_response_4xx(
+      request,
       http::StatusCode::METHOD_NOT_ALLOWED,
       zero_path_buf,
-      request,
       server_config,
     )
   }
@@ -71,18 +74,25 @@ pub fn handle_all(
     Ok(v) => v,
     Err(e) => {
       eprintln!("Failed to read file: {}", e); //todo: remove dev print
-      return custom_response_500(zero_path_buf, request, server_config)
+      return custom_response_500(
+        request,
+        zero_path_buf,
+        server_config
+      )
     }
   };
 
   let mut response = match Response::builder()
-  .status(200)
+  .status(StatusCode::OK)
   .body(file_content)
   {
     Ok(v) => v,
     Err(e) => {
       eprintln!("Failed to create response with file: {}", e);
-      return custom_response_500(zero_path_buf, request, server_config)
+      return custom_response_500(
+        request,
+        zero_path_buf,
+        server_config)
     }
   };
 
