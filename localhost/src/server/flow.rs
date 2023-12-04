@@ -119,14 +119,29 @@ pub fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
       let mut headers_buffer: Vec<u8> = Vec::new();
       let mut body_buffer: Vec<u8> = Vec::new();
 
+      // use first server config as default
+      let mut choosen_server_config = server_configs[0].clone();
+
+      println!("=== choosen_server_config: {:?}", choosen_server_config); //todo: remove dev print
+
       // Read the HTTP request from the client
       match
-      read_with_timeout( timeout, &mut stream, &mut headers_buffer, &mut body_buffer ){
+      read_with_timeout(
+        timeout,
+        &mut stream,
+        &mut headers_buffer,
+        &mut body_buffer,
+        &mut choosen_server_config,
+        server_configs.clone()
+      ){
         Ok(v) => v,
         Err(e) => {
           eprintln!("Failed to read from stream: {:?} {}", stream, e);
+          //todo: implement inside read_with_timeout check the error type, to find the client_body_size limit error, which is 413. Add server config inside read_with_timeout. If error is 413, then return custom_response_4xx with 413 status code
         }
       };
+
+      println!("=== updated choosen_server_config: {:?}", choosen_server_config); //todo: remove dev print
       
       println!("Buffer sizes after read: headers_buffer: {}, body_buffer: {}", headers_buffer.len(), body_buffer.len()); //todo: remove dev print
       
