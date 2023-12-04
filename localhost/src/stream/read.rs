@@ -123,7 +123,7 @@ pub fn read_with_timeout(
           
           // Check if the body size is bigger than client_body_size
           if body_size > client_body_size {
-            eprintln!("ERROR: body size is bigger than client_body_size limit");
+            eprintln!("ERROR: body size is bigger than client_body_size limit: {} > {}", body_size, client_body_size);
             return Err(ERROR_413_BODY_SIZE_LIMIT.into());
           }
           
@@ -203,7 +203,7 @@ pub fn read_with_timeout(
           
           // Check if the body size is bigger than client_body_size
           if body_size > client_body_size {
-            eprintln!("ERROR: body size is bigger than client_body_size limit");
+            eprintln!("ERROR: body size is bigger than client_body_size limit: {} > {}", body_size, client_body_size);
             return Err(ERROR_413_BODY_SIZE_LIMIT.into());
           }
           
@@ -274,7 +274,7 @@ pub fn read_with_timeout(
                 
                 // Check if the body size is bigger than client_body_size
                 if body_size > client_body_size {
-                  eprintln!("ERROR: body size is bigger than client_body_size limit");
+                  eprintln!("ERROR: body size is bigger than client_body_size limit: {} > {}", body_size, client_body_size);
                   return Err(ERROR_413_BODY_SIZE_LIMIT.into());
                 }
                 
@@ -417,7 +417,7 @@ pub fn read_with_timeout(
             
             // Check if the body size is bigger than client_body_size
             if body_size > client_body_size {
-              eprintln!("ERROR: body size is bigger than client_body_size limit");
+              eprintln!("ERROR: body size is bigger than client_body_size limit: {} > {}", body_size, client_body_size);
               return Err(ERROR_413_BODY_SIZE_LIMIT.into());
             }
             
