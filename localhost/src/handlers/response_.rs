@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::path::PathBuf;
 
-use http::{Response, Request, StatusCode};
+use http::{Response, Request, StatusCode, response};
 
 use crate::{server::core::ServerConfig, handlers::response_500::custom_response_500};
 use crate::stream::errors::{CUSTOM_ERRORS_400, CUSTOM_ERRORS_413, CUSTOM_ERRORS_500};
@@ -63,6 +63,7 @@ pub fn check_custom_errors(
   request: &Request<Vec<u8>>,
   zero_path_buf: PathBuf,
   server_config: ServerConfig,
+  response: &mut Response<Vec<u8>>,
 ) -> Response<Vec<u8>>{
   
   // check error 400 array

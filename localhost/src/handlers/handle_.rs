@@ -11,8 +11,9 @@ use crate::handlers::handle_all::handle_all;
 pub fn handle_request(
   request: &Request<Vec<u8>>,
   zero_path_buf: PathBuf,
-  server_config: ServerConfig
-) -> Result<Response<Vec<u8>>, Box<dyn std::error::Error>>{
+  server_config: ServerConfig,
+  global_error_string: &mut String,
+) -> Response<Vec<u8>>{
   
   // try to manage the cgi request case strictly and separately,
   // to decrease vulnerability, because cgi is old, unsafe and not recommended to use.
@@ -42,7 +43,7 @@ pub fn handle_request(
     }
   };
   
-  Ok(response)
+  response
 }
 
 /// todo: remove dev gap

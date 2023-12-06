@@ -4,18 +4,25 @@ use std::error::Error;
 use http::{Request, Method, Uri, Version, HeaderMap, HeaderValue, HeaderName};
 
 /// Function to parse a raw HTTP request from a Vec<u8> buffer into an http::Request
-pub fn parse_raw_request(headers_buffer: Vec<u8>, body_buffer: Vec<u8>) -> Result<Request<Vec<u8>>, Box<dyn Error>> {
+pub fn parse_raw_request(
+  headers_buffer: Vec<u8>,
+  body_buffer: Vec<u8>,
+  request: &mut Request<Vec<u8>>,
+  global_error_string: &mut String,
+) {
   
   if headers_buffer.is_empty() {
     eprintln!("parse_raw_request: headers_buffer is empty");
-    return Err(ERROR_400_HEADERS_BUFFER_IS_EMPTY.into());
+    *global_error_string = ERROR_400_HEADERS_BUFFER_IS_EMPTY.to_string();
+    return;
   }
   
   let headers_string = match String::from_utf8(headers_buffer.clone()){
     Ok(v) => v,
     Err(e) => {
       eprintln!("Failed to convert headers_buffer to string:\n {}", e);
-      return Err(ERROR_400_HEADERS_BUFFER_TO_STRING.into())
+      *global_error_string = ERROR_400_HEADERS_BUFFER_TO_STRING.to_string();
+      return;
     }
   };
   
@@ -28,7 +35,8 @@ pub fn parse_raw_request(headers_buffer: Vec<u8>, body_buffer: Vec<u8>) -> Resul
   
   if headers_lines.is_empty() {
     eprintln!("headers_lines is empty");
-    return Err(ERROR_400_HEADERS_LINES_IS_EMPTY.into())
+    *global_error_string = ERROR_400_HEADERS_LINES_IS_EMPTY.to_string();
+    return;
   }
 
   // Initialize a new HeaderMap to store the HTTP headers
@@ -39,7 +47,8 @@ pub fn parse_raw_request(headers_buffer: Vec<u8>, body_buffer: Vec<u8>) -> Resul
     Some(value) => {value.to_string()},
     None => {
       eprintln!("Fail to get request_line");
-      return Err(ERROR_500_INTERNAL_SERVER_ERROR.into())
+      *global_error_string = ERROR_500_INTERNAL_SERVER_ERROR.to_string();
+      return;
     },
   };
   
@@ -47,7 +56,8 @@ pub fn parse_raw_request(headers_buffer: Vec<u8>, body_buffer: Vec<u8>) -> Resul
     Ok(v) => v,
     Err(e) => {
       eprintln!("Failed to parse request_line: {}", e);
-      return Err(ERROR_400_HEADERS_FAILED_TO_PARSE.into())
+      *global_error_string = ERROR_400_HEADERS_FAILED_TO_PARSE.to_string();
+      return;
     }
   };
   
@@ -58,7 +68,8 @@ pub fn parse_raw_request(headers_buffer: Vec<u8>, body_buffer: Vec<u8>) -> Resul
       Some(value) => {value.to_string()},
       None => {
         eprintln!("Fail to get header line");
-        return Err(ERROR_500_INTERNAL_SERVER_ERROR.into())
+        *global_error_string = ERROR_500_INTERNAL_SERVER_ERROR.to_string();
+        return;
       },
     };
     
@@ -70,7 +81,8 @@ pub fn parse_raw_request(headers_buffer: Vec<u8>, body_buffer: Vec<u8>) -> Resul
         Ok(v) => v,
         Err(e) =>{
           eprintln!("Invalid header name: {}\n {}", parts[0], e);
-          return Err(ERROR_400_HEADERS_INVALID_HEADER_NAME.into())
+          *global_error_string = ERROR_400_HEADERS_INVALID_HEADER_NAME.to_string();
+          return;
         },
       };
       // println!("parsed header_name: {}", header_name); //todo: remove dev print
@@ -81,7 +93,8 @@ pub fn parse_raw_request(headers_buffer: Vec<u8>, body_buffer: Vec<u8>) -> Resul
         Ok(v) => headers.insert(header_name, v),
         Err(e) =>{
           eprintln!("Invalid header value: {}\n {}", parts[1], e);
-          return Err(ERROR_400_HEADERS_INVALID_HEADER_VALUE.into())
+          *global_error_string = ERROR_400_HEADERS_INVALID_HEADER_VALUE.to_string();
+          return;
         },
       };
       
@@ -89,7 +102,7 @@ pub fn parse_raw_request(headers_buffer: Vec<u8>, body_buffer: Vec<u8>) -> Resul
   }
   
   // Construct the http::Request object
-  let mut request = match Request::builder()
+  *request = match Request::builder()
   .method(method)
   .uri(uri)
   .version(version)
@@ -97,7 +110,8 @@ pub fn parse_raw_request(headers_buffer: Vec<u8>, body_buffer: Vec<u8>) -> Resul
     Ok(v) => v,
     Err(e) => {
       eprintln!("Failed to construct the http::Request object: {}", e);
-      return Err(ERROR_500_INTERNAL_SERVER_ERROR.into())
+      *global_error_string = ERROR_500_INTERNAL_SERVER_ERROR.to_string();
+      return;
     }
   };
   
@@ -110,14 +124,13 @@ pub fn parse_raw_request(headers_buffer: Vec<u8>, body_buffer: Vec<u8>) -> Resul
       Some(v) => v,
       None => {
         eprintln!("Invalid header name");
-        return Err(ERROR_400_HEADERS_INVALID_HEADER_NAME.into())
+        *global_error_string = ERROR_400_HEADERS_INVALID_HEADER_NAME.to_string();
+        return;
       },
     };
     
     request_headers.append(header_name, value);
   }
-  
-  Ok(request)
   
 }
 

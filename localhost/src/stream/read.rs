@@ -19,7 +19,7 @@ pub fn read_with_timeout(
   server_config: &mut ServerConfig, // nightmare
   server_configs: Vec<ServerConfig>,
   global_error_string: &mut String,
-) -> Result<(), Box<dyn Error>> {
+) {
   println!("INSIDE read_with_timeout"); //todo: remove later
   // Start the timer
   let start_time = Instant::now();
@@ -37,7 +37,7 @@ pub fn read_with_timeout(
     if start_time.elapsed() >= timeout {
       eprintln!("ERROR: headers read timed out");
       *global_error_string = ERROR_400_HEADERS_READ_TIMEOUT.to_string();
-      return Err(ERROR_400_HEADERS_READ_TIMEOUT.into());
+      return;
     }
     
     match stream.read(&mut buf) {
@@ -68,7 +68,7 @@ pub fn read_with_timeout(
         // Other error occurred
         eprintln!("ERROR: reading from stream: {}", e);
         *global_error_string = ERROR_400_HEADERS_READING_STREAM.to_string();
-        return Err(ERROR_400_HEADERS_READING_STREAM.into());
+        return;
       },
     }
     
@@ -110,7 +110,7 @@ pub fn read_with_timeout(
       if start_time.elapsed() >= timeout {
         eprintln!("ERROR: sum chunk size read timed out");
         *global_error_string = ERROR_400_BODY_SUM_CHUNK_SIZE_READ_TIMEOUT.to_string();
-        return Err(ERROR_400_BODY_SUM_CHUNK_SIZE_READ_TIMEOUT.into());
+        return;
       }
       
       // Read from the stream one byte at a time
@@ -124,7 +124,7 @@ pub fn read_with_timeout(
           if body_size > client_body_size {
             eprintln!("ERROR: body size is bigger than client_body_size limit: {} > {}", body_size, client_body_size);
             *global_error_string = ERROR_413_BODY_SIZE_LIMIT.to_string();
-            return Err(ERROR_413_BODY_SIZE_LIMIT.into());
+            return;
           }
           
           // println!("attempt to read {} bytes from stream", n);
@@ -144,7 +144,7 @@ pub fn read_with_timeout(
         Err(e) => { // Other error occurred
           eprintln!("ERROR: reading sum chunk size from stream: {}", e);
           *global_error_string = ERROR_400_BODY_SUM_CHUNK_SIZE_READING_STREAM.to_string();
-          return Err(ERROR_400_BODY_SUM_CHUNK_SIZE_READING_STREAM.into());
+          return;
         },
       }
       
@@ -158,7 +158,7 @@ pub fn read_with_timeout(
           Err(e) =>{
             eprintln!("Failed to parse sum_chunk_size_str: {}\n {}", sum_chunk_size_str, e);
             *global_error_string = ERROR_400_BODY_SUM_CHUNK_SIZE_PARSE.to_string();
-            return Err(ERROR_400_BODY_SUM_CHUNK_SIZE_PARSE.into())
+            return;
           }
         };
         println!("sum chunk_size: {}", sum_chunk_size); //todo: remove later
@@ -168,7 +168,7 @@ pub fn read_with_timeout(
         {
           eprintln!("Error: chunked body with zero sum chunk size");
           *global_error_string = ERROR_400_BODY_CHUNKED_BUT_ZERO_SUM_CHUNK_SIZE.to_string();
-          return Err(ERROR_400_BODY_CHUNKED_BUT_ZERO_SUM_CHUNK_SIZE.into());
+          return;
         }
         break;
         
@@ -191,7 +191,7 @@ pub fn read_with_timeout(
       if start_time.elapsed() >= timeout {
         eprintln!("chunk size read timed out");
         *global_error_string = ERROR_400_BODY_CHUNK_SIZE_READ_TIMEOUT.to_string();
-        return Err(ERROR_400_BODY_CHUNK_SIZE_READ_TIMEOUT.into())
+        return;
       }
       
       // Read from the stream one byte at a time
@@ -209,7 +209,7 @@ pub fn read_with_timeout(
           if body_size > client_body_size {
             eprintln!("ERROR: body size is bigger than client_body_size limit: {} > {}", body_size, client_body_size);
             *global_error_string = ERROR_413_BODY_SIZE_LIMIT.to_string();
-            return Err(ERROR_413_BODY_SIZE_LIMIT.into());
+            return;
           }
           
           // Successfully read n bytes from stream
@@ -233,7 +233,7 @@ pub fn read_with_timeout(
           // Other error occurred
           eprintln!("ERROR: reading chunk size from stream: {}", e);
           *global_error_string = ERROR_400_BODY_CHUNK_SIZE_READING_STREAM.to_string();
-          return Err(ERROR_400_BODY_CHUNK_SIZE_READING_STREAM.into());
+          return;
         },
       }
       
@@ -248,7 +248,7 @@ pub fn read_with_timeout(
           Err(e) =>{
             eprintln!("ERROR: Failed to parse chunk_size_str: {}\n {}", chunk_size_str, e);
             *global_error_string = ERROR_400_BODY_CHUNK_SIZE_PARSE.to_string();
-            return Err(ERROR_400_BODY_CHUNK_SIZE_PARSE.into())
+            return;
           }
         };
         println!("chunk_size: {}", chunk_size); //todo: remove later
@@ -266,7 +266,7 @@ pub fn read_with_timeout(
             if start_time.elapsed() >= timeout {
               println!("ERROR: chunk body read timed out"); //todo: remove later
               *global_error_string = ERROR_400_BODY_CHUNK_READ_TIMEOUT.to_string();
-              return Err(ERROR_400_BODY_CHUNK_READ_TIMEOUT.into());
+              return;
             }
             
             // Read from the stream one byte at a time
@@ -284,7 +284,7 @@ pub fn read_with_timeout(
                 if body_size > client_body_size {
                   eprintln!("ERROR: body size is bigger than client_body_size limit: {} > {}", body_size, client_body_size);
                   *global_error_string = ERROR_413_BODY_SIZE_LIMIT.to_string();
-                  return Err(ERROR_413_BODY_SIZE_LIMIT.into());
+                  return;
                 }
                 
                 // Successfully read n bytes from stream
@@ -308,7 +308,7 @@ pub fn read_with_timeout(
                 // Other error occurred
                 eprintln!("ERROR: reading chunk from stream: {}", e);
                 *global_error_string = ERROR_400_BODY_CHUNK_READING_STREAM.to_string();
-                return Err(ERROR_400_BODY_CHUNK_READING_STREAM.into());
+                return;
               },
             }
             
@@ -338,7 +338,7 @@ pub fn read_with_timeout(
               
               eprintln!("ERROR: chunk is bigger than chunk_size");
               *global_error_string = ERROR_400_BODY_CHUNK_IS_BIGGER_THAN_CHUNK_SIZE.to_string();
-              return Err(ERROR_400_BODY_CHUNK_IS_BIGGER_THAN_CHUNK_SIZE.into());
+              return;
             }
             
           }
@@ -358,7 +358,7 @@ pub fn read_with_timeout(
     // it will be x5 times shorter than the timeout incoming parameter.
     
     println!("THE REQUEST IS UNCHUNKED: is_chunked {}", is_chunked); //todo: remove later
-
+    
     // todo: implement the check that buffer lentgh  is equal to Content-Length header value, then break the loop, to prevent timeout
     
     let dirty_timeout = timeout / 5;
@@ -387,94 +387,94 @@ pub fn read_with_timeout(
         Err(e) => {
           eprintln!("ERROR: Failed to parse content_length_str: {}\n {}", content_length_str, e);
           *global_error_string = ERROR_400_HEADERS_FAILED_TO_PARSE.to_string();
-          return Err(ERROR_400_HEADERS_FAILED_TO_PARSE.into())}
+          return;
         }
-      };
-      
-      loop{
-        // check the body_buffer length
-        if content_length > 0{
-          if body_buffer.len() == content_length{
-            println!("body_buffer.len() == content_length. mission complete"); //todo: remove later
-            break;
-          } else if body_buffer.len() > content_length{
-            eprintln!("ERROR: body_buffer.len() > content_length");
-            *global_error_string = ERROR_400_BODY_BUFFER_LENGHT_IS_BIGGER_THAN_CONTENT_LENGTH.to_string();
-            return Err(ERROR_400_BODY_BUFFER_LENGHT_IS_BIGGER_THAN_CONTENT_LENGTH.into());
-          }
-        }
-        
-        // Check if the timeout has expired
-        if start_time.elapsed() >= timeout {
-          println!("ERROR: body read timed out");
-          *global_error_string = ERROR_400_BODY_READ_TIMEOUT.to_string();
-          return Err(ERROR_400_BODY_READ_TIMEOUT.into());
-        }
-        
-        if content_length_header_not_found // potentilal case of dirty body
-        && dirty_start_time.elapsed() >= dirty_timeout
-        {
-          if body_buffer.len() == 0{
-            break; // let is say that there is no body in this case, so continue
-          } else {
-            eprintln!("ERROR: dirty body read timed out.\n = File: {}, Line: {}, Column: {}", file!(), line!(), column!()); //todo: remove later
-            *global_error_string = ERROR_400_DIRTY_BODY_READ_TIMEOUT.to_string();
-            return Err(ERROR_400_DIRTY_BODY_READ_TIMEOUT.into());
-          }
-        }
-        
-        // Read from the stream one byte at a time
-        match stream.read(&mut buf) {
-          Ok(0) => {
-            // EOF reached
-            println!("read EOF reached");
-            break;
-          },
-          Ok(n) => {
-            
-            body_size += n;
-            
-            // Check if the body size is bigger than client_body_size
-            if body_size > client_body_size {
-              eprintln!("ERROR: body size is bigger than client_body_size limit: {} > {}", body_size, client_body_size);
-              *global_error_string = ERROR_413_BODY_SIZE_LIMIT.to_string();
-              return Err(ERROR_413_BODY_SIZE_LIMIT.into());
-            }
-            
-            // Successfully read n bytes from stream
-            // println!("attempt to read {} bytes from stream", n); //todo: remove later
-            body_buffer.extend_from_slice(&buf[..n]);
-            // println!("after read buffer size: {}", body_buffer.len());
-            // println!("after read buffer: {:?}", body_buffer);
-            // println!("after read buffer to string: {:?}", String::from_utf8(body_buffer.clone()));
-            // Check if the end of the stream has been reached
-            if n < buf.len() {
-              println!("read EOF reached relatively, because buffer not full after read");
-              break;
-            }
-          },
-          Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
-            // Stream is not ready yet, try again later
-            // this fires also when stream is read to the end. Fixed above
-            // append_to_file("= BANG! this crap happens...read would block");
-            // append_to_file(&e.to_string());
-            continue;
-          },
-          Err(e) => {
-            // Other error occurred
-            eprintln!("ERROR: reading from stream: {}", e);
-            *global_error_string = ERROR_400_BODY_READING_STREAM.to_string();
-            return Err(ERROR_400_BODY_READING_STREAM.into());
-          },
-        }
-        
       }
+    };
+    
+    loop{
+      // check the body_buffer length
+      if content_length > 0{
+        if body_buffer.len() == content_length{
+          println!("body_buffer.len() == content_length. mission complete"); //todo: remove later
+          break;
+        } else if body_buffer.len() > content_length{
+          eprintln!("ERROR: body_buffer.len() > content_length");
+          *global_error_string = ERROR_400_BODY_BUFFER_LENGHT_IS_BIGGER_THAN_CONTENT_LENGTH.to_string();
+          return;
+        }
+      }
+      
+      // Check if the timeout has expired
+      if start_time.elapsed() >= timeout {
+        println!("ERROR: body read timed out");
+        *global_error_string = ERROR_400_BODY_READ_TIMEOUT.to_string();
+        return;
+      }
+      
+      if content_length_header_not_found // potentilal case of dirty body
+      && dirty_start_time.elapsed() >= dirty_timeout
+      {
+        if body_buffer.len() == 0{
+          break; // let is say that there is no body in this case, so continue
+        } else {
+          eprintln!("ERROR: dirty body read timed out.\n = File: {}, Line: {}, Column: {}", file!(), line!(), column!()); //todo: remove later
+          *global_error_string = ERROR_400_DIRTY_BODY_READ_TIMEOUT.to_string();
+          return;
+        }
+      }
+      
+      // Read from the stream one byte at a time
+      match stream.read(&mut buf) {
+        Ok(0) => {
+          // EOF reached
+          println!("read EOF reached");
+          break;
+        },
+        Ok(n) => {
+          
+          body_size += n;
+          
+          // Check if the body size is bigger than client_body_size
+          if body_size > client_body_size {
+            eprintln!("ERROR: body size is bigger than client_body_size limit: {} > {}", body_size, client_body_size);
+            *global_error_string = ERROR_413_BODY_SIZE_LIMIT.to_string();
+            return;
+          }
+          
+          // Successfully read n bytes from stream
+          // println!("attempt to read {} bytes from stream", n); //todo: remove later
+          body_buffer.extend_from_slice(&buf[..n]);
+          // println!("after read buffer size: {}", body_buffer.len());
+          // println!("after read buffer: {:?}", body_buffer);
+          // println!("after read buffer to string: {:?}", String::from_utf8(body_buffer.clone()));
+          // Check if the end of the stream has been reached
+          if n < buf.len() {
+            println!("read EOF reached relatively, because buffer not full after read");
+            break;
+          }
+        },
+        Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+          // Stream is not ready yet, try again later
+          // this fires also when stream is read to the end. Fixed above
+          // append_to_file("= BANG! this crap happens...read would block");
+          // append_to_file(&e.to_string());
+          continue;
+        },
+        Err(e) => {
+          // Other error occurred
+          eprintln!("ERROR: reading from stream: {}", e);
+          *global_error_string = ERROR_400_BODY_READING_STREAM.to_string();
+          return;
+        },
+      }
+      
     }
-    
-    println!("read {} bytes from stream", body_buffer.len()); //todo: remove dev print
-    println!("Raw incoming buffer to string: {:?}", String::from_utf8(body_buffer.clone()));
-    
-    Ok(())
   }
   
+  println!("read {} bytes from stream", body_buffer.len()); //todo: remove dev print
+  println!("Raw incoming buffer to string: {:?}", String::from_utf8(body_buffer.clone()));
   
+  
+}
+

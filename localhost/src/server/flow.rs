@@ -124,10 +124,8 @@ pub fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
       println!("=== choosen_server_config: {:?}", choosen_server_config); //todo: remove dev print
       
       let mut response:Response<Vec<u8>> = Response::new(Vec::new());
-      let mut read_is_ok = false;
       
       // Read the HTTP request from the client
-      match
       read_with_timeout(
         timeout,
         &mut stream,
@@ -136,107 +134,77 @@ pub fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
         &mut choosen_server_config,
         server_configs.clone(),
         &mut global_error_string,
-      ){
-        Ok(v) => {
-          read_is_ok = true;
-          v
-        },
-        Err(e) => {
-          
-          eprintln!("ERROR: Failed to read from stream: {:?} {}", stream, e);
-          //todo: manage errors here. here is no request at the moment, so use gap,and expect potential error 400 response, or 500 in worst case
-          
-          let mut gap_request = Request::new(Vec::new());
-          gap_request = match parse_raw_request(headers_buffer.clone(), body_buffer.clone()) {
-            Ok(request) => request,
-            Err(e) => {
-              eprintln!("ERROR: Failed to parse request, in case of read_with_timeout failed: {}", e);
-              gap_request
-            }
-          };
-          
-          response = check_custom_errors(
-            e.to_string(),
-            &gap_request,
-            zero_path_buf.clone(),
-            choosen_server_config.clone());
-          }
-          
-        };
+      );
+      
+      println!("=== updated choosen_server_config:\n{:?}", choosen_server_config); //todo: remove dev print
+      
+      println!("Buffer sizes after read: headers_buffer: {}, body_buffer: {}", headers_buffer.len(), body_buffer.len()); //todo: remove dev print
+      
+      if headers_buffer.is_empty() {
+        println!("NO DATA RECEIVED, empty headres_buffer");
+      }else if body_buffer.is_empty() {
+        println!("NO DATA RECEIVED, empty body_buffer");
+      }else{
+        println!("buffers are not empty"); //todo: remove dev print
+        println!("Raw buffers:\nheaders_buffer:\n=\n{}\n=\nbody_buffer:\n=\n{}\n=", String::from_utf8_lossy(&headers_buffer), String::from_utf8_lossy(&body_buffer));
+      }
+      
+      let mut request = Request::new(Vec::new());
+
+      if global_error_string == ERROR_200_OK.to_string() {
         
-        println!("=== updated choosen_server_config:\n{:?}", choosen_server_config); //todo: remove dev print
+        parse_raw_request(
+          headers_buffer,
+          body_buffer,
+          &mut request,
+          &mut global_error_string,
+        );
+        println!("request: {:?}", request); //todo: remove dev print
         
-        println!("Buffer sizes after read: headers_buffer: {}, body_buffer: {}", headers_buffer.len(), body_buffer.len()); //todo: remove dev print
+        // let server_config = server_config(&request, server_configs.clone());
         
-        if headers_buffer.is_empty() {
-          println!("NO DATA RECEIVED, empty headres_buffer");
-        }else if body_buffer.is_empty() {
-          println!("NO DATA RECEIVED, empty body_buffer");
-        }else{
-          println!("buffers are not empty"); //todo: remove dev print
-          println!("Raw buffers:\nheaders_buffer:\n=\n{}\n=\nbody_buffer:\n=\n{}\n=", String::from_utf8_lossy(&headers_buffer), String::from_utf8_lossy(&body_buffer));
-        }
-        
-        if read_is_ok {
-          
-          let request = match parse_raw_request(headers_buffer, body_buffer) {
-            Ok(request) => request,
-            Err(e) => {
-              eprintln!("ERROR: Failed to parse request: {}", e);
-              //todo: send 400 response some way
-              continue;
-            }
-          };
-          println!("request: {:?}", request); //todo: remove dev print
-          
-          // let server_config = server_config(&request, server_configs.clone());
-          
-          response = match handle_request(
-            &request,
-            zero_path_buf.clone(),
-            choosen_server_config.clone()
-          ){
-            Ok(v) => v,
-            Err(e) => {
-              eprintln!("Failed to handle request: {}", e);
-              custom_response_4xx(
-                &request,
-                zero_path_buf.clone(),
-                choosen_server_config.clone(),
-                StatusCode::BAD_REQUEST,
-              )
-              
-            }
-          };
-          
-        }
-        
-        match write_response_into_stream(&mut stream, response){
-          Ok(_) => println!("Response sent"),
-          Err(e) => {
-            eprintln!("Failed to send response: {}", e)
-            //todo: remove the stream from poll registry some way
-          },
-        }
-        
-        match stream.flush(){
-          Ok(_) => println!("Response flushed"),
-          Err(e) => {
-            eprintln!("Failed to flush response: {}", e)
-            //todo: remove the stream from poll registry some way
-          },
-        };
-        
-        match stream.shutdown(std::net::Shutdown::Both) {
-          Ok(_) => println!("Connection closed successfully"),
-          Err(e) => {
-            eprintln!("Failed to close connection: {}", e)
-            //todo: remove the stream from poll registry some way
-          },
-        }
-        
+        response = handle_request(
+          &request,
+          zero_path_buf.clone(),
+          choosen_server_config.clone(),
+          &mut global_error_string,
+        );
         
       }
+
+      check_custom_errors(
+        global_error_string,
+        &request,
+        zero_path_buf.clone(),
+        choosen_server_config.clone(),
+        &mut response,
+      );
+      
+      match write_response_into_stream(&mut stream, response){
+        Ok(_) => println!("Response sent"),
+        Err(e) => {
+          eprintln!("Failed to send response: {}", e)
+          //todo: remove the stream from poll registry some way
+        },
+      }
+      
+      match stream.flush(){
+        Ok(_) => println!("Response flushed"),
+        Err(e) => {
+          eprintln!("Failed to flush response: {}", e)
+          //todo: remove the stream from poll registry some way
+        },
+      };
+      
+      match stream.shutdown(std::net::Shutdown::Both) {
+        Ok(_) => println!("Connection closed successfully"),
+        Err(e) => {
+          eprintln!("Failed to close connection: {}", e)
+          //todo: remove the stream from poll registry some way
+        },
+      }
+      
     }
-    
   }
+  
+}
