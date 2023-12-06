@@ -1,7 +1,6 @@
-use std::error::Error;
 use std::path::PathBuf;
 
-use http::{Response, Request, StatusCode, response};
+use http::{Response, Request, StatusCode};
 
 use crate::{server::core::ServerConfig, handlers::response_500::custom_response_500};
 use crate::stream::errors::{CUSTOM_ERRORS_400, CUSTOM_ERRORS_413, CUSTOM_ERRORS_500, ERROR_200_OK};
@@ -37,6 +36,7 @@ pub fn response_default_static_file(
   
   let mut response = match Response::builder()
   .status(StatusCode::OK)
+  .header("Content-Type", "text/html")
   .body(default_file_content)
   {
     Ok(v) => v,
@@ -50,12 +50,8 @@ pub fn response_default_static_file(
     }
   };
   
-  response.headers_mut().insert("Content-Type", "text/html".parse().unwrap());
-  
   response
 }
-
-//todo: implement check error and return response respectivelly, based on arrays of custom errors in errors.rs
 
 /// check error and return response respectivelly, based on arrays of custom errors in errors.rs
 pub fn check_custom_errors(
@@ -93,7 +89,6 @@ pub fn check_custom_errors(
     }
     
     // check error 500. Actually it can be just return custom_response_500, without check. No difference at the moment
-    println!("UPPER LEVEL check error 500. CHECK CUSTOM ERRORS. RESPONSE_.RS");
     for error in CUSTOM_ERRORS_500.iter(){
       if custom_error_string == *error{
         *response = custom_response_500(

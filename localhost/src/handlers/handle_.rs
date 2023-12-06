@@ -7,12 +7,12 @@ use crate::handlers::handle_all::handle_all;
 
 /// handle all requests.
 /// The cgi requests are handled like separated match case.
-/// The uploads requests are handled separated match case.
+/// The uploads requests are handled separated match case. //todo: implement uploads
 pub fn handle_request(
   request: &Request<Vec<u8>>,
   zero_path_buf: PathBuf,
   server_config: ServerConfig,
-  global_error_string: &mut String,
+  global_error_string: &mut String, //at the moment not mutated here
 ) -> Response<Vec<u8>>{
   
   // try to manage the cgi request case strictly and separately,

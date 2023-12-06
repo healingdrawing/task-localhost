@@ -1,14 +1,14 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use http::{Response, Request, StatusCode};
 
 use crate::handlers::response_500::custom_response_500;
-use crate::server::core::{ServerConfig, self};
+use crate::server::core::ServerConfig;
 use crate::handlers::response_::response_default_static_file;
 use crate::handlers::response_4xx::custom_response_4xx;
 
 
-/// handle all requests, except cgi.
+/// handle all requests, except cgi, and except uploads.
 /// 
 /// Also, in case of uri is directory, the task requires to return default file,
 /// according to server config. So in this case, there is no need to check the method,

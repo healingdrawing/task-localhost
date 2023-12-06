@@ -1,4 +1,3 @@
-
 use std::str;
 use std::error::Error;
 use http::{Request, Method, Uri, Version, HeaderMap, HeaderValue, HeaderName};

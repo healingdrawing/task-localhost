@@ -51,8 +51,8 @@ pub fn custom_response_4xx(
     }
   };
 
-  let print_error_page_content = std::str::from_utf8(&error_page_content).unwrap(); //todo: remove dev print
-  println!("\n\nerror_page_content {:?}", print_error_page_content); //todo: remove dev print
+  // let print_error_page_content = std::str::from_utf8(&error_page_content).unwrap(); //todo: remove dev print. it is unsafe
+  // println!("\n\nerror_page_content {:?}", print_error_page_content); //todo: remove dev print
 
   let mut response = match Response::builder()
   .status(status_code)
@@ -69,9 +69,7 @@ pub fn custom_response_4xx(
       )
     }
   };
-
-  response.headers_mut().insert("Content-Type", "text/html".parse().unwrap());
-
+  
   response
 
 }

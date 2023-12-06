@@ -6,7 +6,7 @@ use crate::server::core::ServerConfig;
 
 /// last point, if custom error 500 response failed
 fn hardcoded_response_500(
-  request: &Request<Vec<u8>>,
+  request: &Request<Vec<u8>>, //probably for cookies stuff
 ) -> Response<Vec<u8>>{
 
   println!("\n\nhardcoded_response_500"); //todo: remove dev print
@@ -25,9 +25,8 @@ fn hardcoded_response_500(
     }
   };
   
-  // response.headers_mut().insert("Content-Type", "text/plain".parse().unwrap());
-  
   response
+
 }
 
 /// return custom 500 error response.
@@ -55,7 +54,7 @@ pub fn custom_response_500(
   let print_error_page_content = std::str::from_utf8(&error_page_content).unwrap(); //todo: remove dev print
   println!("\n\nerror_page_content {:?}", print_error_page_content); //todo: remove dev print
   
-  let mut response = match Response::builder()
+  let response = match Response::builder()
   .status(StatusCode::INTERNAL_SERVER_ERROR)
   .header("Content-Type", "text/html")
   .body(error_page_content)
@@ -66,8 +65,6 @@ pub fn custom_response_500(
       return hardcoded_response_500(request)
     }
   };
-
-  // response.headers_mut().insert("Content-Type", "text/html".parse().unwrap());
 
   response
 }

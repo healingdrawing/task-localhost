@@ -1,21 +1,9 @@
-use http::StatusCode;
-use mio::{Events, Interest, Poll, Token};
+use mio::Token;
 use mio::net::TcpListener;
 use serde::Deserialize;
-use core::num;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::error::Error;
-use std::io::Write;
-use std::net::SocketAddr;
-use std::path::PathBuf;
-use std::time::Duration;
-
-use crate::handlers::response_4xx::{self, custom_response_4xx};
-use crate::stream::read::read_with_timeout;
-use crate::stream::parse::parse_raw_request;
-use crate::handlers::handle_::handle_request;
-use crate::stream::write_::write_response_into_stream;
 
 
 #[derive(Debug, Deserialize, Clone)]
@@ -59,36 +47,10 @@ impl ServerConfig {
   
 }
 
-// #[derive(Debug, Deserialize, Clone)]
-// pub struct Route {
-//   pub methods: Vec<String>,
-// }
-
 #[derive(Debug)]
 pub struct Server {
   pub listener: TcpListener,
   pub token: Token,
-}
-
-/// create token usize from ip:port string
-fn ip_port_to_token(server: &Server) -> Result<usize, String>{
-  let addr = match server.listener.local_addr(){
-    Ok(v) => v.to_string(),
-    Err(e) => return Err(format!("Failed to get local_addr from server.listener: {}", e)),
-  };
-  let mut token_str = String::new();
-  // accumulate token_str from addr chars usize values
-  for c in addr.chars(){
-    let c_str = (c as usize).to_string();
-    token_str.push_str(&c_str);
-  }
-  
-  let token: usize = match token_str.parse(){
-    Ok(v) => v,
-    Err(e) => return Err(format!("Failed to parse token_str: {} into usize: {}", token_str, e)),
-  };
-  
-  Ok(token)
 }
 
 /// get list of unique ports from server_configs, to use listen 0.0.0.0:port
@@ -114,4 +76,5 @@ pub fn get_usize_unique_ports(server_configs: &Vec<ServerConfig>) -> Result<Vec<
   }
   
   Ok(ports)
+  
 }

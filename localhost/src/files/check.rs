@@ -1,4 +1,4 @@
-use std::{path::Path, f32::consts::E};
+use std::path::Path;
 
 use crate::server::core::ServerConfig;
 
@@ -12,8 +12,9 @@ pub fn dummy_check_file_path(){
    }
 }
 
-//todo: implement the function to check the file by relative path in time of server configuration check, before run the server. Should be used to prevent run without required files described in config etc. Later after server run, if some files will be removed, server , according to task requirements must continue to work. To implement this, the emergency server error 500 page must be hardcoded into executable, and the server must be able to serve it without any files.
-
+/// relative path from executable folder/level
+/// 
+/// named file_exists , but it checks path, not only files. But used only for files.
 pub fn file_exists(path: &str) -> bool{
   let path = Path::new(path);
     if path.exists() {

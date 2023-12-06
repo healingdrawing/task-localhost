@@ -33,13 +33,10 @@ pub mod files{
   pub mod add_static;
   pub mod check;
 }
-use files::check::dummy_check_file_path;
 
 use std::{env, path::PathBuf};
 use std::error::Error;
-use config::{ConfigError, File, FileFormat};
-
-use std::process::{Command, Stdio};
+use config::{File, FileFormat};
 
 use crate::files::add_static::add_static_files_to_server_configs;
 use crate::files::check::all_files_exists;
@@ -61,8 +58,6 @@ pub fn get_zero_path() -> Result<PathBuf, Box<dyn Error>>{
 
 fn main() {
   println!("Hello, world!");
-  
-  dummy_check_file_path(); //todo: remove this dev print
   
   match create_something_in_uploads_folder(){
     Ok(_) => println!("\"something\" created in uploads folder"),
@@ -127,7 +122,7 @@ fn main() {
           };
           
           println!("{:#?}", server_configs); //todo: remove this dev print
-          run( zero_path_buf ,server_configs);//todo: looks like need send exe_path to run() to manage the config, cgi, etc folders
+          run( zero_path_buf ,server_configs);
         },
         Err(e) => eprintln!("Failed to convert settings into Vec<ServerConfig>: {}", e),
       }

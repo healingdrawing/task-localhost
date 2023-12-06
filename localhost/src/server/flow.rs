@@ -1,14 +1,12 @@
-use http::{StatusCode, Response, Request};
+use http::{Response, Request};
 use mio::{Events, Interest, Poll, Token};
 use mio::net::TcpListener;
-use std::error::Error;
 use std::io::Write;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::time::Duration;
 
 use crate::handlers::response_::check_custom_errors;
-use crate::handlers::response_4xx::{self, custom_response_4xx};
 use crate::handlers::handle_::handle_request;
 
 use crate::server::core::{get_usize_unique_ports, Server};
@@ -86,7 +84,7 @@ pub fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
     
     for event in events.iter() {
       
-      println!("event: {:?}", event);
+      println!("event: {:?}", event); //todo: remove dev print
       
       let token = event.token();
       
@@ -99,7 +97,7 @@ pub fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
         }
       };
       
-      println!("server: {:?}", server);
+      println!("server: {:?}", server); //todo: remove dev print
       
       // Accept the incoming connection
       let (mut stream, _) = match server.listener.accept(){
@@ -138,7 +136,7 @@ pub fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
       
       // println!("=== updated choosen_server_config:\n{:?}", choosen_server_config); //todo: remove dev print
       
-      println!("Buffer sizes after read: headers_buffer: {}, body_buffer: {}", headers_buffer.len(), body_buffer.len()); //todo: remove dev print
+      // println!("Buffer sizes after read: headers_buffer: {}, body_buffer: {}", headers_buffer.len(), body_buffer.len()); //todo: remove dev print
       
       if headers_buffer.is_empty() {
         println!("NO DATA RECEIVED, empty headres_buffer");

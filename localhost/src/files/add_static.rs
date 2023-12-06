@@ -42,18 +42,8 @@ pub fn add_static_files_to_server_configs(server_configs: &mut Vec<ServerConfig>
       
       routes.insert(key, value);
       
-      // get the file name
-      let file_name = match relative_file_path.file_name(){
-        Some(v) => v,
-        None => continue,
-      };
-      // get the file name as string
-      let file_name = match file_name.to_str(){
-        Some(v) => v,
-        None => continue,
-      };
       
-      // println!("static file: {}", file_name);
+      // let file_name = relative_file_path.file_name()
       
     }
     

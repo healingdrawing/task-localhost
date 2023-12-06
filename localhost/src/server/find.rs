@@ -1,17 +1,8 @@
-use http::{Request, Response, StatusCode, HeaderMap, HeaderName, HeaderValue};
-use mio::net::TcpStream;
-use std::io:: Write;
-use std::path::PathBuf;
-use std::error::Error;
-
-use crate::server;
+use http::{Request, HeaderMap, HeaderName, HeaderValue};
 use crate::server::core::ServerConfig;
-use crate::handlers::handle_cgi::handle_cgi;
-use crate::handlers::handle_all::handle_all;
-use crate::stream::errors::{ERROR_400_HEADERS_BUFFER_IS_EMPTY, ERROR_400_HEADERS_FAILED_TO_PARSE, ERROR_400_HEADERS_BUFFER_TO_STRING, ERROR_500_INTERNAL_SERVER_ERROR, ERROR_400_HEADERS_INVALID_HEADER_NAME, ERROR_400_HEADERS_INVALID_HEADER_VALUE, ERROR_400_HEADERS_LINES_IS_EMPTY};
 use crate::stream::parse::parse_request_line;
-use crate::stream::write_::write_response_into_stream;
 
+/// at the moment not used
 pub fn server_config(
   request: &Request<Vec<u8>>,
   server_configs: Vec<ServerConfig>
@@ -172,7 +163,7 @@ pub fn server_config_from_headers_buffer_or_use_default(
     let header_name = match key {
       Some(v) => v,
       None => {
-        eprintln!("Invalid header name");
+        eprintln!("Invalid header name"); //todo: it looks weird, data must be valid
         return server_config
       },
     };
@@ -182,7 +173,8 @@ pub fn server_config_from_headers_buffer_or_use_default(
 
   // choose the server config, based on the server_name and port pair of the request,
   // or use "default" , as task requires
-  let mut server_config = server_configs[0].clone(); // default server config
+  
+  server_config = server_configs[0].clone(); // default server config
   let request_server_host  = match request.headers().get("host"){
     Some(value) => {
       match value.to_str(){

@@ -1,9 +1,7 @@
-use std::error::Error;
 use std::time::{Instant, Duration};
 use std::io::{self, Read};
 use mio::net::TcpStream;
 
-use crate::debug::append_to_file;
 use crate::server::core::ServerConfig;
 use crate::server::find::server_config_from_headers_buffer_or_use_default;
 use crate::stream::errors::{ERROR_400_HEADERS_READ_TIMEOUT, ERROR_400_HEADERS_READING_STREAM, ERROR_400_BODY_SUM_CHUNK_SIZE_READ_TIMEOUT, ERROR_400_BODY_SUM_CHUNK_SIZE_READING_STREAM, ERROR_400_BODY_SUM_CHUNK_SIZE_PARSE, ERROR_400_BODY_CHUNKED_BUT_ZERO_SUM_CHUNK_SIZE, ERROR_400_BODY_CHUNK_SIZE_READ_TIMEOUT, ERROR_400_BODY_CHUNK_SIZE_READING_STREAM, ERROR_400_BODY_CHUNK_SIZE_PARSE, ERROR_400_BODY_CHUNK_READ_TIMEOUT, ERROR_400_BODY_CHUNK_READING_STREAM, ERROR_400_BODY_CHUNK_IS_BIGGER_THAN_CHUNK_SIZE, ERROR_400_HEADERS_FAILED_TO_PARSE, ERROR_400_BODY_BUFFER_LENGHT_IS_BIGGER_THAN_CONTENT_LENGTH, ERROR_400_BODY_READ_TIMEOUT, ERROR_400_DIRTY_BODY_READ_TIMEOUT, ERROR_400_BODY_READING_STREAM, ERROR_413_BODY_SIZE_LIMIT};
@@ -23,7 +21,6 @@ pub fn read_with_timeout(
   println!("\nINSIDE read_with_timeout"); //todo: remove later
   // Start the timer
   let start_time = Instant::now();
-  // println!("start_time: {:?}", start_time); //todo: remove later
   
   // Read from the stream until timeout or EOF
   let mut buf = [0; 1];
@@ -94,7 +91,12 @@ pub fn read_with_timeout(
   let client_body_size = server_config.client_body_size;
   let mut body_size = 0_usize;
   
-  let is_chunked = String::from_utf8_lossy(&headers_buffer).contains("Transfer-Encoding: chunked");
+  // not nice
+  let is_chunked = 
+  String::from_utf8_lossy(&headers_buffer).contains("Transfer-Encoding: chunked")
+  || String::from_utf8_lossy(&headers_buffer).contains("Transfer-Encoding: Chunked")
+  || String::from_utf8_lossy(&headers_buffer).contains("transfer-encoding: chunked")
+  || String::from_utf8_lossy(&headers_buffer).contains("transfer-encoding: Chunked");
   
   // ------------------------------------
   // collect request body section

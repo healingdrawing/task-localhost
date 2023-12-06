@@ -49,14 +49,6 @@ pub fn handle_cgi(
     } // new puzzle. instead of return error as string(instead of coding), fuck your brain for hours , with borrowing/binding/lifetime etc, because it is just can not do this naturally. Rust is crap
   };
   
-  // .expect("Failed to execute command");
-  
-  // // Print the result from the Python3 script
-  // println!("Result is:{}", std::str::from_utf8(&output.stdout).unwrap());
-  
-  // // Read the result inside Rust code
-  // let result = std::str::from_utf8(&output.stdout).unwrap();
-  
   // write to the stream
   let body = format!("Hello from Rust and Python3: {}\n\n", result)
   .as_bytes().to_vec();
@@ -65,6 +57,7 @@ pub fn handle_cgi(
   
   let mut response = match Response::builder()
   .status(StatusCode::OK)
+  .header("Content-Type", "text/plain")
   .body(body)
   {
     Ok(v) => v,
@@ -77,7 +70,6 @@ pub fn handle_cgi(
     }
     
   };
-  response.headers_mut().insert("Content-Type", "text/plain".parse().unwrap());
   
   response
   
