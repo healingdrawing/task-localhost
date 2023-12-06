@@ -50,3 +50,5 @@ pub fn response_default_static_file(
 
   response
 }
+
+//todo: implement check error and return response respectivelly, based on arrays of custom errors in errors.rs
