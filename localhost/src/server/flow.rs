@@ -75,8 +75,8 @@ pub fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
   );
   
   loop {
-    // poll.poll(&mut events, Some(Duration::from_millis(100))).unwrap(); // changes nothing
-    match poll.poll(&mut events, None){
+    // poll.poll(&mut events, None).unwrap(); // changes nothing
+    match poll.poll(&mut events, Some(Duration::from_millis(100))){
       Ok(v) => v,
       Err(e) => {
         eprint!("ERROR: Failed to poll: {}", e);
@@ -121,7 +121,7 @@ pub fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
       let mut choosen_server_config = server_configs[0].clone();
       let mut global_error_string = ERROR_200_OK.to_string();
       
-      println!("=== choosen_server_config: {:?}", choosen_server_config); //todo: remove dev print
+      // println!("=== choosen_server_config: {:?}", choosen_server_config); //todo: remove dev print
       
       let mut response:Response<Vec<u8>> = Response::new(Vec::new());
       
@@ -136,7 +136,7 @@ pub fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
         &mut global_error_string,
       );
       
-      println!("=== updated choosen_server_config:\n{:?}", choosen_server_config); //todo: remove dev print
+      // println!("=== updated choosen_server_config:\n{:?}", choosen_server_config); //todo: remove dev print
       
       println!("Buffer sizes after read: headers_buffer: {}, body_buffer: {}", headers_buffer.len(), body_buffer.len()); //todo: remove dev print
       
@@ -150,7 +150,7 @@ pub fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
       }
       
       let mut request = Request::new(Vec::new());
-
+      
       if global_error_string == ERROR_200_OK.to_string() {
         
         parse_raw_request(
@@ -159,9 +159,11 @@ pub fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
           &mut request,
           &mut global_error_string,
         );
-        println!("request: {:?}", request); //todo: remove dev print
-        
-        // let server_config = server_config(&request, server_configs.clone());
+        // println!("request: {:?}", request); //todo: remove dev print
+
+      }
+      
+      if global_error_string == ERROR_200_OK.to_string() {
         
         response = handle_request(
           &request,
@@ -171,7 +173,7 @@ pub fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
         );
         
       }
-
+      
       check_custom_errors(
         global_error_string,
         &request,
@@ -197,9 +199,9 @@ pub fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
       };
       
       match stream.shutdown(std::net::Shutdown::Both) {
-        Ok(_) => println!("Connection closed successfully"),
+        Ok(_) => println!("Connection closed successfully\n\n"),
         Err(e) => {
-          eprintln!("Failed to close connection: {}", e)
+          eprintln!("Failed to close connection: {}\n\n", e)
           //todo: remove the stream from poll registry some way
         },
       }

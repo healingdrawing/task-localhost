@@ -35,11 +35,16 @@ pub fn handle_all(
   if path.ends_with("/") || absolute_path.is_dir() {
     return response_default_static_file( zero_path_buf, request, server_config, );
   } else if !absolute_path.is_file() {
-    return custom_response_500(
+
+    println!("------------\nIS NOT A FILE\n-------------"); //todo: remove dev print
+    
+    return custom_response_4xx(
       request, 
       zero_path_buf, 
-      server_config)
-  } // check if file exists or return 500, because before server start, all files checked, so it is server error. The "uploads" folder managed separately with 404
+      server_config,
+      StatusCode::NOT_FOUND,
+    )
+  } // check if file exists or return 404
   
   
   let parts: Vec<&str> = path.split('/').collect();
@@ -101,7 +106,7 @@ pub fn handle_all(
     Some(v) => v.to_string(),
     None => "text/plain".to_string(),
   };
-  println!("mime_type {}", mime_type); //todo: remove dev print
+  println!("\n-------\n\nmime_type {}\n\n----------\n", mime_type); //todo: remove dev print
 
   response.headers_mut().insert(
     "Content-Type",

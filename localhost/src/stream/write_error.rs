@@ -2,18 +2,12 @@ use std::io::Write;
 
 use mio::net::TcpStream;
 
-pub fn write_standard_error_response_into_stream(
+pub fn write_critical_error_response_into_stream(
   stream: &mut TcpStream,
   http_status_code: http::StatusCode,
 ) -> std::io::Result<()> {
   let mut status = http_status_code.as_u16();
-  let reason = match http_status_code.canonical_reason(){
-    Some(v) => v.to_string(),
-    None => {
-      status = http::StatusCode::INTERNAL_SERVER_ERROR.as_u16();
-      "Internal Server Error: http::StatusCode.canonical_reason() failed".to_string()
-    }
-  };
+  let reason = "Internal Server Error: edge case".to_string();
   let status_line = format!("HTTP/1.1 {} {}\r\n", status, reason);
   
   match stream.write_all(status_line.as_bytes()){
@@ -34,6 +28,14 @@ pub fn write_standard_error_response_into_stream(
       eprintln!("Failed to write error response reason into the stream: {}", e);
     }
   };
+
+  // todo: remove dev print
+  match stream.write_all(b"WTF"){
+    Ok(_) => {},
+    Err(e) => {
+      eprintln!("Failed to write WTF into the stream: {}", e);
+    }
+  }
   
   Ok(())
 }

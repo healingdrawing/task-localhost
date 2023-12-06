@@ -20,10 +20,10 @@ pub fn read_with_timeout(
   server_configs: Vec<ServerConfig>,
   global_error_string: &mut String,
 ) {
-  println!("INSIDE read_with_timeout"); //todo: remove later
+  println!("\nINSIDE read_with_timeout"); //todo: remove later
   // Start the timer
   let start_time = Instant::now();
-  println!("start_time: {:?}", start_time); //todo: remove later
+  // println!("start_time: {:?}", start_time); //todo: remove later
   
   // Read from the stream until timeout or EOF
   let mut buf = [0; 1];
@@ -82,7 +82,7 @@ pub fn read_with_timeout(
   // response 413 error, if body is bigger.
   // Duplicated fragment of code, because of weird task requirements.
   
-  println!("headers_buffer: {:?}", String::from_utf8_lossy(headers_buffer.as_slice()));//todo: remove later
+  // println!("headers_buffer: {:?}", String::from_utf8_lossy(headers_buffer.as_slice()));//todo: remove later
   
   //todo: implement choosen_server_config based on request host header
   *server_config = server_config_from_headers_buffer_or_use_default(
@@ -472,8 +472,8 @@ pub fn read_with_timeout(
     }
   }
   
-  println!("read {} bytes from stream", body_buffer.len()); //todo: remove dev print
-  println!("Raw incoming buffer to string: {:?}", String::from_utf8(body_buffer.clone()));
+  // println!("read {} body buffer bytes from stream", body_buffer.len()); //todo: remove dev print
+  // println!("Raw incoming body buffer to string: {:?}", String::from_utf8(body_buffer.clone()));
   
   
 }

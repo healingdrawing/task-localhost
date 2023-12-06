@@ -141,7 +141,7 @@ use crate::stream::errors::{ERROR_400_HEADERS_INVALID_REQUEST_LINE, ERROR_400_HE
 pub fn parse_request_line(
   request_line: String
 ) -> Result<(Method, Uri, Version), Box<dyn Error>> {
-  println!("raw request_line: {:?}", request_line); //todo: remove dev print
+  // println!("raw request_line: {:?}", request_line); //todo: remove dev print
   
   let parts:Vec<&str> = request_line.trim().split_whitespace().collect();
   if parts.len() != 3 {

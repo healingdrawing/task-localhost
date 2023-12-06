@@ -55,7 +55,7 @@ pub fn server_config(
       }
     }
   }
-  println!("CHOOSEN server_config: {:?}", server_config.clone()); //todo: remove dev print
+  // println!("CHOOSEN server_config: {:?}", server_config.clone()); //todo: remove dev print
 
   server_config
 
@@ -219,7 +219,7 @@ pub fn server_config_from_headers_buffer_or_use_default(
       }
     }
   }
-  println!("CHOOSEN server_config: {:?}", server_config.clone()); //todo: remove dev print
+  // println!("CHOOSEN server_config: {:?}", server_config.clone()); //todo: remove dev print
 
   server_config
 }

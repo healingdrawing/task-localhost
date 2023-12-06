@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use http::{Response, Request, StatusCode, response};
 
 use crate::{server::core::ServerConfig, handlers::response_500::custom_response_500};
-use crate::stream::errors::{CUSTOM_ERRORS_400, CUSTOM_ERRORS_413, CUSTOM_ERRORS_500};
+use crate::stream::errors::{CUSTOM_ERRORS_400, CUSTOM_ERRORS_413, CUSTOM_ERRORS_500, ERROR_200_OK};
 
 use super::response_4xx::custom_response_4xx;
 
@@ -20,7 +20,7 @@ pub fn response_default_static_file(
   .join(server_config.static_files_prefix.clone())
   .join(server_config.default_file.clone());
   println!("default_file_path {:?}", default_file_path); //todo: remove dev print
-
+  
   // read the default file. if error, then return error response with 500 status code,
   // because before server start, all files checked, so it is server error
   let default_file_content = match std::fs::read(default_file_path){
@@ -34,7 +34,7 @@ pub fn response_default_static_file(
       )
     }
   };
-
+  
   let mut response = match Response::builder()
   .status(StatusCode::OK)
   .body(default_file_content)
@@ -51,7 +51,7 @@ pub fn response_default_static_file(
   };
   
   response.headers_mut().insert("Content-Type", "text/html".parse().unwrap());
-
+  
   response
 }
 
@@ -64,48 +64,52 @@ pub fn check_custom_errors(
   zero_path_buf: PathBuf,
   server_config: ServerConfig,
   response: &mut Response<Vec<u8>>,
-) -> Response<Vec<u8>>{
+) {
   
-  // check error 400 array
-  for error in CUSTOM_ERRORS_400.iter(){
-    if custom_error_string == *error{
-      return custom_response_4xx(
-        request,
-        zero_path_buf,
-        server_config,
-        StatusCode::BAD_REQUEST
-      )
+  if custom_error_string != ERROR_200_OK.to_string(){
+    
+    // check error 400 array
+    for error in CUSTOM_ERRORS_400.iter(){
+      if custom_error_string == *error{
+        *response = custom_response_4xx(
+          request,
+          zero_path_buf.clone(),
+          server_config.clone(),
+          StatusCode::BAD_REQUEST
+        )
+      }
     }
-  }
-
-  // check error 413
-  for error in CUSTOM_ERRORS_413.iter(){
-    if custom_error_string == *error{
-      return custom_response_4xx(
-        request,
-        zero_path_buf,
-        server_config,
-        StatusCode::PAYLOAD_TOO_LARGE
-      )
+    
+    // check error 413
+    for error in CUSTOM_ERRORS_413.iter(){
+      if custom_error_string == *error{
+        *response = custom_response_4xx(
+          request,
+          zero_path_buf.clone(),
+          server_config.clone(),
+          StatusCode::PAYLOAD_TOO_LARGE
+        )
+      }
     }
-  }
-
-  // check error 500. Actually it can be just return custom_response_500, without check. No difference at the moment
-  for error in CUSTOM_ERRORS_500.iter(){
-    if custom_error_string == *error{
-      return custom_response_500(
-        request,
-        zero_path_buf,
-        server_config,
-      )
+    
+    // check error 500. Actually it can be just return custom_response_500, without check. No difference at the moment
+    println!("UPPER LEVEL check error 500. CHECK CUSTOM ERRORS. RESPONSE_.RS");
+    for error in CUSTOM_ERRORS_500.iter(){
+      if custom_error_string == *error{
+        *response = custom_response_500(
+          request,
+          zero_path_buf.clone(),
+          server_config.clone(),
+        )
+      }
     }
+    
+    // if error not found, then return custom 500 response
+    *response = custom_response_500(
+      request,
+      zero_path_buf.clone(),
+      server_config.clone(),
+    )
   }
-
-  // if error not found, then return custom 500 response
-  custom_response_500(
-    request,
-    zero_path_buf,
-    server_config,
-  )
-
+  
 }

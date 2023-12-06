@@ -23,6 +23,8 @@ pub fn custom_response_4xx(
   status_code: StatusCode,
 ) -> Response<Vec<u8>>{
 
+  println!("\n\ncustom_response_4xx: status code {:?}", status_code); //todo: remove dev print
+
   // check status code is in 4xx list 400,403,404,405,413
   if !ALLOWED_4XX_STATUS_CODES.contains(&status_code){
     eprintln!("Internal Server Error\ncustom_response_4xx: status code {:?}\nis not in 4xx list {:?}", status_code, ALLOWED_4XX_STATUS_CODES);
@@ -48,10 +50,13 @@ pub fn custom_response_4xx(
       )
     }
   };
-  println!("error_page_content {:?}", error_page_content); //todo: remove dev print
+
+  let print_error_page_content = std::str::from_utf8(&error_page_content).unwrap(); //todo: remove dev print
+  println!("\n\nerror_page_content {:?}", print_error_page_content); //todo: remove dev print
 
   let mut response = match Response::builder()
   .status(status_code)
+  .header("Content-Type", "text/html")
   .body(error_page_content)
   {
     Ok(v) => v,
