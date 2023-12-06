@@ -18,9 +18,9 @@ const ALLOWED_4XX_STATUS_CODES: [StatusCode; 5] = [
 /// if error happens, then return custom_response_500
 pub fn custom_response_4xx(
   request: &Request<Vec<u8>>,
-  status_code: StatusCode,
   zero_path_buf: PathBuf,
   server_config: ServerConfig,
+  status_code: StatusCode,
 ) -> Response<Vec<u8>>{
 
   // check status code is in 4xx list 400,403,404,405,413

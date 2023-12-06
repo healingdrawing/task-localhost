@@ -1,21 +1,18 @@
 use http::{Request, Response, StatusCode};
-use mio::net::TcpStream;
-use std::io:: Write;
 use std::path::PathBuf;
 
 use crate::server::core::ServerConfig;
 use crate::handlers::handle_cgi::handle_cgi;
 use crate::handlers::handle_all::handle_all;
-use crate::stream::write_::write_response_into_stream;
 
-/// just for test
+/// handle all requests.
+/// The cgi requests are handled like separated match case.
+/// The uploads requests are handled separated match case.
 pub fn handle_request(
   request: &Request<Vec<u8>>,
   zero_path_buf: PathBuf,
   server_config: ServerConfig
 ) -> Result<Response<Vec<u8>>, Box<dyn std::error::Error>>{
-  
-  // todo!("handle_request: implement the logic. but first refactor to handle unwrap() more safe. to prevent panics");
   
   // try to manage the cgi request case strictly and separately,
   // to decrease vulnerability, because cgi is old, unsafe and not recommended to use.
@@ -42,24 +39,8 @@ pub fn handle_request(
     _ => {
       // todo : implement the response for other cases
       handle_all( zero_path_buf, request, server_config, )
-      // dummy_200_response()
     }
   };
-  
-  // match write_response_into_stream(stream, response){
-  //   Ok(_) => println!("Response sent"),
-  //   Err(e) => eprintln!("Failed to send response: {}", e),
-  // }
-  
-  // match stream.flush(){
-  //   Ok(_) => println!("Response flushed"),
-  //   Err(e) => eprintln!("Failed to flush response: {}", e),
-  // };
-  
-  // match stream.shutdown(std::net::Shutdown::Both) {
-  //   Ok(_) => println!("Connection closed successfully"),
-  //   Err(e) => eprintln!("Failed to close connection: {}", e),
-  // }
   
   Ok(response)
 }

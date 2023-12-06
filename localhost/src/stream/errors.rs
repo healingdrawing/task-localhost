@@ -1,3 +1,4 @@
+pub const ERROR_200_OK: &str = "[200] OK"; // not an error, but for consistency
 
 pub const ERROR_400_HEADERS_READ_TIMEOUT: &str = "[400] HEADERS READ TIMEOUT";
 pub const ERROR_400_HEADERS_READING_STREAM: &str = "[400] HEADERS READING STREAM";

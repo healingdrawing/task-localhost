@@ -51,9 +51,9 @@ pub fn handle_all(
     None => {
        return custom_response_4xx(
         request,
-        http::StatusCode::NOT_FOUND,
         zero_path_buf,
         server_config,
+        http::StatusCode::NOT_FOUND,
        )
     }
   };
@@ -63,9 +63,9 @@ pub fn handle_all(
   if !allowed_methods.contains(&request_method_string){
     return custom_response_4xx(
       request,
-      http::StatusCode::METHOD_NOT_ALLOWED,
       zero_path_buf,
       server_config,
+      http::StatusCode::METHOD_NOT_ALLOWED,
     )
   }
 
