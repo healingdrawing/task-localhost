@@ -5,8 +5,7 @@ use crate::server::core::ServerConfig;
 use crate::handlers::handle_cgi::handle_cgi;
 use crate::handlers::handle_all::handle_all;
 use crate::handlers::handle_uploads::handle_uploads;
-
-use super::handle_uploads::handle_uploads_get_uploaded_file;
+use crate::handlers::uploads_get::handle_uploads_get_uploaded_file;
 
 
 /// handle all requests.
