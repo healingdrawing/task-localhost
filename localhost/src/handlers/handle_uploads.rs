@@ -4,7 +4,6 @@ use http::{Response, Request, StatusCode};
 
 use crate::handlers::response_500::custom_response_500;
 use crate::server::core::ServerConfig;
-use crate::handlers::response_::response_default_static_file;
 use crate::handlers::response_4xx::custom_response_4xx;
 
 
@@ -78,12 +77,15 @@ pub fn handle_uploads(
   match request_method_string.as_str(){
     "GET" => {
       body_content.extend_from_slice(b"GET uploads\n");
+      // todo: implement generating of the dynamic html page to return as response body. The page includes the list of files in uploads folder(click on file send DELETE request), and the from to upload new file, with POST request, after pressing the "upload file" button.
     },
     "POST" => {
       body_content.extend_from_slice(b"POST uploads\n");
+      // todo: implement the file upload, using the form from GET request, and return the dynamic html page with the list of files in uploads folder(click on file send DELETE request), and the from to upload new file, with POST request, after pressing the "upload file" button.
     },
     "DELETE" => {
       body_content.extend_from_slice(b"DELETE uploads\n");
+      // todo: implement the file delete, using the form from GET request, and return the dynamic html page with the list of files in uploads folder(click on file send DELETE request), and the from to upload new file, with POST request, after pressing the "upload file" button.
     },
     _ => {
       eprintln!("ERROR: method {} is not implemented for path {}.\nShould never fire, because checked above!!!", request_method_string, path);
