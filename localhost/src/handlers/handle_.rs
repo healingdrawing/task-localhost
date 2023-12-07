@@ -6,6 +6,8 @@ use crate::handlers::handle_cgi::handle_cgi;
 use crate::handlers::handle_all::handle_all;
 use crate::handlers::handle_uploads::handle_uploads;
 
+use super::handle_uploads::handle_uploads_get_uploaded_file;
+
 
 /// handle all requests.
 /// The cgi requests are handled like separated match case.
@@ -40,6 +42,14 @@ pub fn handle_request(
       //todo :implement the response for uploads case. GET, POST, DELETE
       handle_uploads( zero_path_buf, request, server_config, )
       
+    },
+    ["", "uploads", file_path ] => {
+      handle_uploads_get_uploaded_file(
+        zero_path_buf,
+        file_path.to_string(),
+        request,
+        server_config,
+      )
     },
     _ => {
       // todo : implement the response for other cases

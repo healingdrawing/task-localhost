@@ -28,6 +28,7 @@ pub mod handlers{
   pub mod response_;
   pub mod response_500;
   pub mod response_4xx;
+  pub mod uploads_get;
 }
 
 pub mod files{

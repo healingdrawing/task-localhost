@@ -20,13 +20,16 @@ pub fn handle_all(
 ) -> Response<Vec<u8>>{
   // todo: refactor path check to os separator instead of hardcoding of / ... probably
   
-  // analyze path. if path is directory, then return default file, according to server config
-  let mut path = request.uri().path();
+  // replace /uploads/ to /, to prevent wrong path. The uploads files served separately on the upper level
+  let binding_path = request.uri().path().replacen("uploads/", "", 1);
+  let mut path = binding_path.as_str();
+
   // cut first slash
   if path.starts_with("/"){ path = &path[1..]; }
   println!("path {}", path); // todo: remove dev prints
   // path to site folder in static folder
   let relative_static_site_path = format!("static/{}/{}", server_config.static_files_prefix, path);
+
   println!("relative_static_site_path {}", relative_static_site_path);
   let absolute_path = zero_path_buf.join(relative_static_site_path);
   println!("absolute_path {:?}", absolute_path);
@@ -115,7 +118,7 @@ pub fn handle_all(
       match mime_type.parse(){
         Ok(v) => v,
         Err(e) => {
-          eprintln!("Failed to parse mime type: {}", e);
+          eprintln!("ERROR: Failed to parse mime type: {}", e);
           "text/plain".parse().unwrap()
         }
       }
