@@ -33,7 +33,7 @@ pub fn handle_request(
         server_config,
       )
     },
-    ["", "uploads", file_path @ ..] => {
+    ["", "uploads"] => {
       //todo :implement the response for uploads case. GET, POST, DELETE
       dummy_200_response()
     },
