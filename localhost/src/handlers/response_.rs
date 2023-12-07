@@ -25,7 +25,7 @@ pub fn response_default_static_file(
   let default_file_content = match std::fs::read(default_file_path){
     Ok(v) => v,
     Err(e) => {
-      eprintln!("Failed to read default file: {}", e); //todo: remove dev print
+      eprintln!("ERROR: Failed to read default file: {}", e); //todo: remove dev print
       return custom_response_500(
         request, 
         zero_path_buf, 
@@ -41,7 +41,7 @@ pub fn response_default_static_file(
   {
     Ok(v) => v,
     Err(e) => {
-      eprintln!("Failed to create response with default file: {}", e);
+      eprintln!("ERROR: Failed to create response with default file: {}", e);
       return custom_response_500(
         request, 
         zero_path_buf, 

@@ -46,7 +46,7 @@ pub fn custom_response_500(
   let error_page_content = match std::fs::read(error_page_path){
     Ok(v) => v,
     Err(e) => {
-      eprintln!("Failed to read error page: {}", e); //todo: remove dev print
+      eprintln!("ERROR: Failed to read error page: {}", e); //todo: remove dev print
       return hardcoded_response_500(request)
     }
   };
@@ -61,7 +61,7 @@ pub fn custom_response_500(
   {
     Ok(v) => v,
     Err(e) => {
-      eprintln!("Failed to create custom 500 response: {}", e);
+      eprintln!("ERROR: Failed to create custom 500 response: {}", e);
       return hardcoded_response_500(request)
     }
   };

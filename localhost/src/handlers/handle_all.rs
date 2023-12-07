@@ -35,8 +35,8 @@ pub fn handle_all(
   if path.ends_with("/") || absolute_path.is_dir() {
     return response_default_static_file( zero_path_buf, request, server_config, );
   } else if !absolute_path.is_file() {
-
-    println!("------------\nIS NOT A FILE\n-------------"); //todo: remove dev print
+    
+    eprintln!("ERROR:\n------------\nIS NOT A FILE\n-------------");
     
     return custom_response_4xx(
       request, 
@@ -54,18 +54,20 @@ pub fn handle_all(
   let allowed_methods = match server_config.routes.get(path){
     Some(v) => {v},
     None => {
-       return custom_response_4xx(
+      eprintln!("ERROR: path {} is not inside routes", path);
+      return custom_response_4xx(
         request,
         zero_path_buf,
         server_config,
         http::StatusCode::NOT_FOUND,
-       )
+      )
     }
   };
-
+  
   // check if method is allowed for this path or return 405
   let request_method_string = request.method().to_string();
   if !allowed_methods.contains(&request_method_string){
+    eprintln!("ERROR: method {} is not allowed for path {}", request_method_string, path);
     return custom_response_4xx(
       request,
       zero_path_buf,
@@ -73,12 +75,12 @@ pub fn handle_all(
       http::StatusCode::METHOD_NOT_ALLOWED,
     )
   }
-
+  
   // read the file. if error, then return error 500 response
   let file_content = match std::fs::read(absolute_path.clone()){
     Ok(v) => v,
     Err(e) => {
-      eprintln!("Failed to read file: {}", e); //todo: remove dev print
+      eprintln!("ERROR: Failed to read file: {}", e);
       return custom_response_500(
         request,
         zero_path_buf,
@@ -86,39 +88,40 @@ pub fn handle_all(
       )
     }
   };
-
+  
   let mut response = match Response::builder()
   .status(StatusCode::OK)
   .body(file_content)
   {
     Ok(v) => v,
     Err(e) => {
-      eprintln!("Failed to create response with file: {}", e);
+      eprintln!("ERROR: Failed to create response with file: {}", e);
       return custom_response_500(
         request,
         zero_path_buf,
         server_config)
-    }
-  };
-
-  // get file mime type using mime_guess, or use the text/plain
-  let mime_type = match mime_guess::from_path(absolute_path.clone()).first(){
-    Some(v) => v.to_string(),
-    None => "text/plain".to_string(),
-  };
-  println!("\n-------\n\nmime_type {}\n\n----------\n", mime_type); //todo: remove dev print
-
-  response.headers_mut().insert(
-    "Content-Type",
-    match mime_type.parse(){
-      Ok(v) => v,
-      Err(e) => {
-        eprintln!("Failed to parse mime type: {}", e);
-        "text/plain".parse().unwrap()
       }
-    }
-  );
+    };
+    
+    // get file mime type using mime_guess, or use the text/plain
+    let mime_type = match mime_guess::from_path(absolute_path.clone()).first(){
+      Some(v) => v.to_string(),
+      None => "text/plain".to_string(),
+    };
+    println!("\n-------\n\nmime_type {}\n\n----------\n", mime_type); //todo: remove dev print
+    
+    response.headers_mut().insert(
+      "Content-Type",
+      match mime_type.parse(){
+        Ok(v) => v,
+        Err(e) => {
+          eprintln!("Failed to parse mime type: {}", e);
+          "text/plain".parse().unwrap()
+        }
+      }
+    );
+    
+    response
+    
+  }
   
-  response
-  
-}

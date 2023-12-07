@@ -1,4 +1,4 @@
-use std::{fs::{File, OpenOptions}, io::{self, Write}};
+use std::{fs::{File, OpenOptions, create_dir_all}, io::{self, Write}};
 
 pub const DEBUG: bool = false; //set to false to disable debug.txt stuff
 
@@ -30,6 +30,9 @@ pub fn append_to_file(data: &str) -> io::Result<()> {
 /// 
 /// as audit question requires
 pub fn create_something_in_uploads_folder() -> io::Result<()> {
+  println!("Check the \"uploads\" folder, on executable folder level");
+  // Create the directory on the executable folder level, if it doesn't exist
+  create_dir_all("uploads")?;
   File::create("uploads/something")?; 
   Ok(())
 }

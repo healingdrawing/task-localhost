@@ -4,6 +4,8 @@ use std::path::PathBuf;
 use crate::server::core::ServerConfig;
 use crate::handlers::handle_cgi::handle_cgi;
 use crate::handlers::handle_all::handle_all;
+use crate::handlers::handle_uploads::handle_uploads;
+
 
 /// handle all requests.
 /// The cgi requests are handled like separated match case.
@@ -32,10 +34,12 @@ pub fn handle_request(
         request,
         server_config,
       )
+
     },
     ["", "uploads"] => {
       //todo :implement the response for uploads case. GET, POST, DELETE
-      dummy_200_response()
+      handle_uploads( zero_path_buf, request, server_config, )
+      
     },
     _ => {
       // todo : implement the response for other cases
