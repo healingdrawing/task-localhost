@@ -5,6 +5,7 @@ use http::{Response, Request, StatusCode};
 use crate::handlers::response_500::custom_response_500;
 use crate::handlers::uploads_delete::delete_the_file_from_uploads_folder;
 use crate::handlers::uploads_get::generate_uploads_html;
+use crate::handlers::uploads_set::upload_the_file_into_uploads_folder;
 use crate::server::core::ServerConfig;
 use crate::handlers::response_4xx::custom_response_4xx;
 
@@ -79,25 +80,13 @@ pub fn handle_uploads(
   
   match request_method_string.as_str(){
     "GET" => {
-      body_content.extend_from_slice(b"GET uploads\n");
-      body_content.extend_from_slice(
-        generate_uploads_html( &absolute_path, ).as_bytes(),
-      );
+      /* do nothing unique. The html page is generated below */
     },
     "POST" => {
       body_content.extend_from_slice(b"POST uploads\n");
-      // todo: implement the file upload, using the form from GET request, and return the dynamic html page with the list of files in uploads folder(click on file send DELETE request), and the from to upload new file, with POST request, after pressing the "upload file" button.
-      todo!("implement function to upload file");
-      todo!("implement function to return dynamic html page as body_content")
+      upload_the_file_into_uploads_folder(request, &absolute_path);
     },
-    "DELETE" => {
-      body_content.extend_from_slice(b"DELETE uploads\n");
-      delete_the_file_from_uploads_folder(request, &absolute_path);
-      body_content.extend_from_slice(b"DELETE uploads\n");
-      body_content.extend_from_slice(
-        generate_uploads_html( &absolute_path, ).as_bytes(),
-      );
-    },
+    "DELETE" => { delete_the_file_from_uploads_folder(request, &absolute_path); },
     _ => {
       eprintln!("ERROR: method {} is not implemented for path {}.\nShould never fire, because checked above!!!", request_method_string, path);
       return custom_response_500(
@@ -108,6 +97,10 @@ pub fn handle_uploads(
     },
   }
   
+  body_content.extend_from_slice(
+    generate_uploads_html( &absolute_path, ).as_bytes(),
+  );
+
   // the old code section starts here, // todo: refactor it to the new code section
   // read the file. if error, then return error 500 response
   // let body_content = match std::fs::read(absolute_path.clone()){

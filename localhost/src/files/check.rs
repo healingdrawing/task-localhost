@@ -1,4 +1,5 @@
 use std::path::Path;
+use sanitise_file_name::sanitise;
 
 use crate::server::core::ServerConfig;
 
@@ -26,7 +27,7 @@ pub fn file_exists(path: &str) -> bool{
     }
 }
 
-const ERROR_PAGES: [&str; 6] = ["400.html", "403.html", "404.html", "405.html", "413.html", "500.html"];
+pub const ERROR_PAGES: [&str; 6] = ["400.html", "403.html", "404.html", "405.html", "413.html", "500.html"];
 
 /// check relative paths. The parent level is executable folder.
 /// 
@@ -62,3 +63,9 @@ pub fn all_files_exists(server_configs: &Vec<ServerConfig>) -> bool{
 
   true
 }
+
+/// sanitise + replace spaces to underscores + replace double underscores to single underscore
+pub fn sanitise_file_name(file_name: &str) -> String{
+  sanitise( file_name ).replace(" ", "_").replace("__", "_")
+}
+pub fn bad_file_name(file_name: &str) -> bool{ sanitise_file_name(file_name) != file_name }

@@ -2,8 +2,11 @@ use std::path::PathBuf;
 
 use http::{Response, Request, StatusCode};
 
+use crate::server;
 use crate::{server::core::ServerConfig, handlers::response_500::custom_response_500};
 use crate::stream::errors::{CUSTOM_ERRORS_400, CUSTOM_ERRORS_413, CUSTOM_ERRORS_500, ERROR_200_OK};
+
+use crate::files::check::ERROR_PAGES;
 
 use super::response_4xx::custom_response_4xx;
 
@@ -72,7 +75,8 @@ pub fn check_custom_errors(
           zero_path_buf.clone(),
           server_config.clone(),
           StatusCode::BAD_REQUEST
-        )
+        );
+        return
       }
     }
     
@@ -84,7 +88,8 @@ pub fn check_custom_errors(
           zero_path_buf.clone(),
           server_config.clone(),
           StatusCode::PAYLOAD_TOO_LARGE
-        )
+        );
+        return
       }
     }
     
@@ -95,7 +100,8 @@ pub fn check_custom_errors(
           request,
           zero_path_buf.clone(),
           server_config.clone(),
-        )
+        );
+        return
       }
     }
     
@@ -107,4 +113,46 @@ pub fn check_custom_errors(
     )
   }
   
+}
+
+/// check the path ends to find error pages, and return response respectivelly, or return 200 OK
+/// 
+/// it is needed for manual testing/requesting of error pages
+pub fn force_status(
+absolute_path: PathBuf,
+request: &Request<Vec<u8>>,
+server_config: ServerConfig,
+)-> StatusCode {
+
+  println!("force_status"); //todo: remove dev print
+
+  
+  let path = request.uri().path();
+  println!("path {:?}", path); //todo: remove dev print
+  
+  let error_pages_prefix = server_config.error_pages_prefix.clone();
+  println!("error_pages_prefix {:?}", error_pages_prefix); //todo: remove dev print
+  
+  println!("absolute_path {:?}", absolute_path); //todo: remove dev print
+
+  let absolute_path = absolute_path.to_str().unwrap().to_string();
+  // check if path ends with error pages prefix
+  for error_page in ERROR_PAGES.iter(){
+    let end = "/".to_owned() + &error_pages_prefix + "/" + error_page;
+    println!("end {:?}", end); //todo: remove dev print
+    if absolute_path.ends_with(&end){
+      println!("path ends with error page {:?}", error_page); //todo: remove dev print
+      return match error_page{
+        &"400.html" => StatusCode::BAD_REQUEST,
+        &"403.html" => StatusCode::FORBIDDEN,
+        &"404.html" => StatusCode::NOT_FOUND,
+        &"405.html" => StatusCode::METHOD_NOT_ALLOWED,
+        &"413.html" => StatusCode::PAYLOAD_TOO_LARGE,
+        &"500.html" => StatusCode::INTERNAL_SERVER_ERROR,
+        _ => StatusCode::OK, // shoud never happen
+      }
+    }
+  }
+
+  StatusCode::OK
 }

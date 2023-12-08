@@ -4,7 +4,7 @@ use http::{Response, Request, StatusCode};
 
 use crate::handlers::response_500::custom_response_500;
 use crate::server::core::ServerConfig;
-use crate::handlers::response_::response_default_static_file;
+use crate::handlers::response_::{response_default_static_file, force_status};
 use crate::handlers::response_4xx::custom_response_4xx;
 
 
@@ -23,13 +23,13 @@ pub fn handle_all(
   // replace /uploads/ to /, to prevent wrong path. The uploads files served separately on the upper level
   let binding_path = request.uri().path().replacen("uploads/", "", 1);
   let mut path = binding_path.as_str();
-
+  
   // cut first slash
   if path.starts_with("/"){ path = &path[1..]; }
   println!("path {}", path); // todo: remove dev prints
   // path to site folder in static folder
   let relative_static_site_path = format!("static/{}/{}", server_config.static_files_prefix, path);
-
+  
   println!("relative_static_site_path {}", relative_static_site_path);
   let absolute_path = zero_path_buf.join(relative_static_site_path);
   println!("absolute_path {:?}", absolute_path);
@@ -93,7 +93,13 @@ pub fn handle_all(
   };
   
   let mut response = match Response::builder()
-  .status(StatusCode::OK)
+  .status(
+    force_status(
+      absolute_path.clone(),
+      request,
+      server_config.clone()
+    )
+  )
   .body(file_content)
   {
     Ok(v) => v,

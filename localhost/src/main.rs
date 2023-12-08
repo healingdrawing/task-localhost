@@ -29,6 +29,7 @@ pub mod handlers{
   pub mod response_500;
   pub mod response_4xx;
   pub mod uploads_get;
+  pub mod uploads_set;
   pub mod uploads_delete;
 }
 

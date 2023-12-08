@@ -8,7 +8,7 @@ pub fn delete_the_file_from_uploads_folder(
   absolute_path: &PathBuf
 ) {
   
-  println!("=== INSIDE delete_the_file_from_uploads_folder");
+  println!("=== INSIDE delete_the_file_from_uploads_folder");// todo: remove dev print
 
   let body = std::str::from_utf8(&request.body()).unwrap();
   let params: Vec<&str> = body.split('&').collect();
@@ -26,7 +26,7 @@ pub fn delete_the_file_from_uploads_folder(
   if file_path.is_file() {
     fs::remove_file(file_path).unwrap();
     // wait while file system deletes the file
-    // std::thread::sleep(std::time::Duration::from_millis(200));
+    // std::thread::sleep(std::time::Duration::from_millis(1000));
   } else {
     eprintln!("ERROR: no file \"{:?}\" detected", file_path);
   }
