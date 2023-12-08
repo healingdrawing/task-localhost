@@ -149,7 +149,7 @@ server_config: ServerConfig,
         &"405.html" => StatusCode::METHOD_NOT_ALLOWED,
         &"413.html" => StatusCode::PAYLOAD_TOO_LARGE,
         &"500.html" => StatusCode::INTERNAL_SERVER_ERROR,
-        _ => StatusCode::OK, // shoud never happen
+        _ => StatusCode::OK, // should never happen
       }
     }
   }
