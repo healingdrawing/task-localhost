@@ -17,7 +17,7 @@ routes = { "redirect.html" = ["GET", "POST"] }
 server_name = "mega.company"
 ports = ["8082", "8083", "8084", "8085"]
 server_address = "127.0.0.2"
-client_body_size = 2048
+client_body_size = 2048000
 static_files_prefix = "site1"
 default_file = "index.html"
 error_pages_prefix = "site1/error"
