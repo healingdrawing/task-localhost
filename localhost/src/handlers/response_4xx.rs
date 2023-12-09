@@ -27,7 +27,7 @@ pub fn custom_response_4xx(
 
   // check status code is in 4xx list 400,403,404,405,413
   if !ALLOWED_4XX_STATUS_CODES.contains(&status_code){
-    eprintln!("Internal Server Error\ncustom_response_4xx: status code {:?}\nis not in 4xx list {:?}", status_code, ALLOWED_4XX_STATUS_CODES);
+    eprintln!("ERROR: Internal Server Error\ncustom_response_4xx: status code {:?}\nis not in 4xx list {:?}", status_code, ALLOWED_4XX_STATUS_CODES);
     return custom_response_500(
       request, 
       zero_path_buf, 
@@ -45,7 +45,7 @@ pub fn custom_response_4xx(
   let error_page_content = match std::fs::read(error_page_path){
     Ok(v) => v,
     Err(e) => {
-      eprintln!("Failed to read error page: {}", e); //todo: remove dev print
+      eprintln!("ERROR: Failed to read error page: {}", e); //todo: remove dev print
       return custom_response_500(
         request, 
         zero_path_buf, 
@@ -64,7 +64,7 @@ pub fn custom_response_4xx(
   {
     Ok(v) => v,
     Err(e) => {
-      eprintln!("Failed to create custom 4xx response: {}", e);
+      eprintln!("ERROR: Failed to create custom 4xx response: {}", e);
       return custom_response_500(
         request, 
         zero_path_buf, 

@@ -64,6 +64,18 @@ pub fn all_files_exists(server_configs: &Vec<ServerConfig>) -> bool{
   true
 }
 
+/// check the path file ends with error page name. Only implemented error pages checked.
+pub fn is_implemented_error_page(path: &str) -> bool{
+  for error_page in ERROR_PAGES{
+    if path.ends_with(error_page){ return true }
+    else{
+      println!("path {} does not end with error page {}", path, error_page); //todo: remove this dev print
+    }
+  }
+
+  false
+}
+
 /// sanitise + replace spaces to underscores + replace double underscores to single underscore
 pub fn sanitise_file_name(file_name: &str) -> String{
   sanitise( file_name ).replace(" ", "_").replace("__", "_")

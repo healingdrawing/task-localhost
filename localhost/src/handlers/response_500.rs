@@ -20,7 +20,7 @@ fn hardcoded_response_500(
   {
     Ok(v) => v,
     Err(e) => {
-      eprintln!("Failed to create hardcoded 500 response: {}", e);
+      eprintln!("ERROR: Failed to create hardcoded 500 response: {}", e);
       return Response::new("Fatal Internal Server Error.\nFailed to create hardcoded error 500 response.\nStatus 500 does not set properly".as_bytes().to_vec());
     }
   };
