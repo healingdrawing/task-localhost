@@ -37,7 +37,14 @@ According to the task requirements only one script implemented and it hardcoded 
 It is not a static part of the project, and managed separately, to prevent extra activity. This folder includes `.gitignore` file, to prevent uploading files to the repository. Checking for `.gitignore` file is hardcoded into the `runme` file.
 For any configuration you can use `/uploads` to uploads page, which is hardcoded into the `runme` file.
 - - the `settings` file, configured properly.  
-Follow the examples in the `settings` file on your own risk, or do not touch it(it is educational project, aimed to satisfy task requirements in strictly limited time period).
+Follow the examples in the `settings` file on your own risk, or do not touch it(it is educational project, aimed to satisfy task requirements in strictly limited time period).  
+
+So finally it should looks like:
+- `some_folder/runme` (executable)
+- `some_folder/static` (folder)
+- `some_folder/cgi` (folder)
+- `some_folder/uploads` (folder)
+- `some_folder/settings` (file)
 
 ### Site customization:
 
