@@ -100,23 +100,29 @@ pub fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
       println!("server: {:?}", server); //todo: remove dev print
       
       // Accept the incoming connection
-      let (mut stream, _) = match server.listener.accept(){
+      let (mut stream, _) = match server.listener.accept() {
         Ok(v) => v,
-        Err(e) => { // according to docs it can be io::ErrorKind::WouldBlock, so just continue
-          eprintln!("ERROR: Failed to accept incoming connection: {}", e);
-          continue;
+        Err(e) => {
+          if e.kind() == std::io::ErrorKind::WouldBlock {
+              // operation would block, continue to the next iteration
+              continue;
+          } else {
+              eprintln!("ERROR: Failed to accept incoming connection: {}", e);
+              continue;
+          }
         }
       };
       
       println!("stream: {:?}", stream); //todo: remove dev print
       
-      // create buffers here and fill them with read_with_timeout
+      // create buffers here and fill them inside read_with_timeout
       let timeout = Duration::from_millis(5000);
       let mut headers_buffer: Vec<u8> = Vec::new();
       let mut body_buffer: Vec<u8> = Vec::new();
       
       // use first server config as default
       let mut choosen_server_config = server_configs[0].clone();
+      // if nothing will update it, then let is say that the process is ok
       let mut global_error_string = ERROR_200_OK.to_string();
       
       // println!("=== choosen_server_config: {:?}", choosen_server_config); //todo: remove dev print
@@ -183,24 +189,41 @@ pub fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
       match write_response_into_stream(&mut stream, response){
         Ok(_) => println!("Response sent"),
         Err(e) => {
-          eprintln!("Failed to send response: {}", e)
-          //todo: remove the stream from poll registry some way
+          eprintln!("ERROR: Failed to send response: {}", e);
+          match poll.registry().deregister(&mut stream) {
+              Ok(_) => println!("BROKEN stream deregistered successfully"),
+              Err(e) => eprintln!("ERROR: Failed to deregister BROKEN stream: {}", e),
+          }
+          match stream.shutdown(std::net::Shutdown::Both) {
+              Ok(_) => println!("BROKEN Connection closed successfully\n\n"),
+              Err(e) => eprintln!("ERROR: Failed to close BROKEN connection: {}\n\n", e),
+          }
         },
       }
       
       match stream.flush(){
         Ok(_) => println!("Response flushed"),
         Err(e) => {
-          eprintln!("Failed to flush response: {}", e)
-          //todo: remove the stream from poll registry some way
+          eprintln!("ERROR: Failed to flush response: {}", e);
+          match poll.registry().deregister(&mut stream) {
+              Ok(_) => println!("stream deregistered successfully"),
+              Err(e) => eprintln!("ERROR: Failed to deregister stream: {}", e),
+          }
+          match stream.shutdown(std::net::Shutdown::Both) {
+              Ok(_) => println!("Connection closed successfully\n\n"),
+              Err(e) => eprintln!("Failed to close connection: {}\n\n", e),
+          }
         },
       };
       
       match stream.shutdown(std::net::Shutdown::Both) {
         Ok(_) => println!("Connection closed successfully\n\n"),
         Err(e) => {
-          eprintln!("Failed to close connection: {}\n\n", e)
-          //todo: remove the stream from poll registry some way
+          eprintln!("ERROR: Failed to close connection: {}\n\n", e);
+          match poll.registry().deregister(&mut stream) {
+              Ok(_) => (),
+              Err(e) => eprintln!("ERROR: Failed to deregister stream: {}", e),
+          }
         },
       }
       
