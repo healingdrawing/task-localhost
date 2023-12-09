@@ -4,7 +4,6 @@ use http::{Response, Request, StatusCode};
 
 use crate::files::check::is_implemented_error_page;
 use crate::handlers::response_500::custom_response_500;
-use crate::server;
 use crate::server::core::ServerConfig;
 use crate::handlers::response_::{response_default_static_file, force_status};
 use crate::handlers::response_4xx::custom_response_4xx;

@@ -55,7 +55,7 @@ pub fn handle_cgi(
   // let mut response = Response::new(body.as_bytes().to_vec());
   // response.headers_mut().insert("Content-Type", "text/plain".parse().unwrap());
   
-  let mut response = match Response::builder()
+  let response = match Response::builder()
   .status(StatusCode::OK)
   .header("Content-Type", "text/plain")
   .body(body)

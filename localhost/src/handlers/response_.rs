@@ -2,7 +2,6 @@ use std::path::PathBuf;
 
 use http::{Response, Request, StatusCode};
 
-use crate::server;
 use crate::{server::core::ServerConfig, handlers::response_500::custom_response_500};
 use crate::stream::errors::{CUSTOM_ERRORS_400, CUSTOM_ERRORS_413, CUSTOM_ERRORS_500, ERROR_200_OK};
 
@@ -37,7 +36,7 @@ pub fn response_default_static_file(
     }
   };
   
-  let mut response = match Response::builder()
+  let response = match Response::builder()
   .status(StatusCode::OK)
   .header("Content-Type", "text/html")
   .body(default_file_content)
