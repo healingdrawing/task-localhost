@@ -66,14 +66,23 @@ pub fn handle_uploads(
   // check if method is allowed for this path or return 405
   let request_method_string = request.method().to_string();
   if !allowed_methods.contains(&request_method_string){
-    eprintln!("ERROR: method {} is not allowed for path {}", request_method_string, path);
+    eprintln!("ERROR: method {} is not allowed for uploads", request_method_string);
     return custom_response_4xx(
       request,
       zero_path_buf,
       server_config,
       http::StatusCode::METHOD_NOT_ALLOWED,
     )
+  } else if !server_config.uploads_methods.contains(&request_method_string){
+    eprintln!("ERROR: method {} is not allowed for uploads in server_config", request_method_string);
+    return custom_response_4xx(
+      request,
+      zero_path_buf,
+      server_config,
+      http::StatusCode::METHOD_NOT_ALLOWED,
+    );
   }
+  
   
   // new implementation
   let mut body_content:Vec<u8> = Vec::new();

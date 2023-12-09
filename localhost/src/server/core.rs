@@ -15,6 +15,7 @@ pub struct ServerConfig {
   pub static_files_prefix: String,
   pub default_file: String,
   pub error_pages_prefix: String,
+  pub uploads_methods: Vec<String>,
   pub routes: HashMap<String, Vec<String>>,
 }
 

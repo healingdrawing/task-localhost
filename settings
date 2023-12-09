@@ -11,7 +11,8 @@ client_body_size = 1024
 static_files_prefix = "default"
 default_file = "default.html"
 error_pages_prefix = "default/error"
-routes = { "redirect.html" = ["GET", "POST"] }
+uploads_methods = ["GET","POST"]
+routes = { "redirect.html" = [] }
 
 [[servers]]
 server_name = "mega.company"
@@ -21,4 +22,5 @@ client_body_size = 2048000
 static_files_prefix = "site1"
 default_file = "index.html"
 error_pages_prefix = "site1/error"
+uploads_methods = ["GET","POST","DELETE"]
 routes = { "redirect.html" = ["GET", "POST", "DELETE"] }

@@ -13,76 +13,142 @@ pub fn generate_uploads_html(absolute_path: &PathBuf) -> String {
   html.push_str("<h1>Uploads</h1>");
   html.push_str("<ul>");
   for entry in fs::read_dir(absolute_path).unwrap() {
-   let entry = entry.unwrap();
-   let path = entry.path();
-   if path.is_file() {
-     let file_name = path.file_name().unwrap().to_str().unwrap();
-     
-     if bad_file_name(file_name) {
-       eprintln!("ERROR: bad file name \"{}\" inside \"uploads\" folder.\nPotential crappers activity :|,\nor file_name sanitised not properly\n", file_name);
-       continue;
-     }
-     if file_name == ".gitignore" { continue; }
- 
-     html.push_str("\n<li>");
-     html.push_str(&format!("\n<button onclick=\"deleteFile('{}')\">Delete</button>", file_name));
-     html.push_str(&format!("\n<a href=\"/uploads/{}\">{}</a>", file_name, file_name));
-     html.push_str("\n</li>");
-   }
+    let entry = entry.unwrap();
+    let path = entry.path();
+    if path.is_file() {
+      let file_name = path.file_name().unwrap().to_str().unwrap();
+      
+      if bad_file_name(file_name) {
+        eprintln!("ERROR: bad file name \"{}\" inside \"uploads\" folder.\nPotential crappers activity :|,\nor file_name sanitised not properly\n", file_name);
+        continue;
+      }
+      if file_name == ".gitignore" { continue; }
+      
+      html.push_str("\n<li>");
+      html.push_str(&format!("\n<button onclick=\"deleteFile('{}')\">Delete</button>", file_name));
+      html.push_str(&format!("\n<a href=\"/uploads/{}\">{}</a>", file_name, file_name));
+      html.push_str("\n</li>");
+    }
   }
   html.push_str("\n</ul>");
-  html.push_str("\n<form method=\"POST\" action=\"/uploads\" id=\"uploadForm\" enctype=\"multipart/form-data\">");
-  html.push_str("<input type=\"file\" name=\"file\" id=\"fileInput\">");
-  html.push_str("<input type=\"submit\" value=\"Upload\">");
-  html.push_str("</form>");
-  html.push_str("<script>");
-  html.push_str("function deleteFile(fileName) {");
-  html.push_str(" fetch('/uploads', {");
-  html.push_str(" method: 'DELETE',");
-  html.push_str(" headers: {");
-  html.push_str(" 'Content-Type': 'application/x-www-form-urlencoded',");
-  html.push_str(" },");
-  html.push_str(" body: 'file=' + encodeURIComponent(fileName),");
-  html.push_str(" }).then(() => {");
-  html.push_str(" location.reload();");
-  html.push_str(" });");
-  html.push_str("}");
-  html.push_str("document.getElementById('uploadForm').addEventListener('submit', function(event) {");
-  html.push_str(" event.preventDefault();");
-  html.push_str(" const fileInput = document.getElementById('fileInput');");
-  html.push_str(" const file = fileInput.files[0];");
-  html.push_str(" const reader = new FileReader();");
-  html.push_str(" reader.readAsArrayBuffer(file);");
-  html.push_str(" reader.onloadend = function() {");
-html.push_str(" const arrayBuffer = reader.result;");
-html.push_str(" const uint8Array = new Uint8Array(arrayBuffer);");
-html.push_str(" fetch('/uploads', {");
-html.push_str(" method: 'POST',");
-html.push_str(" headers: {");
-html.push_str("  'Content-Type': 'application/octet-stream',");
-html.push_str("  'X-File-Name': file.name");
-html.push_str(" },");
-html.push_str(" body: uint8Array,");
-html.push_str(" redirect: 'manual'");
-html.push_str(" }).then(response => {");
-html.push_str(" if (!response.ok) {");
-html.push_str(" if (response.status === 413) {");
-html.push_str("  window.location.href = '413.html';");
-html.push_str(" }");
-html.push_str(" } else {");
-html.push_str("  setTimeout(function() {");
-html.push_str("    location.reload();");
-html.push_str("  }, 1000);");
-html.push_str(" }");
-html.push_str(" }).catch(error => {");
-html.push_str(" console.error('Error:', error);");
-html.push_str(" });");
-html.push_str(" };");
-html.push_str("});");
-  html.push_str("</script>");
+  
+  let form = r#"
+  <form method="POST" action="/uploads" id="uploadForm" enctype="multipart/form-data">
+  <input type="file" name="file" id="fileInput">
+  <input type="submit" value="Upload">
+  </form>
+  "#;
+  
+  html.push_str(&form);
+  
+  let script = r#"
+  <script>
+  function deleteFile(fileName) {
+    fetch('/uploads', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: 'file=' + encodeURIComponent(fileName),
+      redirect: 'manual'
+    }).then(response => {
+      console.log(response.status);
+      if (!response.ok) {
+        if (response.status === 400) {
+          console.log('400 crap piles from 01 delivered');
+          window.location.href = '400.html';
+        }
+        else if (response.status === 403) {
+          console.log('403 crap piles from 01 delivered');
+          window.location.href = '403.html';
+        }
+        else if (response.status === 404) {
+          console.log('404 crap piles from 01 delivered');
+          window.location.href = '404.html';
+        }
+        else if (response.status === 405) {
+          console.log('405 Method Not Allowed');
+          window.location.href = '405.html';
+        }
+        else if (response.status === 413) {
+          console.log('413 crap piles from 01 delivered');
+          window.location.href = '413.html';
+        }
+        else {
+          console.log('500 crap piles from 01 delivered');
+          window.location.href = '500.html';
+        }
+      } else {
+        setTimeout(function() {
+          location.reload();
+        }, 1000);
+      }
+    }).catch(error => {
+      console.error('Error:', error);
+    });
+  }
+  document.getElementById('uploadForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    reader.readAsArrayBuffer(file);
+    reader.onloadend = function() {
+      const arrayBuffer = reader.result;
+      const uint8Array = new Uint8Array(arrayBuffer);
+      fetch('/uploads', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'X-File-Name': file.name
+        },
+        body: uint8Array,
+        redirect: 'manual'
+      }).then(response => {
+        console.log(response.status);
+        if (!response.ok) {
+          if (response.status === 400) {
+            console.log('400 crap piles from 01 delivered');
+            window.location.href = '400.html';
+          }
+          else if (response.status === 403) {
+            console.log('403 crap piles from 01 delivered');
+            window.location.href = '403.html';
+          }
+          else if (response.status === 404) {
+            console.log('404 crap piles from 01 delivered');
+            window.location.href = '404.html';
+          }
+          else if (response.status === 405) {
+            console.log('405 Method Not Allowed');
+            window.location.href = '405.html';
+          }
+          else if (response.status === 413) {
+            console.log('413 crap piles from 01 delivered');
+            window.location.href = '413.html';
+          }
+          else {
+            console.log('500 crap piles from 01 delivered');
+            window.location.href = '500.html';
+          }
+        } else {
+          setTimeout(function() {
+            location.reload();
+          }, 1000);
+        }
+      }).catch(error => {
+        console.error('Error:', error);
+      });
+    };
+  });
+  </script>
+  "#;
+  
+  html.push_str(&script);
+  
   html
- }
- 
+}
+
 
 /// when some file requested from uploads folder,
 /// 
