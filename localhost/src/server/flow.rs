@@ -139,9 +139,9 @@ pub fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
       // println!("Buffer sizes after read: headers_buffer: {}, body_buffer: {}", headers_buffer.len(), body_buffer.len()); //todo: remove dev print
       
       if headers_buffer.is_empty() {
-        println!("NO DATA RECEIVED, empty headres_buffer");
+        println!("========================\n=   NO DATA RECEIVED   =\n= EMPTY HEADERS BUFFER =\n========================");
       }else if body_buffer.is_empty() {
-        println!("NO DATA RECEIVED, empty body_buffer");
+        println!("=====================\n= EMPTY BODY BUFFER =\n=====================");
       }else{
         println!("buffers are not empty"); //todo: remove dev print
         println!("Raw buffers:\nheaders_buffer:\n=\n{}\n=\nbody_buffer:\n=\n{}\n=", String::from_utf8_lossy(&headers_buffer), String::from_utf8_lossy(&body_buffer));
