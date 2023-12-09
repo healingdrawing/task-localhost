@@ -58,7 +58,7 @@ The expectable structure of the site can be f.e. next:
 - static/site2/index.html
 - static/site2/style/style.css
 - static/site2/error/500.html
-According to task, the next error pages must be implemented: 400, 403, 404, 405, 413, 500. So you must provide the correct settings file configuration to error page folder. And the error folder must include properly created files: `400.html`, `403.html`, `404.html`, `405.html`, `413.html`, `500.html`.  
+According to task, the next error pages must be implemented: 400, 403, 404, 405, 413, 500. So you must provide the correct settings file configuration to error pages folder. And the error pages folder must include properly created files: `400.html`, `403.html`, `404.html`, `405.html`, `413.html`, `500.html`.  
 Otherwise do not expect server will work/initalize properly.
 
 ## Authors
