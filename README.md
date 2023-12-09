@@ -49,16 +49,22 @@ So finally it should looks like:
 ### Site customization:
 
 Do not create messy and follow examples style to structure sites. Or just do nothing.
-Do not use spaces in the names of any folders and files.
+Do not use spaces in the names of any folders and files.  
+
+According to task methods `GET`, `HEAD`, `POST`, `PUT`, `DELETE` must be implemented. 
+Do not use other methods to configure the server routes.  
+
 Place inside the `static` folder the folder with the unique name of the site, f.e. `site2`, and inside the site folder place the `index.html` file and so on.  
 Follow the examples in the `static` folder on your own risk, or do not touch it.  
+
 The `settings` file must be configured properly to use the site.
 The expectable structure of the site can be f.e. next:
 - static/site2/favicon.ico
 - static/site2/index.html
 - static/site2/style/style.css
 - static/site2/error/500.html  
-According to task, the next error pages must be implemented: 400, 403, 404, 405, 413, 500. So you must provide the correct settings file configuration to error pages folder. And the error pages folder must include properly created files: `400.html`, `403.html`, `404.html`, `405.html`, `413.html`, `500.html`.  
+According to task, the next error pages must be implemented: 400, 403, 404, 405, 413, 500.  
+So you must provide the correct settings file configuration to error pages folder. And the error pages folder must contain properly created files: `400.html`, `403.html`, `404.html`, `405.html`, `413.html`, `500.html`.  
 
 Otherwise do not expect server will work/initalize properly.
 
