@@ -1,5 +1,4 @@
 use std::{path::PathBuf, fs};
-use sanitise_file_name::sanitise;
 
 use http::{Request, Response, StatusCode};
 
@@ -69,7 +68,7 @@ html.push_str(" }).then(response => {");
 html.push_str(" if (!response.ok) {");
 html.push_str(" if (response.status === 413) {");
 html.push_str("  alert('413 crap piles from 01 delivered');");
-html.push_str("  window.location.href = 'error/413.html';");
+html.push_str("  window.location.href = '/error/413.html';");
 html.push_str(" }");
 html.push_str(" } else {");
 html.push_str("  setTimeout(function() {");

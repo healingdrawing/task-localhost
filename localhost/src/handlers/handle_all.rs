@@ -31,13 +31,13 @@ pub fn handle_all(
   let relative_static_site_path = format!("static/{}/{}", server_config.static_files_prefix, path);
   
   println!("relative_static_site_path {}", relative_static_site_path);
-  let absolute_path = zero_path_buf.join(relative_static_site_path);
-  println!("absolute_path {:?}", absolute_path);
+  let absolute_path_buf = zero_path_buf.join(relative_static_site_path);
+  println!("absolute_path {:?}", absolute_path_buf);
   
   // check if path is directory, then return default file as task requires
-  if path.ends_with("/") || absolute_path.is_dir() {
+  if path.ends_with("/") || absolute_path_buf.is_dir() {
     return response_default_static_file( zero_path_buf, request, server_config, );
-  } else if !absolute_path.is_file() {
+  } else if !absolute_path_buf.is_file() {
     
     eprintln!("ERROR:\n------------\nIS NOT A FILE\n-------------");
     
@@ -80,7 +80,7 @@ pub fn handle_all(
   }
   
   // read the file. if error, then return error 500 response
-  let file_content = match std::fs::read(absolute_path.clone()){
+  let file_content = match std::fs::read(absolute_path_buf.clone()){
     Ok(v) => v,
     Err(e) => {
       eprintln!("ERROR: Failed to read file: {}", e);
@@ -95,9 +95,9 @@ pub fn handle_all(
   let mut response = match Response::builder()
   .status(
     force_status(
-      absolute_path.clone(),
-      request,
-      server_config.clone()
+      zero_path_buf.clone(),
+      absolute_path_buf.clone(),
+      server_config.clone(),
     )
   )
   .body(file_content)
@@ -113,7 +113,7 @@ pub fn handle_all(
     };
     
     // get file mime type using mime_guess, or use the text/plain
-    let mime_type = match mime_guess::from_path(absolute_path.clone()).first(){
+    let mime_type = match mime_guess::from_path(absolute_path_buf.clone()).first(){
       Some(v) => v.to_string(),
       None => "text/plain".to_string(),
     };

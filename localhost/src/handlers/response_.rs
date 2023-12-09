@@ -119,29 +119,29 @@ pub fn check_custom_errors(
 /// 
 /// it is needed for manual testing/requesting of error pages
 pub fn force_status(
-absolute_path: PathBuf,
-request: &Request<Vec<u8>>,
-server_config: ServerConfig,
+  zero_path_buf: PathBuf,
+  absolute_path_buf: PathBuf,
+  server_config: ServerConfig,
 )-> StatusCode {
-
-  println!("force_status"); //todo: remove dev print
-
-  
-  let path = request.uri().path();
-  println!("path {:?}", path); //todo: remove dev print
   
   let error_pages_prefix = server_config.error_pages_prefix.clone();
   println!("error_pages_prefix {:?}", error_pages_prefix); //todo: remove dev print
   
-  println!("absolute_path {:?}", absolute_path); //todo: remove dev print
-
-  let absolute_path = absolute_path.to_str().unwrap().to_string();
+  println!("absolute_path {:?}", absolute_path_buf); //todo: remove dev print
+  
+  // let absolute_path = absolute_path.to_str().unwrap().to_string();
   // check if path ends with error pages prefix
   for error_page in ERROR_PAGES.iter(){
-    let end = "/".to_owned() + &error_pages_prefix + "/" + error_page;
-    println!("end {:?}", end); //todo: remove dev print
-    if absolute_path.ends_with(&end){
-      println!("path ends with error page {:?}", error_page); //todo: remove dev print
+
+    // let error_path = "/".to_owned() + &error_pages_prefix + "/" + error_page;
+    let error_path = zero_path_buf
+    .join("static")
+    .join(&error_pages_prefix)
+    .join(error_page);
+
+    println!("error path {:?}", error_path); //todo: remove dev print
+    if absolute_path_buf == error_path{
+      println!("path is error page {:?}", error_page); //todo: remove dev print
       return match error_page{
         &"400.html" => StatusCode::BAD_REQUEST,
         &"403.html" => StatusCode::FORBIDDEN,
@@ -153,6 +153,6 @@ server_config: ServerConfig,
       }
     }
   }
-
+  
   StatusCode::OK
 }

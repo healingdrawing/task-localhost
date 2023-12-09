@@ -35,7 +35,10 @@ pub fn custom_response_4xx(
     );
   }
 
-  let error_page_path = zero_path_buf.join("static").join(server_config.error_pages_prefix.clone()).join(status_code.as_str().to_string() + ".html");
+  let error_page_path = zero_path_buf
+  .join("static")
+  .join(server_config.error_pages_prefix.clone())
+  .join(status_code.as_str().to_string() + ".html");
   println!("error_page_path {:?}", error_page_path); //todo: remove dev print
 
   // read the error page. if error, then return custom_response_500
@@ -54,7 +57,7 @@ pub fn custom_response_4xx(
   // let print_error_page_content = std::str::from_utf8(&error_page_content).unwrap(); //todo: remove dev print. it is unsafe
   // println!("\n\nerror_page_content {:?}", print_error_page_content); //todo: remove dev print
 
-  let mut response = match Response::builder()
+  let response = match Response::builder()
   .status(status_code)
   .header("Content-Type", "text/html")
   .body(error_page_content)

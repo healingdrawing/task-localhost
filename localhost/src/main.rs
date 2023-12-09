@@ -45,7 +45,7 @@ use config::{File, FileFormat};
 use crate::files::add_static::add_static_files_to_server_configs;
 use crate::files::check::all_files_exists;
 
-/// get exe path and cut off exe name. to manage the config, cgi, etc folders
+/// get the path to executable and cut off the executable name. to manage the config, cgi, etc folders
 pub fn get_zero_path() -> Result<PathBuf, Box<dyn Error>>{
   let mut exe_path = match env::current_exe(){
     Ok(v) => v,
