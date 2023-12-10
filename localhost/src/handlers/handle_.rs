@@ -1,7 +1,8 @@
 use http::{Request, Response, StatusCode};
+use std::collections::HashMap;
 use std::path::PathBuf;
 
-use crate::server::core::ServerConfig;
+use crate::server::core::{ServerConfig, Server};
 use crate::handlers::handle_cgi::handle_cgi;
 use crate::handlers::handle_all::handle_all;
 use crate::handlers::handle_uploads::handle_uploads;
@@ -13,11 +14,15 @@ use crate::handlers::uploads_get::handle_uploads_get_uploaded_file;
 /// The uploads requests are handled separated match case. //todo: implement uploads
 pub fn handle_request(
   request: &Request<Vec<u8>>,
+  server: &mut Server,
   zero_path_buf: PathBuf,
   server_config: ServerConfig,
   global_error_string: &mut String, //at the moment not mutated here
 ) -> Response<Vec<u8>>{
   
+  // manage cookies
+  server.check_expired_cookies();
+
   // try to manage the cgi request case strictly and separately,
   // to decrease vulnerability, because cgi is old, unsafe and not recommended to use.
   // Also, the task is low quality, because audit question ask only to check

@@ -1,3 +1,4 @@
+use http::Request;
 use mio::Token;
 use mio::net::TcpListener;
 use serde::Deserialize;
@@ -7,6 +8,8 @@ use std::collections::HashSet;
 use std::error::Error;
 use std::time::Duration;
 use std::time::SystemTime;
+
+use super::cookie::Cookie;
 
 
 #[derive(Debug, Deserialize, Clone)]
@@ -83,107 +86,4 @@ pub struct Server {
   pub token: Token,
   pub cookies: HashMap<String, Cookie>,
   pub cookies_check_time: SystemTime,
-}
-
-#[derive(Debug)]
-pub struct Cookie {
-  pub name: String,
-  pub value: String,
-  pub expiration: SystemTime,
-}
-
-impl Server {
-  pub fn set_cookie(&mut self, name: String, value: String, life_time: Duration){
-    let expiration = SystemTime::now() + life_time;
-    self.cookies.insert(
-      name.clone(),
-      Cookie {
-        name,
-        value,
-        expiration
-      }
-    );
-  }
-  
-  pub fn get_cookie(&self, name: &str) -> Option<&Cookie>{
-    self.cookies.get(name)
-  }
-  
-  /// get cookie by name, if cookie not found, then generate new cookie for one minute
-  /// 
-  /// return header value for cookie as string "{}={}; Expires={}; HttpOnly; Path=/" to send in response
-  pub fn send_cookie(&mut self, name: String) -> String {
-    if let Some(cookie) = self.cookies.get(&name){
-      let name = cookie.name.clone();
-      let value = cookie.value.clone();
-      let expiration = cookie.expiration.clone();
-      let expires = match
-      expiration.duration_since(SystemTime::UNIX_EPOCH){
-        Ok(v) => v,
-        Err(e) => {
-          eprintln!("ERROR: Failed to get duration_since for cookie name {}: {}", name, e);
-          Duration::new(0, 0)
-        }
-      }
-      .as_secs();
-      
-      let cookie = format!(
-        "{}={}; Expires={}; HttpOnly; Path=/", name, value, expires
-      );
-      
-      return cookie
-      
-    } else { // if cookie not found, then generate new cookie for one minute
-      let name = Uuid::new_v4().to_string();
-      let value = Uuid::new_v4().to_string();
-      self.set_cookie( name.clone(), value.clone(), Duration::from_secs(60) );
-      
-      return format!(
-        "{}={}; Expires={}; HttpOnly; Path=/\r\n", name, value, 60
-      );
-
-    }
-
-  }
-  
-  /// if cookie expired, then remove it from cookies, and return true,
-  /// 
-  /// if cookie not found,then return true, as signal, to generate new cookie,
-  /// 
-  /// else return false
-  pub fn is_cookie_expired(&mut self, name: &str) -> bool {
-    let now = SystemTime::now();
-    if let Some(cookie) = self.cookies.get(name){
-      if cookie.expiration < now{
-        self.cookies.remove(name);
-        return true
-      }
-    } else {
-      return true
-    }
-    false
-  }
-  
-  /// remove all expired cookies. Used with timeout 60 sec, to not check every request
-  pub fn check_expired_cookies(&mut self){
-    let now = SystemTime::now();
-    if now > self.cookies_check_time {
-      // collect all expired cookies
-      let mut expired_cookies = Vec::new();
-      for (name, cookie) in self.cookies.iter(){
-        if cookie.expiration < now {
-          expired_cookies.push(name.clone());
-          println!("expired cookie: {:?}", cookie); //todo: remove dev print
-        }
-      }
-      // remove all expired cookies
-      for name in expired_cookies.iter(){
-        self.cookies.remove(name);
-      }
-    }
-    // set next check time, one minute from now
-    self.cookies_check_time = now + Duration::from_secs(60);
-    
-  }
-
 }

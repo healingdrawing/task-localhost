@@ -7,6 +7,7 @@ use debug:: {
 pub mod server{
   pub mod find;
   pub mod core;
+  pub mod cookie;
   pub mod flow;
 }
 use server::core::ServerConfig;

@@ -96,7 +96,7 @@ loop {
     let token = event.token();
     
     // Find the server associated with the token
-    let server = match servers.iter_mut().find(|s| s.token.0 == token.0){
+    let mut server = match servers.iter_mut().find(|s| s.token.0 == token.0){
       Some(v) => v,
       None => {
         eprintln!("ERROR: Failed to find server by token: {}", token.0);
@@ -178,6 +178,7 @@ loop {
       
       response = handle_request(
         &request,
+        &mut server,
         zero_path_buf.clone(),
         choosen_server_config.clone(),
         &mut global_error_string,
