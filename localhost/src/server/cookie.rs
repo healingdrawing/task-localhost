@@ -6,16 +6,17 @@ use super::core::Server;
 
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Cookie {
   pub name: String,
   pub value: String,
-  pub expiration: SystemTime,
+  /// expiration time in seconds from UNIX_EPOCH
+  pub expires: u64,
 }
 
 impl Server {
 
-  pub fn generate_unique_cookie_and_return_value(&mut self) -> Cookie {
+  fn generate_unique_cookie_and_return(&mut self) -> Cookie {
     let name = Uuid::new_v4().to_string();
     let value = Uuid::new_v4().to_string();
     let cookie = self.set_cookie( name.clone(), value.clone(), Duration::from_secs(60) );
@@ -24,32 +25,37 @@ impl Server {
 
   pub fn set_cookie(&mut self, name: String, value: String, life_time: Duration) -> Cookie {
     let expiration = SystemTime::now() + life_time;
-    let cookie = Cookie { name, value, expiration };
-    self.cookies.insert( name.clone(), cookie );
+    let expires = match
+    expiration.duration_since(SystemTime::UNIX_EPOCH){
+      Ok(v) => v,
+      Err(e) => {
+        eprintln!("ERROR: Failed to get duration_since for cookie name {}: {}", name, e);
+        Duration::new(0, 0)
+      }
+    }
+    .as_secs();
+
+    let cookie = Cookie { name: name.clone(), value, expires };
+    self.cookies.insert( name.clone(), cookie.clone() );
     cookie
   }
   
   pub fn get_cookie(&self, name: &str) -> Option<&Cookie>{ self.cookies.get(name) }
 
-  pub fn extract_cookies_from_request(
+  /// extract cookies from request, if cookie not found, then generate new cookie for one minute.
+  /// 
+  /// Also return bool. False if cookie recognized as bad, for bad request response
+  pub fn extract_cookies_from_request_or_provide_new(
     &mut self,
     request: &Request<Vec<u8>>
-  ) -> String {
-    // have value
-    let mut cookie_names = Vec::new();
-    // does not have value
-    let flags = String::new();
-    // expiration time
-    let expiration_string = String::new();
-    let mut is_expired = false;
+  ) -> (String, bool) {
     
-   
     let cookie_header = match request.headers().get("Cookie"){
       Some(v) => v,
       None =>{
-        println!("no cookie header, new one will be generated"); //todo: remove dev print
-        
-        return self.send_cookie(Uuid::new_v4().to_string())
+        println!("no cookie header, new cookie will be generated"); //todo: remove dev print
+        let cookie = self.generate_unique_cookie_and_return();
+        return (self.send_cookie(cookie.name), true)
       }
     };
 
@@ -57,42 +63,86 @@ impl Server {
       Ok(v) => v,
       Err(e) => {
         eprintln!("ERROR: Failed to get cookie_header.to_str: {}", e);
-        return self.send_cookie(Uuid::new_v4().to_string())
+        let cookie = self.generate_unique_cookie_and_return();
+        return (self.send_cookie(cookie.name), false)
       }
-    };
+    }
+    .trim();
 
-    // split cookie header by "; " to get all cookie parts, like "name=value" or "name" for flags
+    println!("\n\nrequest cookie_header: {:?}\n\n", cookie_header); //todo: remove dev print
+
+    // split cookie header by "; " to get all cookie parts, like "name=value" or "name" for flags. Correct form is
+    // "{}={}; Expires={}; HttpOnly; Path=/"
+    // , otherwise cookie is bad, so return false to send bad request response
     let cookie_parts:Vec<&str> = cookie_header.split("; ").collect();
     
+    // check the length
+    if cookie_parts.len() != 4{
+      eprintln!("ERROR: cookie_parts.len() != 4. Potential security risk");
+      let cookie = self.generate_unique_cookie_and_return();
+      return (self.send_cookie(cookie.name), false)
+    }
+
+    // check the names/flags and static values of cookie parts
+    let mut static_count = 0; // it must be two finally. "HttpOnly" and "Path=/"
+    for cookie_part in cookie_parts.iter(){
+      if cookie_part == &"HttpOnly" || cookie_part == &"Path=/"{
+        static_count += 1;
+      }
+    }
+    if static_count != 2{
+      eprintln!("ERROR: \"HttpOnly\" and/or \"Path=/\" not found. Potential security risk");
+      let cookie = self.generate_unique_cookie_and_return();
+      return (self.send_cookie(cookie.name), false)
+    }
+
     // check all cookie parts and find Expired name to check it
     // if cookie expired, then do not write it in the server.cookies and return new cookie
+    let mut expires_not_found = true;
     for cookie_part in cookie_parts.iter(){
       let cookie_part: Vec<&str> = cookie_part.splitn(2, '=').collect();
       let part_name = cookie_part[0];
 
-      if part_name == "Expired"{
+      if part_name == "Expires"{
+        expires_not_found = false;
         let part_value = cookie_part[1];
         let expiration = match part_value.parse::<u64>(){
           Ok(v) => v,
           Err(e) => {
             eprintln!("ERROR: Failed to parse cookie expiration: {}", e);
-            return self.send_cookie(Uuid::new_v4().to_string())
+            let cookie = self.generate_unique_cookie_and_return();
+            return (self.send_cookie(cookie.name), false)
           }
         };
+        // check if cookie expired
+        let now = SystemTime::now();
+        let expires = SystemTime::UNIX_EPOCH + Duration::from_secs(expiration);
+        if expires < now{
+          let cookie = self.generate_unique_cookie_and_return();
+          return (self.send_cookie(cookie.name), true)
+        }
+
+        // check if cookie is too long living. Server provide only one minute cookies
+        let max_life_time = SystemTime::now() + Duration::from_secs(60);
+        if expires > max_life_time{
+          eprintln!("ERROR: Cookie life time is too long. Potential security risk");
+          let cookie = self.generate_unique_cookie_and_return();
+          return (self.send_cookie(cookie.name), false)
+        }
 
       }
 
     }
-   
-    if cookie_names.is_empty() {
-    let name = Uuid::new_v4().to_string();
-    let expiration = SystemTime::now() + Duration::from_secs(60);
-    let cookie = Cookie { name: name.clone(), value: "".to_string(), expiration };
-    self.cookies.insert(name.clone(), cookie);
-    cookie_names.push(name);
+
+    if expires_not_found{
+      eprintln!("ERROR: \"Expires\" not found. Potential security risk");
+      let cookie = self.generate_unique_cookie_and_return();
+      return (self.send_cookie(cookie.name), false)
     }
    
-    cookie_names
+    // if cookie is correct, then return it as value for header
+    (cookie_header.to_string(), true)
+
    }
   
   /// get cookie by name, if cookie not found, then generate new cookie for one minute
@@ -102,30 +152,16 @@ impl Server {
     if let Some(cookie) = self.cookies.get(&name){
       let name = cookie.name.clone();
       let value = cookie.value.clone();
-      let expiration = cookie.expiration.clone();
-      let expires = match
-      expiration.duration_since(SystemTime::UNIX_EPOCH){
-        Ok(v) => v,
-        Err(e) => {
-          eprintln!("ERROR: Failed to get duration_since for cookie name {}: {}", name, e);
-          Duration::new(0, 0)
-        }
-      }
-      .as_secs();
-      
+      let expires = cookie.expires.clone();
       let cookie = format!(
-        "{}={}; Expires={}; Path=/", name, value, expires
+        "{}={}; Expires={}; HttpOnly; Path=/", name, value, expires
       );
-      
       return cookie
       
     } else { // if cookie not found, then generate new cookie for one minute
-      let name = Uuid::new_v4().to_string();
-      let value = Uuid::new_v4().to_string();
-      self.set_cookie( name.clone(), value.clone(), Duration::from_secs(60) );
-      
+      let cookie = self.generate_unique_cookie_and_return();
       return format!(
-        "{}={}; Expires={}; Path=/", name, value, 60
+        "{}={}; Expires={}; HttpOnly; Path=/", cookie.name, cookie.value, cookie.expires
       );
 
     }
@@ -140,7 +176,8 @@ impl Server {
   pub fn is_cookie_expired(&mut self, name: &str) -> bool {
     let now = SystemTime::now();
     if let Some(cookie) = self.cookies.get(name){
-      if cookie.expiration < now{
+      let expiration = SystemTime::UNIX_EPOCH + Duration::from_secs(cookie.expires);
+      if expiration < now{
         self.cookies.remove(name);
         return true
       }
@@ -157,15 +194,14 @@ impl Server {
       // collect all expired cookies
       let mut expired_cookies = Vec::new();
       for (name, cookie) in self.cookies.iter(){
-        if cookie.expiration < now {
+        let expiration = SystemTime::UNIX_EPOCH + Duration::from_secs(cookie.expires);
+        if expiration < now {
           expired_cookies.push(name.clone());
           println!("expired cookie: {:?}", cookie); //todo: remove dev print
         }
       }
       // remove all expired cookies
-      for name in expired_cookies.iter(){
-        self.cookies.remove(name);
-      }
+      for name in expired_cookies.iter(){ self.cookies.remove(name); }
     }
     // set next check time, one minute from now
     self.cookies_check_time = now + Duration::from_secs(60);

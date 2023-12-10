@@ -13,7 +13,7 @@ use crate::handlers::handle_::handle_request;
 use crate::server::core::{get_usize_unique_ports, Server};
 use crate::server::core::ServerConfig;
 
-use crate::stream::errors::ERROR_200_OK;
+use crate::stream::errors::{ERROR_200_OK, ERROR_400_HEADERS_INVALID_COOKIE};
 use crate::stream::read::read_with_timeout;
 use crate::stream::parse::parse_raw_request;
 use crate::stream::write_::write_response_into_stream;
@@ -174,11 +174,19 @@ loop {
       
     }
     
+
+    server.check_expired_cookies();
+    let (cookie_value, cookie_is_ok) = server.extract_cookies_from_request_or_provide_new(&request);
+    if !cookie_is_ok {
+      global_error_string = ERROR_400_HEADERS_INVALID_COOKIE.to_string();
+    }
+
+    println!("flow level cookie_value: {}", cookie_value); //todo: remove dev print
+
     if global_error_string == ERROR_200_OK.to_string() {
       
       response = handle_request(
         &request,
-        &mut server,
         zero_path_buf.clone(),
         choosen_server_config.clone(),
         &mut global_error_string,
