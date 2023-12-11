@@ -244,9 +244,6 @@ pub fn handle_uploads_get_uploaded_file(
     )
   } // check if file exists or return 404
   
-  
-  let parts: Vec<&str> = path_str.split('/').collect();
-  
   // only GET method allowed for this path. filtering happens above
   let allowed_methods = vec!["GET".to_string()];
   
