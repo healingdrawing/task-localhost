@@ -27,7 +27,7 @@ pub fn all_files_exists(server_configs: &Vec<ServerConfig>) -> bool{
   
   // check cgi script required by task
   if !file_exists("cgi/useless.py"){
-    eprintln!("ERROR: cgi/useless.py does not exist");
+    eprintln!("ERROR: Path cgi/useless.py does not exist");
     return false
   }
 

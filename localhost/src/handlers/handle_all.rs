@@ -88,33 +88,6 @@ pub fn handle_all(
   } // check if file exists or return 404
   
   // check if path is inside routes, then get methods allowed for this path
-  // create empty vector if path is not inside routes
-  
-  // rust is crap , you can not just return vec from match, nested more then 1 level
-  
-  // this is second approach, limited , so not used at the moment. First one was fixed
-  // using binding ... magic. facepalm
-
-  // let mut allowed_methods: Vec<String> = Vec::new(); 
-  // if is_error_page {
-  //   allowed_methods.push("GET".to_string())
-  // } else {
-  //   let addition = match server_config.routes.get(path_str){
-  //     Some(v) => {v},
-  //     None => {
-  //       eprintln!("ERROR: path {} is not inside routes", path_str);
-  //       return custom_response_4xx(
-  //         request,
-  //         zero_path_buf,
-  //         server_config,
-  //         http::StatusCode::NOT_FOUND,
-  //       )
-  //     }
-  //   };
-  //   allowed_methods.append(&mut addition.to_vec()) // and even this looks ugly
-  // }
-  
-  // first fixed approach
   let mut rust_handicap_binding:Vec<String> = Vec::new();
   let allowed_methods: &Vec<String> = match server_config.routes.get(path_str){
     Some(v) => {v},
@@ -124,7 +97,7 @@ pub fn handle_all(
         &rust_handicap_binding
         
       } else {
-        eprintln!("ERROR: path {} is not inside routes", path_str);
+        eprintln!("ERROR: Path {} is not inside routes", path_str);
         return custom_response_4xx(
           request,
           cookie_value,
@@ -136,11 +109,10 @@ pub fn handle_all(
     }
   };
   
-
   // check if method is allowed for this path or return 405
   let request_method_string = request.method().to_string();
   if !allowed_methods.contains(&request_method_string){
-    eprintln!("ERROR: method {} is not allowed for path {}", request_method_string, path_str);
+    eprintln!("ERROR: Method {} is not allowed for path {}", request_method_string, path_str);
     return custom_response_4xx(
       request,
       cookie_value,
@@ -199,7 +171,7 @@ pub fn handle_all(
         Ok(v) => v,
         Err(e) => {
           eprintln!("ERROR: Failed to parse mime type: {}", e);
-          "text/plain".parse().unwrap()
+          "text/plain".parse().unwrap() // must be safe, otherwise, rust must be r.i.p.
         }
       }
     );

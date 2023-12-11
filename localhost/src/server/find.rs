@@ -11,7 +11,7 @@ pub fn server_config_from_headers_buffer_or_use_default(
   let mut server_config = server_configs[0].clone(); // default server config
 
   if headers_buffer.is_empty() {
-    eprintln!("ERROR: server_config_from_headers: headers_buffer is empty");
+    eprintln!("ERROR: headers_buffer is empty");
     return server_config
   }
 
@@ -137,7 +137,7 @@ pub fn server_config_from_headers_buffer_or_use_default(
       }
     },
     None => { 
-      eprintln!("ERROR: Fail to get request host.\n=> USE \"default\" server config with first port"); //todo: remove dev print. Probably
+      eprintln!("ERROR: Failed to get request host.\n=> USE \"default\" server config with first port");
       server_config.server_name.clone() + ":" + &server_config.ports[0]
     },
   };

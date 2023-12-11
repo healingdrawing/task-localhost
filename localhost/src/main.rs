@@ -70,8 +70,8 @@ fn main() {
   };
 
   match try_recreate_file_according_to_value_of_debug_boolean(){
-    Ok(_) => println!("debug file \"{}\" recreated", DEBUG_FILE),
-    Err(e) => panic!("ERROR: debug file recreation failed: {}", e),
+    Ok(_) => println!("Debug file \"{}\" recreated", DEBUG_FILE),
+    Err(e) => panic!("ERROR: Debug file recreation failed: {}", e),
   }
   
   // manage settings, cgi and so on

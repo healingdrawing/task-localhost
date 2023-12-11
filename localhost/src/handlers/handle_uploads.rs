@@ -8,7 +8,7 @@ use crate::handlers::uploads_delete::delete_the_file_from_uploads_folder;
 use crate::handlers::uploads_get::generate_uploads_html;
 use crate::handlers::uploads_set::upload_the_file_into_uploads_folder;
 use crate::server::core::ServerConfig;
-use crate::stream::errors::{ERROR_200_OK, ERROR_500_INTERNAL_SERVER_ERROR};
+use crate::stream::errors::{ERROR_200_OK, ERROR_400_BAD_REQUEST};
 use crate::stream::errors:: ERROR_400_HEADERS_FAILED_TO_PARSE;
 use crate::stream::errors::ERROR_400_HEADERS_KEY_NOT_FOUND;
 
@@ -63,7 +63,7 @@ pub fn handle_uploads(
   // check if method is allowed for this path or return 405
   let request_method_string = request.method().to_string();
   if !allowed_methods.contains(&request_method_string){
-    eprintln!("ERROR: method {} is not allowed for uploads", request_method_string);
+    eprintln!("ERROR: Method {} is not allowed for uploads", request_method_string);
     return custom_response_4xx(
       request,
       cookie_value,
@@ -72,7 +72,7 @@ pub fn handle_uploads(
       http::StatusCode::METHOD_NOT_ALLOWED,
     )
   } else if !server_config.uploads_methods.contains(&request_method_string){
-    eprintln!("ERROR: method {} is not allowed for uploads in server_config", request_method_string);
+    eprintln!("ERROR: Method {} is not allowed for uploads in server_config", request_method_string);
     return custom_response_4xx(
       request,
       cookie_value,
@@ -92,7 +92,7 @@ pub fn handle_uploads(
       match upload_the_file_into_uploads_folder(request, &absolute_path).as_str(){
         ERROR_200_OK => {/* do nothing. file uploaded successfully */},
         ERROR_400_HEADERS_KEY_NOT_FOUND => {
-          eprintln!("ERROR: header X-File-Name not found in request");
+          eprintln!("ERROR: Header \"X-File-Name\" not found in request");
           return custom_response_4xx(
             request,
             cookie_value,
@@ -102,7 +102,7 @@ pub fn handle_uploads(
           );
         },
         ERROR_400_HEADERS_FAILED_TO_PARSE => {
-          eprintln!("ERROR: failed to parse header_value into file_name");
+          eprintln!("ERROR: Failed to parse header_value into file_name");
           return custom_response_4xx(
             request,
             cookie_value,
@@ -112,7 +112,7 @@ pub fn handle_uploads(
           );
         },
         _ => {
-          eprintln!("ERROR: failed to upload the file into uploads folder");
+          eprintln!("ERROR: Failed to upload the file into uploads folder");
           return custom_response_500(
             request,
             cookie_value,
@@ -123,9 +123,32 @@ pub fn handle_uploads(
       };
 
     },
-    "DELETE" => { delete_the_file_from_uploads_folder(request, &absolute_path); },
+    "DELETE" => {
+      match delete_the_file_from_uploads_folder(request, &absolute_path).as_str(){
+        ERROR_200_OK => {/* do nothing. file deleted successfully */},
+        ERROR_400_BAD_REQUEST => {
+          eprintln!("ERROR: Failed to parse body into file_name");
+          return custom_response_4xx(
+            request,
+            cookie_value,
+            zero_path_buf,
+            server_config,
+            StatusCode::BAD_REQUEST,
+          );
+        },
+        _ => {
+          eprintln!("ERROR: Failed to delete the file from uploads folder");
+          return custom_response_500(
+            request,
+            cookie_value,
+            zero_path_buf,
+            server_config,
+          );
+        }
+      };
+    },
     _ => {
-      eprintln!("ERROR: method {} is not implemented for path {}.\nShould never fire, because checked above!!!", request_method_string, path);
+      eprintln!("ERROR: Method {} is not implemented for path {}.\nShould never fire, because checked above!!!", request_method_string, path);
       return custom_response_500(
         request,
         cookie_value,
@@ -138,7 +161,7 @@ pub fn handle_uploads(
   // generate html page with list of files in uploads folder
   let (html, status) = generate_uploads_html( &absolute_path, );
   if status != ERROR_200_OK {
-    eprintln!("ERROR: failed to generate html page with list of files in uploads folder");
+    eprintln!("ERROR: Failed to generate html page with list of files in uploads folder");
     return custom_response_500(
       request,
       cookie_value,

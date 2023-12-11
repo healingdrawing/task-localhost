@@ -33,7 +33,7 @@ pub fn read_with_timeout(
   loop {
     // Check if the timeout has expired
     if start_time.elapsed() >= timeout {
-      eprintln!("ERROR: headers read timed out");
+      eprintln!("ERROR: Headers read timed out");
       *global_error_string = ERROR_400_HEADERS_READ_TIMEOUT.to_string();
       return;
     }
@@ -63,7 +63,7 @@ pub fn read_with_timeout(
       },
       Err(e) => {
         // Other error occurred
-        eprintln!("ERROR: reading from stream: {}", e);
+        eprintln!("ERROR: Reading headers from stream: {}", e);
         *global_error_string = ERROR_400_HEADERS_READING_STREAM.to_string();
         return;
       },
@@ -108,7 +108,7 @@ pub fn read_with_timeout(
     loop { // since timeout implemented, skip the first chunk size line which is sum of all chunks
       // Check if the timeout has expired
       if start_time.elapsed() >= timeout {
-        eprintln!("ERROR: sum chunk size read timed out");
+        eprintln!("ERROR: Sum chunk size read timed out");
         *global_error_string = ERROR_400_BODY_SUM_CHUNK_SIZE_READ_TIMEOUT.to_string();
         return;
       }
@@ -122,7 +122,7 @@ pub fn read_with_timeout(
           
           // Check if the body size is bigger than client_body_size
           if body_size > client_body_size {
-            eprintln!("ERROR: body size is bigger than client_body_size limit: {} > {}", body_size, client_body_size);
+            eprintln!("ERROR: Body size is bigger than client_body_size limit: {} > {}", body_size, client_body_size);
             *global_error_string = ERROR_413_BODY_SIZE_LIMIT.to_string();
             return;
           }
@@ -137,7 +137,7 @@ pub fn read_with_timeout(
           continue;
         },
         Err(e) => { // Other error occurred
-          eprintln!("ERROR: reading sum chunk size from stream: {}", e);
+          eprintln!("ERROR: Reading sum chunk size from stream: {}", e);
           *global_error_string = ERROR_400_BODY_SUM_CHUNK_SIZE_READING_STREAM.to_string();
           return;
         },
@@ -158,7 +158,7 @@ pub fn read_with_timeout(
         // Check if the end of the stream has been reached
         if sum_chunk_size == 0
         {
-          eprintln!("ERROR: chunked body with zero sum chunk size");
+          eprintln!("ERROR: Chunked body with zero sum chunk size");
           *global_error_string = ERROR_400_BODY_CHUNKED_BUT_ZERO_SUM_CHUNK_SIZE.to_string();
           return;
         }
@@ -181,7 +181,7 @@ pub fn read_with_timeout(
       
       // Check if the timeout has expired
       if start_time.elapsed() >= timeout {
-        eprintln!("ERROR: chunk size read timed out");
+        eprintln!("ERROR: Chunk size read timed out");
         *global_error_string = ERROR_400_BODY_CHUNK_SIZE_READ_TIMEOUT.to_string();
         return;
       }
@@ -199,7 +199,7 @@ pub fn read_with_timeout(
           
           // Check if the body size is bigger than client_body_size
           if body_size > client_body_size {
-            eprintln!("ERROR: body size is bigger than client_body_size limit: {} > {}", body_size, client_body_size);
+            eprintln!("ERROR: Body size is bigger than client_body_size limit: {} > {}", body_size, client_body_size);
             *global_error_string = ERROR_413_BODY_SIZE_LIMIT.to_string();
             return;
           }
@@ -219,7 +219,7 @@ pub fn read_with_timeout(
         },
         Err(e) => {
           // Other error occurred
-          eprintln!("ERROR: reading chunk size from stream: {}", e);
+          eprintln!("ERROR: Reading chunk size from stream: {}", e);
           *global_error_string = ERROR_400_BODY_CHUNK_SIZE_READING_STREAM.to_string();
           return;
         },
@@ -250,7 +250,7 @@ pub fn read_with_timeout(
             
             // Check if the timeout has expired
             if start_time.elapsed() >= timeout {
-              println!("ERROR: chunk body read timed out");
+              println!("ERROR: Chunk body read timed out");
               *global_error_string = ERROR_400_BODY_CHUNK_READ_TIMEOUT.to_string();
               return;
             }
@@ -268,7 +268,7 @@ pub fn read_with_timeout(
                 
                 // Check if the body size is bigger than client_body_size
                 if body_size > client_body_size {
-                  eprintln!("ERROR: body size is bigger than client_body_size limit: {} > {}", body_size, client_body_size);
+                  eprintln!("ERROR: Body size is bigger than client_body_size limit: {} > {}", body_size, client_body_size);
                   *global_error_string = ERROR_413_BODY_SIZE_LIMIT.to_string();
                   return;
                 }
@@ -288,7 +288,7 @@ pub fn read_with_timeout(
               },
               Err(e) => {
                 // Other error occurred
-                eprintln!("ERROR: reading chunk from stream: {}", e);
+                eprintln!("ERROR: Reading chunk from stream: {}", e);
                 *global_error_string = ERROR_400_BODY_CHUNK_READING_STREAM.to_string();
                 return;
               },
@@ -312,7 +312,7 @@ pub fn read_with_timeout(
             else if chunk_buffer.len() > chunk_size + 2 //todo: not obvious, probably
             { // the chunk is broken, because it is bigger than chunk_size
               
-              eprintln!("ERROR: chunk is bigger than chunk_size");
+              eprintln!("ERROR: Chunk is bigger than chunk_size");
               *global_error_string = ERROR_400_BODY_CHUNK_IS_BIGGER_THAN_CHUNK_SIZE.to_string();
               return;
             }
@@ -380,7 +380,7 @@ pub fn read_with_timeout(
       
       // Check if the timeout has expired
       if start_time.elapsed() >= timeout {
-        eprintln!("ERROR: body read timed out");
+        eprintln!("ERROR: Body read timed out");
         *global_error_string = ERROR_400_BODY_READ_TIMEOUT.to_string();
         return;
       }
@@ -391,7 +391,7 @@ pub fn read_with_timeout(
         if body_buffer.len() == 0{
           break; // let is say that there is no body in this case, so continue
         } else {
-          eprintln!("ERROR: dirty body read timed out.\n = File: {}, Line: {}, Column: {}", file!(), line!(), column!()); //todo: remove later
+          eprintln!("ERROR: Dirty body read timed out.\n = File: {}, Line: {}, Column: {}", file!(), line!(), column!()); //todo: remove later
           *global_error_string = ERROR_400_DIRTY_BODY_READ_TIMEOUT.to_string();
           return;
         }
@@ -410,7 +410,7 @@ pub fn read_with_timeout(
           
           // Check if the body size is bigger than client_body_size
           if body_size > client_body_size {
-            eprintln!("ERROR: body size is bigger than client_body_size limit: {} > {}", body_size, client_body_size);
+            eprintln!("ERROR: Body size is bigger than client_body_size limit: {} > {}", body_size, client_body_size);
             *global_error_string = ERROR_413_BODY_SIZE_LIMIT.to_string();
             return;
           }
@@ -430,7 +430,7 @@ pub fn read_with_timeout(
         },
         Err(e) => {
           // Other error occurred
-          eprintln!("ERROR: reading from stream: {}", e);
+          eprintln!("ERROR: Reading from stream: {}", e);
           *global_error_string = ERROR_400_BODY_READING_STREAM.to_string();
           return;
         },

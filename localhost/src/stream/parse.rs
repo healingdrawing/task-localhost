@@ -47,7 +47,7 @@ pub fn parse_raw_request(
   let request_line: String = match headers_lines.get(0) {
     Some(value) => {value.to_string()},
     None => {
-      eprintln!("ERROR: Fail to get request_line");
+      eprintln!("ERROR: Failed to get request_line");
       *global_error_string = ERROR_500_INTERNAL_SERVER_ERROR.to_string();
       return;
     },
@@ -67,7 +67,7 @@ pub fn parse_raw_request(
     let line: String = match headers_lines.get(line_index){
       Some(value) => {value.to_string()},
       None => {
-        eprintln!("ERROR: Fail to get header line");
+        eprintln!("ERROR: Failed to get header line");
         *global_error_string = ERROR_500_INTERNAL_SERVER_ERROR.to_string();
         return;
       },

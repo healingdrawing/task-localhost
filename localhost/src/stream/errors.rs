@@ -1,5 +1,6 @@
 pub const ERROR_200_OK: &str = "[200] OK"; // not an error, but for consistency
 
+pub const ERROR_400_BAD_REQUEST: &str = "[400] BAD REQUEST";
 pub const ERROR_400_HEADERS_READ_TIMEOUT: &str = "[400] HEADERS READ TIMEOUT";
 pub const ERROR_400_HEADERS_READING_STREAM: &str = "[400] HEADERS READING STREAM";
 pub const ERROR_400_HEADERS_BUFFER_IS_EMPTY: &str = "[400] HEADERS BUFFER IS EMPTY";
@@ -51,7 +52,8 @@ pub const ERROR_413_BODY_SIZE_LIMIT: &str =
 pub const ERROR_500_INTERNAL_SERVER_ERROR: &str = "[500] INTERNAL SERVER ERROR";
 
 /// array of custom errors for 400 status code. To use in handle
-pub const CUSTOM_ERRORS_400: [&str; 29] = [
+pub const CUSTOM_ERRORS_400: [&str; 30] = [
+ERROR_400_BAD_REQUEST,
 ERROR_400_HEADERS_READ_TIMEOUT,
 ERROR_400_HEADERS_READING_STREAM,
 ERROR_400_HEADERS_BUFFER_IS_EMPTY,

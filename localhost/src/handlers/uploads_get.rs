@@ -18,8 +18,7 @@ pub fn generate_uploads_html(absolute_path: &PathBuf) -> (String, String) {
   html.push_str("<h1>Uploads</h1>");
   html.push_str("<ul>");
   
-  // manage unwraps properly
-  let mut entries = match fs::read_dir(absolute_path) {
+  let entries = match fs::read_dir(absolute_path) {
     Ok(v) => v,
     Err(e) => {
       eprintln!("ERROR: Failed to read uploads folder: {}", e);
@@ -57,7 +56,7 @@ pub fn generate_uploads_html(absolute_path: &PathBuf) -> (String, String) {
       };
       
       if bad_file_name(file_name_str) {
-        eprintln!("ERROR: bad file name \"{}\" inside \"uploads\" folder.\nPotential crappers activity :|,\nor file name was sanitised not properly\nin time of uploading\nSKIPPED\n", file_name_str);
+        eprintln!("ERROR: Bad file name \"{}\" inside \"uploads\" folder.\nPotential crappers activity :|,\nor file name was sanitised not properly\nin time of uploading\nSKIPPED\n", file_name_str);
         continue;
       }
       if file_name_str == ".gitignore" { continue; }
@@ -70,28 +69,6 @@ pub fn generate_uploads_html(absolute_path: &PathBuf) -> (String, String) {
     }
     
   }
-  
-  // unwraps not managed properly
-  /*
-  for entry in fs::read_dir(absolute_path).unwrap() {
-    let entry = entry.unwrap();
-    let path = entry.path();
-    if path.is_file() {
-      let file_name = path.file_name().unwrap().to_str().unwrap();
-      
-      if bad_file_name(file_name) {
-        eprintln!("ERROR: bad file name \"{}\" inside \"uploads\" folder.\nPotential crappers activity :|,\nor file_name sanitised not properly\n", file_name);
-        continue;
-      }
-      if file_name == ".gitignore" { continue; }
-      
-      html.push_str("\n<li>");
-      html.push_str(&format!("\n<button onclick=\"deleteFile('{}')\">Delete</button>", file_name));
-      html.push_str(&format!("\n<a href=\"/uploads/{}\">{}</a>", file_name, file_name));
-      html.push_str("\n</li>");
-    }
-  }
-  */
   
   html.push_str("\n</ul>");
   
@@ -276,7 +253,7 @@ pub fn handle_uploads_get_uploaded_file(
   // check if method is allowed for this path or return 405
   let request_method_string = request.method().to_string();
   if !allowed_methods.contains(&request_method_string){
-    eprintln!("ERROR: method {} is not allowed for path {}", request_method_string, path_str);
+    eprintln!("ERROR: Method {} is not allowed for path {}", request_method_string, path_str);
     return custom_response_4xx(
       request,
       cookie_value,
@@ -329,7 +306,7 @@ pub fn handle_uploads_get_uploaded_file(
         Ok(v) => v,
         Err(e) => {
           eprintln!("ERROR: Failed to parse mime type: {}", e);
-          "text/plain".parse().unwrap()
+          "text/plain".parse().unwrap() // must be safe, otherwise rust must be r.i.p.
         }
       }
     );

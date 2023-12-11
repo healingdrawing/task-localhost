@@ -50,8 +50,6 @@ pub fn handle_cgi(
   // write to the stream
   let body = format!("Hello from Rust and Python3: {}\n\n", result)
   .as_bytes().to_vec();
-  // let mut response = Response::new(body.as_bytes().to_vec());
-  // response.headers_mut().insert("Content-Type", "text/plain".parse().unwrap());
   
   let response = match Response::builder()
   .status(StatusCode::OK)
