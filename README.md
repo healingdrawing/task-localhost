@@ -51,7 +51,7 @@ So finally it should looks like:
 Do not create messy and follow examples style to structure sites. Or just do nothing.
 Do not use spaces in the names of any folders and files.  
 
-According to task methods `GET`, `HEAD`, `POST`, `PUT`, `DELETE` must be implemented. 
+According to task methods `GET`, `POST`, `DELETE` must be implemented. 
 Do not use other methods to configure the server routes.  
 
 Place inside the `static` folder the folder with the unique name of the site, f.e. `site2`, and inside the site folder place the `index.html` file and so on.  
