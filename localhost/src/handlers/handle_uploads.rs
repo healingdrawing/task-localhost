@@ -135,9 +135,23 @@ pub fn handle_uploads(
     },
   }
   
-  body_content.extend_from_slice(
-    generate_uploads_html( &absolute_path, ).as_bytes(),
-  );
+  // generate html page with list of files in uploads folder
+  let (html, status) = generate_uploads_html( &absolute_path, );
+  if status != ERROR_200_OK {
+    eprintln!("ERROR: failed to generate html page with list of files in uploads folder");
+    return custom_response_500(
+      request,
+      cookie_value,
+      zero_path_buf,
+      server_config,
+    );
+  }
+
+  body_content.extend_from_slice(html.as_bytes());
+
+  // body_content.extend_from_slice(
+  //   generate_uploads_html( &absolute_path, ).as_bytes(),
+  // );
 
   let response = match Response::builder()
   .status(StatusCode::OK)

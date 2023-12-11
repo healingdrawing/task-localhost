@@ -2,20 +2,77 @@ use std::{path::PathBuf, fs};
 
 use http::{Request, Response, StatusCode};
 
-use crate::server::core::ServerConfig;
+use crate::files::check::bad_file_name;
 use crate::handlers::response_::response_default_static_file;
 use crate::handlers::response_4xx::custom_response_4xx;
 use crate::handlers::response_500::custom_response_500;
-use crate::files::check::bad_file_name;
+use crate::server::core::ServerConfig;
+use crate::stream::errors::{ERROR_200_OK, ERROR_500_INTERNAL_SERVER_ERROR};
 
 
 /// html is generated in code. Not templates etc.
 /// 
 /// To decrease dependencies and avoid any extra activities.
-pub fn generate_uploads_html(absolute_path: &PathBuf) -> String {
+pub fn generate_uploads_html(absolute_path: &PathBuf) -> (String, String) {
   let mut html = String::new();
   html.push_str("<h1>Uploads</h1>");
   html.push_str("<ul>");
+  
+  // manage unwraps properly
+  let mut entries = match fs::read_dir(absolute_path) {
+    Ok(v) => v,
+    Err(e) => {
+      eprintln!("ERROR: Failed to read uploads folder: {}", e);
+      return (html, ERROR_500_INTERNAL_SERVER_ERROR.to_string());
+    },
+  };
+  
+  for entry in entries {
+
+    let entry = match entry {
+      Ok(v) => v,
+      Err(e) => {
+        eprintln!("ERROR: Failed to read uploads folder entry: {}\nSKIPPED", e);
+        continue;
+      }
+    };
+    
+    let path = entry.path();
+    if path.is_file() {
+      
+      let file_name = match path.file_name() {
+        Some(v) => v,
+        None => {
+          eprintln!("ERROR: Failed to get file name from path: {:?}\nSKIPPED", path);
+          continue;
+        }
+      };
+      
+      let file_name_str = match file_name.to_str() {
+        Some(v) => v,
+        None => {
+          eprintln!("ERROR: Failed to convert file name to str: {:?}\nSKIPPED", file_name);
+          continue;
+        }
+      };
+      
+      if bad_file_name(file_name_str) {
+        eprintln!("ERROR: bad file name \"{}\" inside \"uploads\" folder.\nPotential crappers activity :|,\nor file name was sanitised not properly\nin time of uploading\nSKIPPED\n", file_name_str);
+        continue;
+      }
+      if file_name_str == ".gitignore" { continue; }
+      
+      html.push_str("\n<li>");
+      html.push_str(&format!("\n<button onclick=\"deleteFile('{}')\">Delete</button>", file_name_str));
+      html.push_str(&format!("\n<a href=\"/uploads/{}\">{}</a>", file_name_str, file_name_str));
+      html.push_str("\n</li>");
+      
+    }
+    
+  }
+  
+  // unwraps not managed properly
+  /*
   for entry in fs::read_dir(absolute_path).unwrap() {
     let entry = entry.unwrap();
     let path = entry.path();
@@ -34,6 +91,8 @@ pub fn generate_uploads_html(absolute_path: &PathBuf) -> String {
       html.push_str("\n</li>");
     }
   }
+  */
+  
   html.push_str("\n</ul>");
   
   let form = r#"
@@ -150,7 +209,7 @@ pub fn generate_uploads_html(absolute_path: &PathBuf) -> String {
   
   html.push_str(&script);
   
-  html
+  (html, ERROR_200_OK.to_string())
 }
 
 
@@ -188,7 +247,7 @@ pub fn handle_uploads_get_uploaded_file(
         StatusCode::FORBIDDEN,
       );
     }
-
+    
     return response_default_static_file(
       request,
       cookie_value,
