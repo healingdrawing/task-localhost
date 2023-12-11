@@ -6,8 +6,9 @@ use crate::stream::write_error::write_critical_error_response_into_stream;
 
 pub fn write_response_into_stream(stream: &mut TcpStream, response: Response<Vec<u8>>) -> std::io::Result<()> {
   
-  println!("\n\n\n=== write_response_into_stream:"); //todo: remove dev print
+  // println!("\n\n\n=== write_response_into_stream:"); //todo: remove dev print
   
+  /*
   println!(
     "response body string: {:?}",
     match std::str::from_utf8(&response.body().clone()){
@@ -18,11 +19,12 @@ pub fn write_response_into_stream(stream: &mut TcpStream, response: Response<Vec
       }
     }
   ); //todo: remove dev print. always fails with favicon.ico request, because it is not utf8 string but binary data
+  */
   
   // Break down the response into its parts
   let (parts, mut body) = response.into_parts();
   
-  println!("\n\nThe parts: {:?}", parts); //todo: remove dev print
+  // println!("\n\nThe parts: {:?}", parts); //todo: remove dev print
   
   // manage errors
   let mut status: http::StatusCode ;
@@ -53,8 +55,6 @@ pub fn write_response_into_stream(stream: &mut TcpStream, response: Response<Vec
   };
   
   // Format the headers
-  // let headers = parts.headers.iter().map(|(name, value)| format!("{}: {}\r\n", name.as_str(), value.to_str().unwrap())).collect::<String>();
-  // the same as above, but handle the error case, and use the for loop instead of map
   let mut headers = String::new();
   for (name, value) in parts.headers.iter(){
     let name = name.as_str();

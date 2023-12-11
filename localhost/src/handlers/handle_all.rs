@@ -15,8 +15,9 @@ use crate::handlers::response_4xx::custom_response_4xx;
 /// according to server config. So in this case, there is no need to check the method,
 /// allowed for route.
 pub fn handle_all(
-  zero_path_buf: PathBuf,
   request: &Request<Vec<u8>>,
+  cookie_value:String,
+  zero_path_buf: PathBuf,
   server_config: ServerConfig,
 ) -> Response<Vec<u8>>{
   // todo: refactor path check to os separator instead of hardcoding of / ... probably
@@ -42,6 +43,7 @@ pub fn handle_all(
         eprintln!(" Must never fire, because path checked/confirmed before.\nSo return [500]");
         return custom_response_500(
           request,
+          cookie_value,
           zero_path_buf,
           server_config,
         );
@@ -58,13 +60,19 @@ pub fn handle_all(
   
   // check if path is directory, then return default file as task requires
   if path_str.ends_with("/") || absolute_path_buf.is_dir() {
-    return response_default_static_file( zero_path_buf, request, server_config, );
+    return response_default_static_file(
+      request,
+      cookie_value,
+      zero_path_buf,
+      server_config,
+    );
   } else if !absolute_path_buf.is_file() {
     
     eprintln!("ERROR:\n------------\nIS NOT A FILE\n-------------");
     
     return custom_response_4xx(
       request, 
+      cookie_value,
       zero_path_buf, 
       server_config,
       StatusCode::NOT_FOUND,
@@ -115,6 +123,7 @@ pub fn handle_all(
         eprintln!("ERROR: path {} is not inside routes", path_str);
         return custom_response_4xx(
           request,
+          cookie_value,
           zero_path_buf,
           server_config,
           http::StatusCode::NOT_FOUND,
@@ -130,6 +139,7 @@ pub fn handle_all(
     eprintln!("ERROR: method {} is not allowed for path {}", request_method_string, path_str);
     return custom_response_4xx(
       request,
+      cookie_value,
       zero_path_buf,
       server_config,
       http::StatusCode::METHOD_NOT_ALLOWED,
@@ -143,6 +153,7 @@ pub fn handle_all(
       eprintln!("ERROR: Failed to read file: {}", e);
       return custom_response_500(
         request,
+        cookie_value,
         zero_path_buf,
         server_config
       )
@@ -157,6 +168,7 @@ pub fn handle_all(
       server_config.clone(),
     )
   )
+  .header("Set-Cookie", cookie_value.clone())
   .body(file_content)
   {
     Ok(v) => v,
@@ -164,6 +176,7 @@ pub fn handle_all(
       eprintln!("ERROR: Failed to create response with file: {}", e);
       return custom_response_500(
         request,
+        cookie_value.clone(),
         zero_path_buf,
         server_config)
       }
@@ -174,7 +187,7 @@ pub fn handle_all(
       Some(v) => v.to_string(),
       None => "text/plain".to_string(),
     };
-    println!("\n-------\n\nmime_type {}\n\n----------\n", mime_type); //todo: remove dev print
+    // println!("\n-------\n\nmime_type {}\n\n----------\n", mime_type); //todo: remove dev print
     
     response.headers_mut().insert(
       "Content-Type",

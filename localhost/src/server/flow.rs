@@ -91,12 +91,12 @@ loop {
   
   for event in events.iter() {
     
-    println!("event: {:?}", event); //todo: remove dev print
+    // println!("event: {:?}", event); //todo: remove dev print
     
     let token = event.token();
     
     // Find the server associated with the token
-    let mut server = match servers.iter_mut().find(|s| s.token.0 == token.0){
+    let server = match servers.iter_mut().find(|s| s.token.0 == token.0){
       Some(v) => v,
       None => {
         eprintln!("ERROR: Failed to find server by token: {}", token.0);
@@ -104,7 +104,7 @@ loop {
       }
     };
     
-    println!("server: {:?}", server); //todo: remove dev print
+    // println!("server: {:?}", server); //todo: remove dev print
     
     // Accept the incoming connection
     let (mut stream, _) = match server.listener.accept() {
@@ -120,10 +120,10 @@ loop {
       }
     };
     
-    println!("stream: {:?}", stream); //todo: remove dev print
+    // println!("stream: {:?}", stream); //todo: remove dev print
     
     // create buffers here and fill them inside read_with_timeout
-    let timeout = Duration::from_millis(5000);
+    let timeout = Duration::from_millis(1000);
     let mut headers_buffer: Vec<u8> = Vec::new();
     let mut body_buffer: Vec<u8> = Vec::new();
     
@@ -131,8 +131,6 @@ loop {
     let mut choosen_server_config = server_configs[0].clone();
     // if nothing will update it, then let is say that the process is ok
     let mut global_error_string = ERROR_200_OK.to_string();
-    
-    // println!("=== choosen_server_config: {:?}", choosen_server_config); //todo: remove dev print
     
     let mut response:Response<Vec<u8>> = Response::new(Vec::new());
     
@@ -147,17 +145,12 @@ loop {
       &mut global_error_string,
     );
     
-    // println!("=== updated choosen_server_config:\n{:?}", choosen_server_config); //todo: remove dev print
-    
-    // println!("Buffer sizes after read: headers_buffer: {}, body_buffer: {}", headers_buffer.len(), body_buffer.len()); //todo: remove dev print
+    // println!("=== updated choosen_server_config:\n{:?}", choosen_server_config);
     
     if headers_buffer.is_empty() {
       println!("========================\n=   NO DATA RECEIVED   =\n= EMPTY HEADERS BUFFER =\n========================");
     }else if body_buffer.is_empty() {
       println!("=====================\n= EMPTY BODY BUFFER =\n=====================");
-    }else{
-      println!("buffers are not empty"); //todo: remove dev print
-      println!("Raw buffers:\nheaders_buffer:\n=\n{}\n=\nbody_buffer:\n=\n{}\n=", String::from_utf8_lossy(&headers_buffer), String::from_utf8_lossy(&body_buffer));
     }
     
     let mut request = Request::new(Vec::new());
@@ -170,23 +163,20 @@ loop {
         &mut request,
         &mut global_error_string,
       );
-      // println!("request: {:?}", request); //todo: remove dev print
       
     }
     
-
     server.check_expired_cookies();
     let (cookie_value, cookie_is_ok) = server.extract_cookies_from_request_or_provide_new(&request);
     if !cookie_is_ok {
       global_error_string = ERROR_400_HEADERS_INVALID_COOKIE.to_string();
     }
 
-    println!("flow level cookie_value: {}", cookie_value); //todo: remove dev print
-
     if global_error_string == ERROR_200_OK.to_string() {
       
       response = handle_request(
         &request,
+        cookie_value.clone(),
         zero_path_buf.clone(),
         choosen_server_config.clone(),
         &mut global_error_string,
@@ -197,6 +187,7 @@ loop {
     check_custom_errors(
       global_error_string,
       &request,
+      cookie_value.clone(),
       zero_path_buf.clone(),
       choosen_server_config.clone(),
       &mut response,

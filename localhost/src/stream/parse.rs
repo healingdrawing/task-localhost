@@ -170,7 +170,7 @@ pub fn parse_request_line(
     return Err(ERROR_400_HEADERS_INVALID_VERSION.into());
   }
 
-  println!("PARSED method: {:?}, uri: {:?}, version: {:?}", method, uri, version); //todo: remove dev print
+  // println!("PARSED method: {:?}, uri: {:?}, version: {:?}", method, uri, version); //todo: remove dev print
 
   Ok((method, uri, Version::HTTP_11))
 

@@ -2,18 +2,22 @@ use std::path::PathBuf;
 
 use http::{Response, Request, StatusCode};
 
-use crate::{server::core::ServerConfig, handlers::response_500::custom_response_500};
-use crate::stream::errors::{CUSTOM_ERRORS_400, CUSTOM_ERRORS_413, CUSTOM_ERRORS_500, ERROR_200_OK};
-
 use crate::files::check::ERROR_PAGES;
 
-use super::response_4xx::custom_response_4xx;
+use crate::handlers::response_500::custom_response_500;
+use crate::handlers::response_4xx::custom_response_4xx;
+
+use crate::server::core::ServerConfig;
+
+use crate::stream::errors::{CUSTOM_ERRORS_400, CUSTOM_ERRORS_413};
+use crate::stream::errors::{CUSTOM_ERRORS_500, ERROR_200_OK};
 
 
 /// create response with static file, according to server config
 pub fn response_default_static_file(
-  zero_path_buf: PathBuf,
   request: &Request<Vec<u8>>,
+  cookie_value:String,
+  zero_path_buf: PathBuf,
   server_config: ServerConfig,
 ) -> Response<Vec<u8>>{
   let default_file_path = zero_path_buf
@@ -29,9 +33,10 @@ pub fn response_default_static_file(
     Err(e) => {
       eprintln!("ERROR: Failed to read default file: {}", e); //todo: remove dev print
       return custom_response_500(
-        request, 
-        zero_path_buf, 
-        server_config
+        request,
+        cookie_value,
+        zero_path_buf,
+        server_config,
       )
     }
   };
@@ -39,6 +44,7 @@ pub fn response_default_static_file(
   let response = match Response::builder()
   .status(StatusCode::OK)
   .header("Content-Type", "text/html")
+  .header("Set-Cookie", cookie_value.clone())
   .body(default_file_content)
   {
     Ok(v) => v,
@@ -46,8 +52,9 @@ pub fn response_default_static_file(
       eprintln!("ERROR: Failed to create response with default file: {}", e);
       return custom_response_500(
         request, 
-        zero_path_buf, 
-        server_config
+        cookie_value.clone(),
+        zero_path_buf,
+        server_config,
       )
     }
   };
@@ -59,6 +66,7 @@ pub fn response_default_static_file(
 pub fn check_custom_errors(
   custom_error_string: String,
   request: &Request<Vec<u8>>,
+  cookie_value:String,
   zero_path_buf: PathBuf,
   server_config: ServerConfig,
   response: &mut Response<Vec<u8>>,
@@ -71,6 +79,7 @@ pub fn check_custom_errors(
       if custom_error_string == *error{
         *response = custom_response_4xx(
           request,
+          cookie_value,
           zero_path_buf.clone(),
           server_config.clone(),
           StatusCode::BAD_REQUEST
@@ -84,6 +93,7 @@ pub fn check_custom_errors(
       if custom_error_string == *error{
         *response = custom_response_4xx(
           request,
+          cookie_value,
           zero_path_buf.clone(),
           server_config.clone(),
           StatusCode::PAYLOAD_TOO_LARGE
@@ -97,6 +107,7 @@ pub fn check_custom_errors(
       if custom_error_string == *error{
         *response = custom_response_500(
           request,
+          cookie_value,
           zero_path_buf.clone(),
           server_config.clone(),
         );
@@ -107,6 +118,7 @@ pub fn check_custom_errors(
     // if error not found, then return custom 500 response
     *response = custom_response_500(
       request,
+      cookie_value,
       zero_path_buf.clone(),
       server_config.clone(),
     )
@@ -124,23 +136,17 @@ pub fn force_status(
 )-> StatusCode {
   
   let error_pages_prefix = server_config.error_pages_prefix.clone();
-  println!("error_pages_prefix {:?}", error_pages_prefix); //todo: remove dev print
   
-  println!("absolute_path {:?}", absolute_path_buf); //todo: remove dev print
-  
-  // let absolute_path = absolute_path.to_str().unwrap().to_string();
   // check if path ends with error pages prefix
   for error_page in ERROR_PAGES.iter(){
-
-    // let error_path = "/".to_owned() + &error_pages_prefix + "/" + error_page;
+    
     let error_path = zero_path_buf
     .join("static")
     .join(&error_pages_prefix)
     .join(error_page);
-
-    println!("error path {:?}", error_path); //todo: remove dev print
+    
     if absolute_path_buf == error_path{
-      println!("path is error page {:?}", error_page); //todo: remove dev print
+      // println!("path \"{:?}\" is error page \"{:?}\"", error_path, error_page); //todo: remove dev print
       return match error_page{
         &"400.html" => StatusCode::BAD_REQUEST,
         &"403.html" => StatusCode::FORBIDDEN,

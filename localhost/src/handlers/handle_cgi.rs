@@ -2,7 +2,8 @@ use std::{process::Command, path::PathBuf};
 
 use http::{Request, Response, StatusCode};
 
-use crate::{server::core::ServerConfig, handlers::response_500::custom_response_500};
+use crate::server::core::ServerConfig;
+use crate::handlers::response_500::custom_response_500;
 
 /// run python script , and check the path is file,folder or not exist/wrong path
 /// 
@@ -10,10 +11,11 @@ use crate::{server::core::ServerConfig, handlers::response_500::custom_response_
 /// 
 /// cgi/useless.py//some/path/here. but in exact this case allow only to check
 pub fn handle_cgi(
+  request: &Request<Vec<u8>>,
+  cookie_value:String,
   zero_path_buf: PathBuf,
   script_file_name: String,
   check_file_path: String,
-  request: &Request<Vec<u8>>,
   server_config: ServerConfig,
 ) -> Response<Vec<u8>>{
   println!("\n\nhandle_cgi_request: check_file_path: {:?}", check_file_path); //todo: remove dev print
@@ -58,15 +60,18 @@ pub fn handle_cgi(
   let response = match Response::builder()
   .status(StatusCode::OK)
   .header("Content-Type", "text/plain")
+  .header("Set-Cookie", cookie_value.clone())
   .body(body)
   {
     Ok(v) => v,
     Err(e) => {
       eprintln!("Failed to build cgi response body | {}", e);
       return custom_response_500(
-        request, 
-        zero_path_buf, 
-        server_config)
+        request,
+        cookie_value.clone(),
+        zero_path_buf,
+        server_config,
+      )
     }
     
   };

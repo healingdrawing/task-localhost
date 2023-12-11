@@ -3,15 +3,6 @@ use sanitise_file_name::sanitise;
 
 use crate::server::core::ServerConfig;
 
-//ok it works
-pub fn dummy_check_file_path(){
-  let path = Path::new("debug.txt");
-   if path.exists() {
-       println!("File exists! {:?}", path);
-   } else {
-       println!("File does not exist! {:?}", path);
-   }
-}
 
 /// relative path from executable folder/level
 /// 
@@ -68,11 +59,7 @@ pub fn all_files_exists(server_configs: &Vec<ServerConfig>) -> bool{
 pub fn is_implemented_error_page(path: &str) -> bool{
   for error_page in ERROR_PAGES{
     if path.ends_with(error_page){ return true }
-    else{
-      println!("path {} does not end with error page {}", path, error_page); //todo: remove this dev print
-    }
   }
-
   false
 }
 

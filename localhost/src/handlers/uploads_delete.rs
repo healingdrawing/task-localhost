@@ -8,8 +8,6 @@ pub fn delete_the_file_from_uploads_folder(
   absolute_path: &PathBuf
 ) {
   
-  println!("=== INSIDE delete_the_file_from_uploads_folder");// todo: remove dev print
-
   let body = std::str::from_utf8(&request.body()).unwrap();
   let params: Vec<&str> = body.split('&').collect();
   let mut file_name = "";

@@ -1,15 +1,12 @@
-use http::Request;
 use mio::Token;
 use mio::net::TcpListener;
 use serde::Deserialize;
-use uuid::Uuid;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::error::Error;
-use std::time::Duration;
 use std::time::SystemTime;
 
-use super::cookie::Cookie;
+use crate::server::cookie::Cookie;
 
 
 #[derive(Debug, Deserialize, Clone)]

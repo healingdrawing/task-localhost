@@ -2,55 +2,6 @@ use http::{Request, HeaderMap, HeaderName, HeaderValue};
 use crate::server::core::ServerConfig;
 use crate::stream::parse::parse_request_line;
 
-/// at the moment not used
-pub fn server_config(
-  request: &Request<Vec<u8>>,
-  server_configs: Vec<ServerConfig>
-) -> ServerConfig{
-  // choose the server config, based on the server_name and port pair of the request,
-  // or use "default" , as task requires
-  let mut server_config = server_configs[0].clone(); // default server config
-  let request_server_host  = match request.headers().get("host"){
-    Some(value) => {
-      match value.to_str(){
-        Ok(v) => v.to_string(),
-        Err(e) => {
-          eprintln!("Failed to convert request host header value \"{:?}\" to str: {}.\n=> USE \"default\" server config with first port", value, e); //todo: remove dev print. Probably
-          server_config.server_name.clone() + ":" + &server_config.ports[0]
-        }
-      }
-    },
-    None => { 
-      eprintln!("Fail to get request host.\n=> USE \"default\" server config with first port"); //todo: remove dev print. Probably
-      server_config.server_name.clone() + ":" + &server_config.ports[0]
-    },
-  };
-  
-  println!("REQUEST_SERVER_HOST: {}", request_server_host); //todo: remove dev print
-  
-  // iterate server configs and the matching one will be used, two variants possible:
-  // match serverconfig.server_name + ":" + &serverconfig.ports[x](for each port) == request_server_host
-  // match server_config.server_address + ":" + &server_config.ports[x](for each port) == request_server_host
-  for config in server_configs{
-    let server_name = config.server_name.to_owned();
-    let server_address = config.server_address.to_owned();
-    for port in config.ports.clone(){
-      let name_port_host = server_name.to_owned() + ":" + &port;
-      // println!("NAME_PORT_HOST: {}", name_port_host); //todo: remove dev print
-      let address_port_host = server_address.to_owned() + ":" + &port;
-      if name_port_host == request_server_host
-      || address_port_host == request_server_host
-      {
-        server_config = config.clone();
-        break;
-      }
-    }
-  }
-  // println!("CHOOSEN server_config: {:?}", server_config.clone()); //todo: remove dev print
-
-  server_config
-
-}
 
 pub fn server_config_from_headers_buffer_or_use_default(
   headers_buffer: &Vec<u8>,
@@ -60,14 +11,14 @@ pub fn server_config_from_headers_buffer_or_use_default(
   let mut server_config = server_configs[0].clone(); // default server config
 
   if headers_buffer.is_empty() {
-    eprintln!("server_config_from_headers: headers_buffer is empty");
+    eprintln!("ERROR: server_config_from_headers: headers_buffer is empty");
     return server_config
   }
 
   let headers_string = match String::from_utf8( headers_buffer.clone() ){
     Ok(v) => v,
     Err(e) => {
-      eprintln!("Failed to convert headers_buffer to string:\n {}", e);
+      eprintln!("ERROR: Failed to convert headers_buffer to string:\n {}", e);
       return server_config
     }
   };
@@ -77,10 +28,12 @@ pub fn server_config_from_headers_buffer_or_use_default(
   
   // separate raw request to ... pieces as vector
   let mut headers_lines: Vec<String> = Vec::new();
-  for line in headers_string.split('\n'){ headers_lines.push(line.to_string()); }
+  for line in headers_string.split('\n'){
+    headers_lines.push(line.to_string());
+  }
   
   if headers_lines.is_empty() {
-    eprintln!("headers_lines is empty");
+    eprintln!("ERROR: headers_lines is empty");
     return server_config
   }
 
@@ -91,7 +44,7 @@ pub fn server_config_from_headers_buffer_or_use_default(
   let request_line: String = match headers_lines.get(0) {
     Some(value) => {value.to_string()},
     None => {
-      eprintln!("Fail to get request_line");
+      eprintln!("ERROR: Fail to get request_line");
       return server_config
     },
   };
@@ -99,7 +52,7 @@ pub fn server_config_from_headers_buffer_or_use_default(
   let (method, uri, version) = match parse_request_line(request_line.clone()){
     Ok(v) => v,
     Err(e) => {
-      eprintln!("Failed to parse request_line: {}", e);
+      eprintln!("ERROR: Failed to parse request_line: {}", e);
       return server_config
     }
   };
@@ -110,7 +63,7 @@ pub fn server_config_from_headers_buffer_or_use_default(
     let line: String = match headers_lines.get(line_index){
       Some(value) => {value.to_string()},
       None => {
-        eprintln!("Fail to get header line");
+        eprintln!("ERROR: Fail to get header line");
         return server_config
       },
     };
@@ -122,18 +75,16 @@ pub fn server_config_from_headers_buffer_or_use_default(
       let header_name = match HeaderName::from_bytes(parts[0].as_bytes()) {
         Ok(v) => v,
         Err(e) =>{
-          eprintln!("Invalid header name: {}\n {}", parts[0], e);
+          eprintln!("ERROR: Invalid header name: {}\n {}", parts[0], e);
           return server_config
         },
       };
-      // println!("parsed header_name: {}", header_name); //todo: remove dev print
-      // println!("raw header value parts[1]: {}", parts[1]);
-      // println!("raw header value len: {}", parts[1].len());
+      
       let value = HeaderValue::from_str( parts[1].trim());
       match value {
         Ok(v) => headers.insert(header_name, v),
         Err(e) =>{
-          eprintln!("Invalid header value: {}\n {}", parts[1], e);
+          eprintln!("ERROR: Invalid header value: {}\n {}", parts[1], e);
           return server_config
         },
       };
@@ -150,7 +101,7 @@ pub fn server_config_from_headers_buffer_or_use_default(
   .body(body_buffer){
     Ok(v) => v,
     Err(e) => {
-      eprintln!("Failed to construct the http::Request object: {}", e);
+      eprintln!("ERROR: Failed to construct the http::Request object: {}", e);
       return server_config
     }
   };
@@ -180,18 +131,16 @@ pub fn server_config_from_headers_buffer_or_use_default(
       match value.to_str(){
         Ok(v) => v.to_string(),
         Err(e) => {
-          eprintln!("Failed to convert request host header value \"{:?}\" to str: {}.\n=> USE \"default\" server config with first port", value, e); //todo: remove dev print. Probably
+          eprintln!("ERROR: Failed to convert request host header value \"{:?}\" to str: {}.\n=> USE \"default\" server config with first port", value, e);
           server_config.server_name.clone() + ":" + &server_config.ports[0]
         }
       }
     },
     None => { 
-      eprintln!("Fail to get request host.\n=> USE \"default\" server config with first port"); //todo: remove dev print. Probably
+      eprintln!("ERROR: Fail to get request host.\n=> USE \"default\" server config with first port"); //todo: remove dev print. Probably
       server_config.server_name.clone() + ":" + &server_config.ports[0]
     },
   };
-  
-  println!("REQUEST_SERVER_HOST: {}", request_server_host); //todo: remove dev print
   
   // iterate server configs and the matching one will be used, two variants possible:
   // match serverconfig.server_name + ":" + &serverconfig.ports[x](for each port) == request_server_host
@@ -201,7 +150,6 @@ pub fn server_config_from_headers_buffer_or_use_default(
     let server_address = config.server_address.to_owned();
     for port in config.ports.clone(){
       let name_port_host = server_name.to_owned() + ":" + &port;
-      // println!("NAME_PORT_HOST: {}", name_port_host); //todo: remove dev print
       let address_port_host = server_address.to_owned() + ":" + &port;
       if name_port_host == request_server_host
       || address_port_host == request_server_host
@@ -211,7 +159,7 @@ pub fn server_config_from_headers_buffer_or_use_default(
       }
     }
   }
-  // println!("CHOOSEN server_config: {:?}", server_config.clone()); //todo: remove dev print
-
+  
   server_config
+  
 }

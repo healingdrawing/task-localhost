@@ -5,9 +5,7 @@ use http::Request;
 use sanitise_file_name::sanitise;
 
 pub fn upload_the_file_into_uploads_folder(request: &Request<Vec<u8>>, absolute_path: &PathBuf) {
- println!("=== INSIDE upload_the_file_from_request");
- println!("request.body() {:?}", request.body());
-
+ 
  let file_content = &request.body()[..];
  let file_name = request.headers().get("X-File-Name").unwrap().to_str().unwrap();
 

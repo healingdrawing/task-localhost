@@ -18,20 +18,20 @@ const ALLOWED_4XX_STATUS_CODES: [StatusCode; 5] = [
 /// if error happens, then return custom_response_500
 pub fn custom_response_4xx(
   request: &Request<Vec<u8>>,
+  cookie_value:String,
   zero_path_buf: PathBuf,
   server_config: ServerConfig,
   status_code: StatusCode,
 ) -> Response<Vec<u8>>{
 
-  println!("\n\ncustom_response_4xx: status code {:?}", status_code); //todo: remove dev print
-
   // check status code is in 4xx list 400,403,404,405,413
   if !ALLOWED_4XX_STATUS_CODES.contains(&status_code){
     eprintln!("ERROR: Internal Server Error\ncustom_response_4xx: status code {:?}\nis not in 4xx list {:?}", status_code, ALLOWED_4XX_STATUS_CODES);
     return custom_response_500(
-      request, 
-      zero_path_buf, 
-      server_config
+      request,
+      cookie_value,
+      zero_path_buf,
+      server_config,
     );
   }
 
@@ -39,36 +39,35 @@ pub fn custom_response_4xx(
   .join("static")
   .join(server_config.error_pages_prefix.clone())
   .join(status_code.as_str().to_string() + ".html");
-  println!("error_page_path {:?}", error_page_path); //todo: remove dev print
-
+  
   // read the error page. if error, then return custom_response_500
   let error_page_content = match std::fs::read(error_page_path){
     Ok(v) => v,
     Err(e) => {
-      eprintln!("ERROR: Failed to read error page: {}", e); //todo: remove dev print
+      eprintln!("ERROR: Failed to read error page: {}", e);
       return custom_response_500(
-        request, 
-        zero_path_buf, 
-        server_config
+        request,
+        cookie_value,
+        zero_path_buf,
+        server_config,
       )
     }
   };
 
-  // let print_error_page_content = std::str::from_utf8(&error_page_content).unwrap(); //todo: remove dev print. it is unsafe
-  // println!("\n\nerror_page_content {:?}", print_error_page_content); //todo: remove dev print
-
   let response = match Response::builder()
   .status(status_code)
   .header("Content-Type", "text/html")
+  .header("Set-Cookie", cookie_value.clone())
   .body(error_page_content)
   {
     Ok(v) => v,
     Err(e) => {
       eprintln!("ERROR: Failed to create custom 4xx response: {}", e);
       return custom_response_500(
-        request, 
-        zero_path_buf, 
-        server_config
+        request,
+        cookie_value.clone(),
+        zero_path_buf,
+        server_config,
       )
     }
   };

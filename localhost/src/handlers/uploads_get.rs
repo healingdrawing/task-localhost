@@ -2,7 +2,11 @@ use std::{path::PathBuf, fs};
 
 use http::{Request, Response, StatusCode};
 
-use crate::{server::core::ServerConfig, handlers::{response_::response_default_static_file, response_4xx::custom_response_4xx, response_500::custom_response_500}, files::check::bad_file_name};
+use crate::server::core::ServerConfig;
+use crate::handlers::response_::response_default_static_file;
+use crate::handlers::response_4xx::custom_response_4xx;
+use crate::handlers::response_500::custom_response_500;
+use crate::files::check::bad_file_name;
 
 
 /// html is generated in code. Not templates etc.
@@ -156,9 +160,10 @@ pub fn generate_uploads_html(absolute_path: &PathBuf) -> String {
 /// 
 /// Managed separately, because the uploads folder is dynamic. Not safe to use.
 pub fn handle_uploads_get_uploaded_file(
+  request: &Request<Vec<u8>>,
+  cookie_value:String,
   zero_path_buf: PathBuf,
   file_path: String,
-  request: &Request<Vec<u8>>,
   server_config: ServerConfig,
 ) -> Response<Vec<u8>>{
   // todo: refactor path check to os separator instead of hardcoding of / ... probably
@@ -167,23 +172,25 @@ pub fn handle_uploads_get_uploaded_file(
   let mut path = request.uri().path();
   // cut first slash
   if path.starts_with("/"){ path = &path[1..]; }
-  println!("path {}", path); // todo: remove dev prints
-  // path to site folder in static folder
   
   let absolute_path = zero_path_buf.join("uploads").join(file_path);
-  println!("absolute_path {:?}", absolute_path);
   
   // check if path is directory, then return default file as task requires
   if path.ends_with("/") || absolute_path.is_dir() {
-    println!("path is dir. Handle uploads file"); // todo: remove dev print
-    return response_default_static_file( zero_path_buf, request, server_config, );
+    return response_default_static_file(
+      request,
+      cookie_value,
+      zero_path_buf,
+      server_config,
+    );
   } else if !absolute_path.is_file() {
     
-    eprintln!("ERROR:\n------------\nIS NOT A FILE\n-------------");
+    eprintln!("ERROR:\n-----------------------------------\nuploads absolute_path IS NOT A FILE \n-----------------------------------"); // todo: remove dev print
     
     return custom_response_4xx(
-      request, 
-      zero_path_buf, 
+      request,
+      cookie_value,
+      zero_path_buf,
       server_config,
       StatusCode::NOT_FOUND,
     )
@@ -191,7 +198,6 @@ pub fn handle_uploads_get_uploaded_file(
   
   
   let parts: Vec<&str> = path.split('/').collect();
-  println!("=== parts {:?}", parts); // todo: remove dev prints
   
   // only GET method allowed for this path. filtering happens above
   let allowed_methods = vec!["GET".to_string()];
@@ -202,6 +208,7 @@ pub fn handle_uploads_get_uploaded_file(
     eprintln!("ERROR: method {} is not allowed for path {}", request_method_string, path);
     return custom_response_4xx(
       request,
+      cookie_value,
       zero_path_buf,
       server_config,
       http::StatusCode::METHOD_NOT_ALLOWED,
@@ -215,6 +222,7 @@ pub fn handle_uploads_get_uploaded_file(
       eprintln!("ERROR: Failed to read file: {}", e);
       return custom_response_500(
         request,
+        cookie_value,
         zero_path_buf,
         server_config
       )
@@ -223,6 +231,7 @@ pub fn handle_uploads_get_uploaded_file(
   
   let mut response = match Response::builder()
   .status(StatusCode::OK)
+  .header("Set-Cookie", cookie_value.clone())
   .body(file_content)
   {
     Ok(v) => v,
@@ -230,6 +239,7 @@ pub fn handle_uploads_get_uploaded_file(
       eprintln!("ERROR: Failed to create response with file: {}", e);
       return custom_response_500(
         request,
+        cookie_value.clone(),
         zero_path_buf,
         server_config)
       }
@@ -240,7 +250,7 @@ pub fn handle_uploads_get_uploaded_file(
       Some(v) => v.to_string(),
       None => "text/plain".to_string(),
     };
-    println!("\n-------\n\nmime_type {}\n\n----------\n", mime_type); //todo: remove dev print
+    // println!("\n-------\n\nmime_type {}\n\n----------\n", mime_type); //todo: remove dev print
     
     response.headers_mut().insert(
       "Content-Type",
