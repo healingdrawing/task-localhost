@@ -89,18 +89,19 @@ pub fn read_with_timeout(
   let mut body_size = 0_usize;
   
   // not nice
+  let dirty_string = String::from_utf8_lossy(&headers_buffer);
   let is_chunked = 
-  String::from_utf8_lossy(&headers_buffer).contains("Transfer-Encoding: chunked")
-  || String::from_utf8_lossy(&headers_buffer).contains("Transfer-Encoding: Chunked")
-  || String::from_utf8_lossy(&headers_buffer).contains("transfer-encoding: chunked")
-  || String::from_utf8_lossy(&headers_buffer).contains("transfer-encoding: Chunked");
+  dirty_string.contains("Transfer-Encoding: chunked")
+  || dirty_string.contains("Transfer-Encoding: Chunked")
+  || dirty_string.contains("transfer-encoding: chunked")
+  || dirty_string.contains("transfer-encoding: Chunked");
   
   // ------------------------------------
   // collect request body section
   // ------------------------------------
   
   if is_chunked {
-    println!("THE REQUEST IS CHUNKED: {}", is_chunked); //todo: remove later
+    println!("THE REQUEST IS CHUNKED");
     
     let mut sum_chunk_size_buffer = Vec::new();
     
@@ -157,7 +158,7 @@ pub fn read_with_timeout(
         // Check if the end of the stream has been reached
         if sum_chunk_size == 0
         {
-          eprintln!("Error: chunked body with zero sum chunk size");
+          eprintln!("ERROR: chunked body with zero sum chunk size");
           *global_error_string = ERROR_400_BODY_CHUNKED_BUT_ZERO_SUM_CHUNK_SIZE.to_string();
           return;
         }
@@ -332,7 +333,7 @@ pub fn read_with_timeout(
     // try to implement the second timeout for body read in this case.
     // it will be x5 times shorter than the timeout incoming parameter.
     
-    println!("THE REQUEST IS NOT CHUNKED: is_chunked {}", is_chunked); //todo: remove later
+    println!("THE REQUEST IS NOT CHUNKED");
     
     let dirty_timeout = timeout / 5;
     let dirty_start_time = Instant::now();
@@ -379,7 +380,7 @@ pub fn read_with_timeout(
       
       // Check if the timeout has expired
       if start_time.elapsed() >= timeout {
-        println!("ERROR: body read timed out");
+        eprintln!("ERROR: body read timed out");
         *global_error_string = ERROR_400_BODY_READ_TIMEOUT.to_string();
         return;
       }

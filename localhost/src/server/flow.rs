@@ -74,7 +74,7 @@ for server in servers.iter_mut() {
   
 }
 
-println!("CONFIGURED:\n{:?}\n", servers);
+println!("===============\n= CONFIGURED: =\n===============\n{:?}\n", servers);
 println!(
   "====================\n= START the server =\n===================="
 );

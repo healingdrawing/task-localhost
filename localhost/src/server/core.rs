@@ -36,7 +36,7 @@ impl ServerConfig {
       let port: u16 = match port.parse(){
         Ok(v) => v,
         Err(e) =>{
-          eprintln!("Config \"{}\" Failed to parse port: {} into u16", self.server_name, e);
+          eprintln!("ERROR: Config \"{}\" Failed to parse port: {} into u16", self.server_name, e);
           continue;
         }
       };
@@ -44,7 +44,7 @@ impl ServerConfig {
     }
     self.ports = ports.into_iter().collect();
     if self.ports.len() != old_ports.len(){
-      eprintln!("=== Config \"{}\" ports changed\nfrom {:?}\n  to {:?}", self.server_name, old_ports, self.ports);
+      println!("=== Config \"{}\" ports changed ===\nfrom {:?}\n  to {:?}", self.server_name, old_ports, self.ports);
     }
     
   }

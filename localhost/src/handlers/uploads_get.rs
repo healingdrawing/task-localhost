@@ -257,7 +257,7 @@ pub fn handle_uploads_get_uploaded_file(
       match mime_type.parse(){
         Ok(v) => v,
         Err(e) => {
-          eprintln!("Failed to parse mime type: {}", e);
+          eprintln!("ERROR: Failed to parse mime type: {}", e);
           "text/plain".parse().unwrap()
         }
       }

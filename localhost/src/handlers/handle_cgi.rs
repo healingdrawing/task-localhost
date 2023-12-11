@@ -18,12 +18,8 @@ pub fn handle_cgi(
   check_file_path: String,
   server_config: ServerConfig,
 ) -> Response<Vec<u8>>{
-  println!("\n\nhandle_cgi_request: check_file_path: {:?}", check_file_path); //todo: remove dev print
-  
-  println!("zero_path_buf: {:?}", zero_path_buf); //todo: remove dev print
   
   let script_path = "cgi/".to_owned() + &script_file_name;
-  println!("script_path: {:?}", script_path); //todo: remove dev print
   
   // Set the system PATH_INFO or send request path_info into python3 script as argument
   let output = Command::new("python3")
@@ -65,7 +61,7 @@ pub fn handle_cgi(
   {
     Ok(v) => v,
     Err(e) => {
-      eprintln!("Failed to build cgi response body | {}", e);
+      eprintln!("ERROR: Failed to build cgi response body | {}", e);
       return custom_response_500(
         request,
         cookie_value.clone(),

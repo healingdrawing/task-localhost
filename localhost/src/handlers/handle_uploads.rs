@@ -35,15 +35,11 @@ pub fn handle_uploads(
   let mut path = request.uri().path();
   // cut first slash
   if path.starts_with("/"){ path = &path[1..]; }
-  println!("path {}", path); // todo: remove dev prints
   
   let absolute_path = zero_path_buf.join("uploads");
-  println!("absolute_path {:?}", absolute_path);// todo: remove dev prints
   
-  // check if path is directory, then return default file as task requires
   if !absolute_path.is_dir() {
     
-    // eprintln!("------------\nIS NOT A FOLDER\n-------------"); // todo: remove dev print
     eprintln!("ERROR: absolute_path {:?} is not a folder.\nThe file structure was damaged after the server started.", absolute_path);
     
     return custom_response_500(
@@ -52,11 +48,7 @@ pub fn handle_uploads(
       zero_path_buf,
       server_config
     )
-  } // check if file exists or return 404
-  
-  
-  let parts: Vec<&str> = path.split('/').collect();
-  // println!("=== parts {:?}", parts); // todo: remove dev prints
+  }
   
   // methods allowed for this path, according to task, GET, POST, DELETE
   let allowed_methods:Vec<String> = vec![

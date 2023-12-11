@@ -13,7 +13,7 @@ pub fn file_exists(path: &str) -> bool{
         // println!("File exists! {:?}", path); //todo: remove this dev print
         return true;
     } else {
-        println!("File does not exist! {:?}", path);
+        eprintln!("ERROR: File does not exist! {:?}", path);
         return false;
     }
 }
@@ -27,7 +27,7 @@ pub fn all_files_exists(server_configs: &Vec<ServerConfig>) -> bool{
   
   // check cgi script required by task
   if !file_exists("cgi/useless.py"){
-    println!("cgi/useless.py does not exist");
+    eprintln!("ERROR: cgi/useless.py does not exist");
     return false
   }
 
@@ -37,7 +37,7 @@ pub fn all_files_exists(server_configs: &Vec<ServerConfig>) -> bool{
     "static/".to_owned()+&server_config.error_pages_prefix; // error pages path prefix
     for file_name in ERROR_PAGES{
       if !file_exists( &(error_prefix.to_owned() + "/" + file_name)){
-        println!("Error page {} does not exist", file_name);
+        eprintln!("ERROR: Error page {} does not exist", file_name);
         return false
       }
     }
@@ -46,7 +46,7 @@ pub fn all_files_exists(server_configs: &Vec<ServerConfig>) -> bool{
     let static_prefix =
     "static/".to_owned()+&server_config.static_files_prefix; // static files path prefix
     if !file_exists( &(static_prefix.to_owned() + "/" + &server_config.default_file)){
-      println!("Default file {} does not exist", &server_config.default_file);
+      println!("ERROR: Default file {} does not exist", &server_config.default_file);
       return false
     }
 

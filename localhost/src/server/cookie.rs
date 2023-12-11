@@ -115,7 +115,6 @@ impl Server {
     
     // if expiration not found, generate new for one minute
     if expires_not_found{
-      // println!("ERROR: \"Expires\" not found. Potential security risk");
       let new_expires  = SystemTime::now() + Duration::from_secs(60);
       global_expiration = match
       new_expires.duration_since(SystemTime::UNIX_EPOCH){
@@ -204,7 +203,7 @@ impl Server {
         let expiration = SystemTime::UNIX_EPOCH + Duration::from_secs(cookie.expires);
         if expiration < now {
           expired_cookies.push(name.clone());
-          println!("expired cookie: {:?}", cookie); //todo: remove dev print
+          println!("EXPIRED COOKIE: {:?}", cookie); //todo: remove dev print
         }
       }
       // remove all expired cookies

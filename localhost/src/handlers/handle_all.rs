@@ -28,14 +28,13 @@ pub fn handle_all(
   
   // cut first slash
   if path_str.starts_with("/"){ path_str = &path_str[1..]; }
-  println!("path {}", path_str); // todo: remove dev prints
   
   // check if path is error page
   let is_error_page = is_implemented_error_page(path_str);
   // path to site folder in static folder
   let relative_static_path_string =
   if is_error_page {
-    println!("is_implemented_error_page"); //todo: remove dev print
+    
     let file_name = match path_str.split('/').last(){
       Some(v) => v,
       None => {
@@ -53,10 +52,7 @@ pub fn handle_all(
   }
   else { format!("static/{}/{}", server_config.static_files_prefix, path_str)};
   
-  println!("relative_static_path_string {}", relative_static_path_string);
-  
   let absolute_path_buf = zero_path_buf.join(relative_static_path_string);
-  println!("absolute_path_buf {:?}", absolute_path_buf);
   
   // check if path is directory, then return default file as task requires
   if path_str.ends_with("/") || absolute_path_buf.is_dir() {
@@ -78,10 +74,6 @@ pub fn handle_all(
       StatusCode::NOT_FOUND,
     )
   } // check if file exists or return 404
-  
-  
-  let parts: Vec<&str> = path_str.split('/').collect();
-  println!("=== parts {:?}", parts); // todo: remove dev prints
   
   // check if path is inside routes, then get methods allowed for this path
   // create empty vector if path is not inside routes

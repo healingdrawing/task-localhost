@@ -24,7 +24,6 @@ pub fn response_default_static_file(
   .join("static")
   .join(server_config.static_files_prefix.clone())
   .join(server_config.default_file.clone());
-  println!("default_file_path {:?}", default_file_path); //todo: remove dev print
   
   // read the default file. if error, then return error response with 500 status code,
   // because before server start, all files checked, so it is server error
@@ -146,7 +145,7 @@ pub fn force_status(
     .join(error_page);
     
     if absolute_path_buf == error_path{
-      // println!("path \"{:?}\" is error page \"{:?}\"", error_path, error_page); //todo: remove dev print
+      
       return match error_page{
         &"400.html" => StatusCode::BAD_REQUEST,
         &"403.html" => StatusCode::FORBIDDEN,
@@ -156,7 +155,9 @@ pub fn force_status(
         &"500.html" => StatusCode::INTERNAL_SERVER_ERROR,
         _ => StatusCode::OK, // should never happen
       }
+
     }
+    
   }
   
   StatusCode::OK
