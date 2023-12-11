@@ -56,6 +56,18 @@ pub fn handle_all(
   
   // check if path is directory, then return default file as task requires
   if path_str.ends_with("/") || absolute_path_buf.is_dir() {
+    
+    // implement 403 error check if method is not GET, to satisfy task requirements
+    if request.method().to_string() != "GET" {
+      return custom_response_4xx(
+        request,
+        cookie_value,
+        zero_path_buf,
+        server_config,
+        StatusCode::FORBIDDEN,
+      );
+    }
+
     return response_default_static_file(
       request,
       cookie_value,

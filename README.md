@@ -26,6 +26,21 @@ For details/restrictions see [task and audit questions](https://github.com/01-ed
 - after execute `./runme` the server will try to start, according to the `settrings` file, which follows the TOML format. If any error occurs in initialization, the server will stop and print the error message in the terminal.
 - after start the server will listen the ip:port configurations from the `settings` file, which will be printed in the terminal, like `Server` instances.
 
+### Details and restrictions:
+
+- `error 403 Forbidden`,  handling implemeted for case of access with directory uri with not GET method, as a way to enforce that only GET requests are allowed for directory URIs. This status code is commonly used when the server does not wish to reveal exactly why the request has been refused, or when no other response is applicable.  
+To test it, you can use the `curl` commands in the terminal.  
+
+Correct case using GET method (return default file as task requires):  
+`
+curl -X GET http://localhost:8080/
+`  
+
+Forbidden case using POST method (return 403 error page):  
+`
+curl -X POST http://localhost:8080/
+`
+
 ### Customization:
 
 - to use the executable separately from the project(not recommended), you need to keep in one folder:

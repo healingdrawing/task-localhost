@@ -169,14 +169,26 @@ pub fn handle_uploads_get_uploaded_file(
   // todo: refactor path check to os separator instead of hardcoding of / ... probably
   
   // analyze path. if path is directory, then return default file, according to server config
-  let mut path = request.uri().path();
+  let mut path_str = request.uri().path();
   // cut first slash
-  if path.starts_with("/"){ path = &path[1..]; }
+  if path_str.starts_with("/"){ path_str = &path_str[1..]; }
   
   let absolute_path = zero_path_buf.join("uploads").join(file_path);
   
   // check if path is directory, then return default file as task requires
-  if path.ends_with("/") || absolute_path.is_dir() {
+  if path_str.ends_with("/") || absolute_path.is_dir() {
+    
+    // implement 403 error check if method is not GET, to satisfy task requirements
+    if request.method().to_string() != "GET" {
+      return custom_response_4xx(
+        request,
+        cookie_value,
+        zero_path_buf,
+        server_config,
+        StatusCode::FORBIDDEN,
+      );
+    }
+
     return response_default_static_file(
       request,
       cookie_value,
@@ -197,7 +209,7 @@ pub fn handle_uploads_get_uploaded_file(
   } // check if file exists or return 404
   
   
-  let parts: Vec<&str> = path.split('/').collect();
+  let parts: Vec<&str> = path_str.split('/').collect();
   
   // only GET method allowed for this path. filtering happens above
   let allowed_methods = vec!["GET".to_string()];
@@ -205,7 +217,7 @@ pub fn handle_uploads_get_uploaded_file(
   // check if method is allowed for this path or return 405
   let request_method_string = request.method().to_string();
   if !allowed_methods.contains(&request_method_string){
-    eprintln!("ERROR: method {} is not allowed for path {}", request_method_string, path);
+    eprintln!("ERROR: method {} is not allowed for path {}", request_method_string, path_str);
     return custom_response_4xx(
       request,
       cookie_value,
