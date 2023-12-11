@@ -6,25 +6,8 @@ use crate::stream::write_error::write_critical_error_response_into_stream;
 
 pub fn write_response_into_stream(stream: &mut TcpStream, response: Response<Vec<u8>>) -> std::io::Result<()> {
   
-  // println!("\n\n\n=== write_response_into_stream:"); //todo: remove dev print
-  
-  /*
-  println!(
-    "response body string: {:?}",
-    match std::str::from_utf8(&response.body().clone()){
-      Ok(v) => v,
-      Err(e) => {
-        eprintln!("\nFailed to convert response body to str: {}", e);
-        "Looks like the response body is not utf8 string"
-      }
-    }
-  ); //todo: remove dev print. always fails with favicon.ico request, because it is not utf8 string but binary data
-  */
-  
   // Break down the response into its parts
   let (parts, mut body) = response.into_parts();
-  
-  // println!("\n\nThe parts: {:?}", parts); //todo: remove dev print
   
   // manage errors
   let mut status: http::StatusCode ;
@@ -40,11 +23,10 @@ pub fn write_response_into_stream(stream: &mut TcpStream, response: Response<Vec
     },
     _ => { // force to 200
       status = http::StatusCode::OK;
-      // Also force simplify any other cases to list above, to satisfy the task requirements, nothing more
+      // Also force simplify any other cases to list above,
+      // to satisfy the task requirements, nothing more
     }
   }
-  
-  // let is say, the status code is 200, so try to write the response into the stream
   
   let mut reason:String = match status.canonical_reason(){
     Some(v) => v.to_string(),
@@ -61,7 +43,7 @@ pub fn write_response_into_stream(stream: &mut TcpStream, response: Response<Vec
     let value = match value.to_str(){
       Ok(v) => v,
       Err(e) => {
-        eprintln!("Failed to convert header value to str: {}", e);
+        eprintln!("ERROR: Failed to convert header value to str: {}", e);
         status = http::StatusCode::INTERNAL_SERVER_ERROR;
         reason = "Internal Server Error: incorrect header value".to_string();
         headers.push_str(&format!("{}: {}\r\n", "Content-Type", "text/plain"));
@@ -83,7 +65,7 @@ pub fn write_response_into_stream(stream: &mut TcpStream, response: Response<Vec
   match stream.write_all(data.as_slice()){
     Ok(_) => {},
     Err(e) => {
-      eprintln!("Failed to write response into the stream: {}", e);
+      eprintln!("ERROR: Failed to write response into the stream: {}", e);
       write_critical_error_response_into_stream(stream,
         http::StatusCode::INTERNAL_SERVER_ERROR,
       );

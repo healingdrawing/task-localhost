@@ -1,7 +1,8 @@
 mod debug;
 use debug:: {
   try_recreate_file_according_to_value_of_debug_boolean,
-  create_something_in_uploads_folder
+  create_something_in_uploads_folder,
+  DEBUG_FILE,
 };
 
 pub mod server{
@@ -62,26 +63,25 @@ pub fn get_zero_path() -> Result<PathBuf, Box<dyn Error>>{
 }
 
 fn main() {
-  println!("Hello, world!");
   
   match create_something_in_uploads_folder(){
     Ok(_) => println!("\"something\" created in uploads folder"),
-    Err(e) => panic!("\"something\" creation failed: {}", e),
+    Err(e) => panic!("ERROR: \"something\" creation failed: {}", e),
   };
 
   match try_recreate_file_according_to_value_of_debug_boolean(){
-    Ok(_) => println!("debug file recreated"),
-    Err(e) => panic!("debug file recreation failed: {}", e),
+    Ok(_) => println!("debug file \"{}\" recreated", DEBUG_FILE),
+    Err(e) => panic!("ERROR: debug file recreation failed: {}", e),
   }
   
   // manage settings, cgi and so on
   let zero_path_buf = match get_zero_path(){
     Ok(v) => v,
-    Err(e) => panic!("Failed to manage current exe path: {}", e),
+    Err(e) => panic!("ERROR: Failed to get current exe path: {}", e),
   };
   let zero_path:String = match zero_path_buf.to_str(){
     Some(v) => v,
-    None => panic!("Failed to convert zero_path to str"),
+    None => panic!("ERROR: Failed to convert zero_path_buf to str"),
   }
   .to_string();
   // set PATH_INFO here to check inside cgi, as task requires.
@@ -96,7 +96,7 @@ fn main() {
   let mut settings = config::Config::builder();
   let config_path_str = match config_path.to_str(){
     Some(v) => v,
-    None => panic!("Failed to convert config_path to str"),
+    None => panic!("ERROR: Failed to convert config_path to str"),
   };
   
   settings = settings.add_source(
@@ -111,27 +111,26 @@ fn main() {
       match server_configs {
         Ok(mut server_configs) =>{ // configuration read successfully
           // check if at least one server config exists
-          if server_configs.len() == 0{ panic!("No correct server configs"); }
+          if server_configs.len() == 0{ panic!("ERROR: No correct server configs"); }
 
           // clean up server_configs
           for sc in server_configs.iter_mut(){sc.check()}
           // check if all required by task files exists
           if !all_files_exists(&server_configs){
-            panic!("Not all required for server config files exists");
+            panic!("ERROR: Not all required for server config files exists");
           };
           
-          //todo: call/implement add static files to server_configs
           match add_static_files_to_server_configs(&mut server_configs){
             Ok(_) => println!("static files added to server configs, with method GET"),
-            Err(e) => panic!("Failed to add static files to server configs: {}", e),
+            Err(e) => panic!("ERROR: Failed to add static files to server configs: {}", e),
           };
           
           println!("{:#?}", server_configs); //todo: remove this dev print
           run( zero_path_buf ,server_configs);
         },
-        Err(e) => eprintln!("Failed to convert settings into Vec<ServerConfig>: {}", e),
+        Err(e) => eprintln!("ERROR: Failed to use settings to fill server_configs:Vec<ServerConfig> : {}", e),
       }
     }
-    Err(e) => eprintln!("Failed to build settings: {}", e),
+    Err(e) => eprintln!("ERROR: Failed to build settings: {}", e),
   }
 }
