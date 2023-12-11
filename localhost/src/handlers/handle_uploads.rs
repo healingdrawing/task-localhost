@@ -2,12 +2,15 @@ use std::path::PathBuf;
 
 use http::{Response, Request, StatusCode};
 
+use crate::handlers::response_4xx::custom_response_4xx;
 use crate::handlers::response_500::custom_response_500;
 use crate::handlers::uploads_delete::delete_the_file_from_uploads_folder;
 use crate::handlers::uploads_get::generate_uploads_html;
 use crate::handlers::uploads_set::upload_the_file_into_uploads_folder;
 use crate::server::core::ServerConfig;
-use crate::handlers::response_4xx::custom_response_4xx;
+use crate::stream::errors::{ERROR_200_OK, ERROR_500_INTERNAL_SERVER_ERROR};
+use crate::stream::errors:: ERROR_400_HEADERS_FAILED_TO_PARSE;
+use crate::stream::errors::ERROR_400_HEADERS_KEY_NOT_FOUND;
 
 
 /// handle uploads requests.
@@ -84,7 +87,42 @@ pub fn handle_uploads(
   
   match request_method_string.as_str(){
     "GET" => { /* do nothing unique. The html page is generated below */ },
-    "POST" => { upload_the_file_into_uploads_folder(request, &absolute_path); },
+    "POST" => {
+      
+      match upload_the_file_into_uploads_folder(request, &absolute_path).as_str(){
+        ERROR_200_OK => {/* do nothing. file uploaded successfully */},
+        ERROR_400_HEADERS_KEY_NOT_FOUND => {
+          eprintln!("ERROR: header X-File-Name not found in request");
+          return custom_response_4xx(
+            request,
+            cookie_value,
+            zero_path_buf,
+            server_config,
+            StatusCode::BAD_REQUEST,
+          );
+        },
+        ERROR_400_HEADERS_FAILED_TO_PARSE => {
+          eprintln!("ERROR: failed to parse header_value into file_name");
+          return custom_response_4xx(
+            request,
+            cookie_value,
+            zero_path_buf,
+            server_config,
+            StatusCode::BAD_REQUEST,
+          );
+        },
+        _ => {
+          eprintln!("ERROR: failed to upload the file into uploads folder");
+          return custom_response_500(
+            request,
+            cookie_value,
+            zero_path_buf,
+            server_config,
+          );
+        },
+      };
+
+    },
     "DELETE" => { delete_the_file_from_uploads_folder(request, &absolute_path); },
     _ => {
       eprintln!("ERROR: method {} is not implemented for path {}.\nShould never fire, because checked above!!!", request_method_string, path);
