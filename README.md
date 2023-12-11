@@ -31,25 +31,30 @@ For details/restrictions see [task and audit questions](https://github.com/01-ed
 - `error 403 Forbidden`,  handling implemeted for case of access with directory uri with not GET method, as a way to enforce that only GET requests are allowed for directory URIs. This status code is commonly used when the server does not wish to reveal exactly why the request has been refused, or when no other response is applicable.  
 To test it, you can use the `curl` commands in the terminal.  
 
-Correct case using GET method (return default file as task requires):  
+Correct case using GET method (returns default file as task requires):  
 `
 curl -X GET http://localhost:8080/
 `  
 
-Forbidden case using POST method (return 403 error page):  
+Forbidden case using POST method (returns 403 error page):  
 `
 curl -X POST http://localhost:8080/
 `
+- `cgi` functionality implemented in handlers separately, as old and unsafe technology, not recommended to use.  
+According to the task requirements only one script enough to be implemented, and link to it hardcoded in the `runme` file, to prevent any extra activity/experiments.  
+- `uploads` functionality implemented in handlers separately, and controlled using separated parameter in `settings` file, to prevent any extra activity/experiments. According to task, server should manage without problems static site.
+Upload and delete files functionality is not a part of the static site, so it is implemented separately, universally for all sites, and hardcoded into the `runme` file.  
+The `settings` file allows to control accessibility of the `/uploads` page for each server settings, using methods `GET`, `POST`, `DELETE`, to download, upload, delete permissions respectively.  
+- default `settings` file configuration, implements two different sites, with possibility to test the `redirect.html` page accessibility, depends on allowed methods.
 
 ### Customization:
 
 - to use the executable separately from the project(not recommended), you need to keep in one folder:
-- - the executable file `runme`.
-- - the `static` folder, includes the sites files.
-- - the `cgi` folder, includes the Python3 CGI script.
-According to the task requirements only one script implemented and it hardcoded in the `runme` file. So no field for experiments with this old and insecure technology.
+- - the executable file `runme`.  
+- - the `static` folder, includes the sites files.  
+- - the `cgi` folder, includes the Python3 CGI script.  
 - - the `uploads` folder, used to manage file uploads/deletions/shows for servers.  
-It is not a static part of the project, and managed separately, to prevent extra activity. This folder includes `.gitignore` file, to prevent uploading files to the repository. Checking for `.gitignore` file is hardcoded into the `runme` file.
+It is not a static part of the project, and managed separately, to prevent extra activity. This folder includes `.gitignore` file, to prevent uploading files to the repository. Checking for `.gitignore` file is hardcoded into the `runme` file.  
 For any configuration you can use `/uploads` to uploads page, which is hardcoded into the `runme` file.
 - - the `settings` file, configured properly.  
 Follow the examples in the `settings` file on your own risk, or do not touch it(it is educational project, aimed to satisfy task requirements in strictly limited time period).  
