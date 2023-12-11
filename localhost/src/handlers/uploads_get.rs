@@ -173,10 +173,10 @@ pub fn handle_uploads_get_uploaded_file(
   // cut first slash
   if path_str.starts_with("/"){ path_str = &path_str[1..]; }
   
-  let absolute_path = zero_path_buf.join("uploads").join(file_path);
+  let absolute_path_buf = zero_path_buf.join("uploads").join(file_path);
   
   // check if path is directory, then return default file as task requires
-  if path_str.ends_with("/") || absolute_path.is_dir() {
+  if path_str.ends_with("/") || absolute_path_buf.is_dir() {
     
     // implement 403 error check if method is not GET, to satisfy task requirements
     if request.method().to_string() != "GET" {
@@ -195,7 +195,7 @@ pub fn handle_uploads_get_uploaded_file(
       zero_path_buf,
       server_config,
     );
-  } else if !absolute_path.is_file() {
+  } else if !absolute_path_buf.is_file() {
     
     eprintln!("ERROR:\n-----------------------------------\nuploads absolute_path IS NOT A FILE \n-----------------------------------"); // todo: remove dev print
     
@@ -228,7 +228,7 @@ pub fn handle_uploads_get_uploaded_file(
   }
   
   // read the file. if error, then return error 500 response
-  let file_content = match std::fs::read(absolute_path.clone()){
+  let file_content = match std::fs::read(absolute_path_buf.clone()){
     Ok(v) => v,
     Err(e) => {
       eprintln!("ERROR: Failed to read file: {}", e);
@@ -258,7 +258,7 @@ pub fn handle_uploads_get_uploaded_file(
     };
     
     // get file mime type using mime_guess, or use the text/plain
-    let mime_type = match mime_guess::from_path(absolute_path.clone()).first(){
+    let mime_type = match mime_guess::from_path(absolute_path_buf.clone()).first(){
       Some(v) => v.to_string(),
       None => "text/plain".to_string(),
     };
