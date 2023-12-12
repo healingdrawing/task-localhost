@@ -4,7 +4,7 @@ pub const DEBUG: bool = true; //set to false to disable debug.txt stuff
 
 pub const DEBUG_FILE: &str = "debug.txt";
 
-pub fn try_recreate_file_according_to_value_of_debug_boolean() -> io::Result<()> {
+pub async fn try_recreate_file_according_to_value_of_debug_boolean() -> io::Result<()> {
   if DEBUG { File::create(DEBUG_FILE)?; }
   Ok(())
 }
@@ -29,7 +29,7 @@ pub async fn append_to_file(data: &str) -> io::Result<()> {
 /// to allow the user remove this file using DELETE method
 /// 
 /// as audit question requires
-pub fn create_something_in_uploads_folder() -> io::Result<()> {
+pub async fn create_something_in_uploads_folder() -> io::Result<()> {
   println!("Check the \"uploads\" folder, on executable folder level");
   // Create the directory on the executable folder level, if it doesn't exist
   create_dir_all("uploads")?;

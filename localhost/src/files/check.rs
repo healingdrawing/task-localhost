@@ -23,7 +23,7 @@ pub const ERROR_PAGES: [&str; 6] = ["400.html", "403.html", "404.html", "405.htm
 /// check relative paths. The parent level is executable folder.
 /// 
 /// Just a minimum files check, to prevent server run without files required by task
-pub fn all_files_exists(server_configs: &Vec<ServerConfig>) -> bool{
+pub async fn all_files_exists(server_configs: &Vec<ServerConfig>) -> bool{
   
   // check cgi script required by task
   if !file_exists("cgi/useless.py"){

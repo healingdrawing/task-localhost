@@ -24,7 +24,7 @@ pub struct ServerConfig {
 
 impl ServerConfig {
   /// drop out all ports not in 0..65535 range, also drop out all repeating of ports
-  pub fn check(&mut self){
+  pub async fn check(&mut self){
     self.check_ports();
   }
   

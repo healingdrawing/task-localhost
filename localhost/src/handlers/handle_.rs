@@ -11,7 +11,7 @@ use crate::handlers::uploads_get::handle_uploads_get_uploaded_file;
 /// handle all requests.
 /// The cgi requests are handled like separated match case.
 /// The uploads requests are handled separated match case.
-pub fn handle_request(
+pub async fn handle_request(
   request: &Request<Vec<u8>>,
   cookie_value:String,
   zero_path_buf: &PathBuf,

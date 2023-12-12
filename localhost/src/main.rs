@@ -48,7 +48,7 @@ use crate::files::add_static::add_static_files_to_server_configs;
 use crate::files::check::all_files_exists;
 
 /// get the path to executable and cut off the executable name. to manage the config, cgi, etc folders
-pub fn get_zero_path() -> Result<PathBuf, Box<dyn Error>>{
+pub async fn get_zero_path() -> Result<PathBuf, Box<dyn Error>>{
   let mut exe_path = match env::current_exe(){
     Ok(v) => v,
     Err(e) => return Err(format!("Failed to get current exe path: {}", e).into()),
@@ -65,18 +65,18 @@ pub fn get_zero_path() -> Result<PathBuf, Box<dyn Error>>{
 #[async_std::main]
 async fn main() {
   
-  match create_something_in_uploads_folder(){
+  match create_something_in_uploads_folder().await{
     Ok(_) => println!("\"something\" created in uploads folder"),
     Err(e) => panic!("ERROR: \"something\" creation failed: {}", e),
   };
 
-  match try_recreate_file_according_to_value_of_debug_boolean(){
+  match try_recreate_file_according_to_value_of_debug_boolean().await{
     Ok(_) => println!("Debug file \"{}\" recreated", DEBUG_FILE),
     Err(e) => panic!("ERROR: Debug file recreation failed: {}", e),
   }
   
   // manage settings, cgi and so on
-  let zero_path_buf = match get_zero_path(){
+  let zero_path_buf = match get_zero_path().await{
     Ok(v) => v,
     Err(e) => panic!("ERROR: Failed to get current exe path: {}", e),
   };
@@ -115,13 +115,13 @@ async fn main() {
           if server_configs.len() == 0{ panic!("ERROR: No correct server configs"); }
 
           // clean up server_configs
-          for sc in server_configs.iter_mut(){sc.check()}
+          for sc in server_configs.iter_mut(){sc.check().await}
           // check if all required by task files exists
-          if !all_files_exists(&server_configs){
+          if !all_files_exists(&server_configs).await{
             panic!("ERROR: Not all required for server config files exists");
           };
           
-          match add_static_files_to_server_configs(&mut server_configs){
+          match add_static_files_to_server_configs(&mut server_configs).await{
             Ok(_) => println!("static files added to server configs, with method GET"),
             Err(e) => panic!("ERROR: Failed to add static files to server configs: {}", e),
           };

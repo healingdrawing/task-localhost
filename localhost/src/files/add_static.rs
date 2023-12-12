@@ -6,7 +6,7 @@ use walkdir::WalkDir;
 use crate::server::core::ServerConfig;
 
 /// add static files to server configs routes, with method GET. Skip already existing routes, so preserve the methods allowed for routes, set in settings.
-pub fn add_static_files_to_server_configs(server_configs: &mut Vec<ServerConfig>) -> Result<(), Box<dyn Error>>{
+pub async fn add_static_files_to_server_configs(server_configs: &mut Vec<ServerConfig>) -> Result<(), Box<dyn Error>>{
   // static files relative path prefix
   let static_files_root = "static/".to_owned();
   for server_config in server_configs{

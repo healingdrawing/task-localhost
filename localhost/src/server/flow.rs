@@ -45,15 +45,15 @@ pub async fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
         parse_raw_request(headers_buffer, body_buffer, &mut request, &mut global_error_string).await;
       }
       let mut server = Server { cookies: HashMap::new(), cookies_check_time: SystemTime::now() + Duration::from_secs(60), };
-      server.check_expired_cookies(); // HERE THE ERROR IS
+      server.check_expired_cookies().await;
 
-      let (cookie_value, cookie_is_ok) = server.extract_cookies_from_request_or_provide_new(&request);
+      let (cookie_value, cookie_is_ok) = server.extract_cookies_from_request_or_provide_new(&request).await;
       if !cookie_is_ok { global_error_string = ERROR_400_HEADERS_INVALID_COOKIE.to_string(); }
       
       if global_error_string == ERROR_200_OK.to_string() {
-        response = handle_request(&request, cookie_value.clone(), zero_path_buf_clone, choosen_server_config.clone(), &mut global_error_string);
+        response = handle_request(&request, cookie_value.clone(), zero_path_buf_clone, choosen_server_config.clone(), &mut global_error_string).await;
       }
-      check_custom_errors(global_error_string, &request, cookie_value.clone(), zero_path_buf_clone, choosen_server_config.clone(), &mut response);
+      check_custom_errors(global_error_string, &request, cookie_value.clone(), zero_path_buf_clone, choosen_server_config.clone(), &mut response).await;
         write_response_into_stream(&mut stream, response).await.unwrap();
         stream.flush().await.unwrap();
         stream.shutdown(std::net::Shutdown::Both).unwrap();

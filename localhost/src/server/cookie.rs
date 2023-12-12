@@ -45,7 +45,7 @@ impl Server {
   /// extract cookies from request, if cookie not found, then generate new cookie for one minute.
   /// 
   /// Also return bool. False if cookie recognized as bad, for bad request response
-  pub fn extract_cookies_from_request_or_provide_new(
+  pub async fn extract_cookies_from_request_or_provide_new(
     &mut self,
     request: &Request<Vec<u8>>
   ) -> (String, bool) {
@@ -194,7 +194,7 @@ impl Server {
   // }
   
   /// remove all expired cookies. Used with timeout 60 sec, to not check every request
-  pub fn check_expired_cookies(&mut self){
+  pub async fn check_expired_cookies(&mut self){
     let now = SystemTime::now();
     if now > self.cookies_check_time {
       // collect all expired cookies

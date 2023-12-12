@@ -62,7 +62,7 @@ pub fn response_default_static_file(
 }
 
 /// check error and return response respectivelly, based on arrays of custom errors in errors.rs
-pub fn check_custom_errors(
+pub async fn check_custom_errors(
   custom_error_string: String,
   request: &Request<Vec<u8>>,
   cookie_value:String,
