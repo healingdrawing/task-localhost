@@ -1,10 +1,11 @@
 use http::Response;
-use mio::net::TcpStream;
-use std::io::Write;
+use async_std::net::TcpStream;
+// use std::io::Write;
+use async_std::io::WriteExt;
 
 use crate::stream::write_error::write_critical_error_response_into_stream;
 
-pub fn write_response_into_stream(stream: &mut TcpStream, response: Response<Vec<u8>>) -> std::io::Result<()> {
+pub async fn write_response_into_stream(stream: &mut TcpStream, response: Response<Vec<u8>>) -> std::io::Result<()> {
   
   // Break down the response into its parts
   let (parts, mut body) = response.into_parts();
@@ -62,13 +63,13 @@ pub fn write_response_into_stream(stream: &mut TcpStream, response: Response<Vec
   data.extend_from_slice(headers.as_bytes());
   data.extend_from_slice(b"\r\n");
   data.extend_from_slice(&body);
-  match stream.write_all(data.as_slice()){
+  match stream.write_all(data.as_slice()).await{
     Ok(_) => {},
     Err(e) => {
       eprintln!("ERROR: Failed to write response into the stream: {}", e);
       write_critical_error_response_into_stream(stream,
         http::StatusCode::INTERNAL_SERVER_ERROR,
-      );
+      ).await;
       return Err(e);
     }
   };

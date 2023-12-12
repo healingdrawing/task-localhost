@@ -1,6 +1,8 @@
 use std::time::{Instant, Duration};
-use std::io::{self, Read};
-use mio::net::TcpStream;
+use std::io::{self};
+
+use async_std::io::ReadExt;
+use async_std::net::TcpStream;
 
 use crate::server::core::ServerConfig;
 use crate::server::find::server_config_from_headers_buffer_or_use_default;
@@ -9,7 +11,7 @@ use crate::stream::errors::{ERROR_400_HEADERS_READ_TIMEOUT, ERROR_400_HEADERS_RE
 /// Read from the stream until timeout or EOF
 /// 
 /// returns a tuple of two vectors: (headers_buffer, body_buffer)
-pub fn read_with_timeout(
+pub async fn read_with_timeout(
   timeout: Duration,
   stream: &mut TcpStream,
   headers_buffer: &mut Vec<u8>,
@@ -38,7 +40,7 @@ pub fn read_with_timeout(
       return;
     }
     
-    match stream.read(&mut buf) {
+    match stream.read(&mut buf).await {
       Ok(0) => {
         // EOF reached
         println!("read EOF reached");
@@ -114,7 +116,7 @@ pub fn read_with_timeout(
       }
       
       // Read from the stream one byte at a time
-      match stream.read(&mut buf) {
+      match stream.read(&mut buf).await {
         Ok(0) => { println!("read EOF reached"); break },
         Ok(n) => { // Successfully read n bytes from stream
           
@@ -187,7 +189,7 @@ pub fn read_with_timeout(
       }
       
       // Read from the stream one byte at a time
-      match stream.read(&mut buf) {
+      match stream.read(&mut buf).await {
         Ok(0) => {
           // EOF reached
           println!("read EOF reached");
@@ -256,7 +258,7 @@ pub fn read_with_timeout(
             }
             
             // Read from the stream one byte at a time
-            match stream.read(&mut buf) {
+            match stream.read(&mut buf).await {
               Ok(0) => {
                 // EOF reached
                 println!("read EOF reached");
@@ -398,7 +400,7 @@ pub fn read_with_timeout(
       }
       
       // Read from the stream one byte at a time
-      match stream.read(&mut buf) {
+      match stream.read(&mut buf).await {
         Ok(0) => {
           // EOF reached
           println!("read EOF reached");

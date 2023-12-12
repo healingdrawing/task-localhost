@@ -1,8 +1,8 @@
-use std::io::Write;
+use async_std::io::WriteExt;
 
-use mio::net::TcpStream;
+use async_std::net::TcpStream;
 
-pub fn write_critical_error_response_into_stream(
+pub async fn write_critical_error_response_into_stream(
   stream: &mut TcpStream,
   http_status_code: http::StatusCode,
 ){
@@ -10,19 +10,19 @@ pub fn write_critical_error_response_into_stream(
   let reason = "Internal Server Error: edge case".to_string();
   let status_line = format!("HTTP/1.1 {} {}\r\n", status, reason);
   
-  match stream.write_all(status_line.as_bytes()){
+  match stream.write_all(status_line.as_bytes()).await{
     Ok(_) => {},
     Err(e) => {
       eprintln!("ERROR: Failed write critical error response into stream\nFailed to write error response status_line into the stream: {}", e);
     }
   };
-  match stream.write_all(b"\r\n"){
+  match stream.write_all(b"\r\n").await{
     Ok(_) => {},
     Err(e) => {
       eprintln!("ERROR: Failed write critical error response into stream\nFailed to write error response empty line into the stream: {}", e);
     }
   };
-  match stream.write_all(reason.as_bytes()){
+  match stream.write_all(reason.as_bytes()).await{
     Ok(_) => {},
     Err(e) => {
       eprintln!("ERROR: Failed write critical error response into stream\nFailed to write error response reason into the stream: {}", e);

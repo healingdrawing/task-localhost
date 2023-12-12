@@ -62,7 +62,8 @@ pub fn get_zero_path() -> Result<PathBuf, Box<dyn Error>>{
   Ok(exe_path)
 }
 
-fn main() {
+#[async_std::main]
+async fn main() {
   
   match create_something_in_uploads_folder(){
     Ok(_) => println!("\"something\" created in uploads folder"),
@@ -126,7 +127,7 @@ fn main() {
           };
           
           println!("{:#?}", server_configs); //todo: remove this dev print
-          run( zero_path_buf ,server_configs);
+          run( zero_path_buf ,server_configs).await;
         },
         Err(e) => eprintln!("ERROR: Failed to use settings to fill server_configs:Vec<ServerConfig> : {}", e),
       }

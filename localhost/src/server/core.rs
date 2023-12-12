@@ -1,5 +1,5 @@
-use mio::Token;
-use mio::net::TcpListener;
+use async_std::net::TcpListener;
+use std::sync::Arc;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -79,8 +79,7 @@ pub fn get_usize_unique_ports(server_configs: &Vec<ServerConfig>) -> Result<Vec<
 
 #[derive(Debug)]
 pub struct Server {
-  pub listener: TcpListener,
-  pub token: Token,
+  pub listener: Arc<TcpListener>,
   pub cookies: HashMap<String, Cookie>,
   pub cookies_check_time: SystemTime,
 }
