@@ -3,7 +3,7 @@ use std::error::Error;
 use http::{Request, Method, Uri, Version, HeaderMap, HeaderValue, HeaderName};
 
 /// Function to parse a raw HTTP request from a Vec<u8> buffer into an http::Request
-pub fn parse_raw_request(
+pub async fn parse_raw_request(
   headers_buffer: Vec<u8>,
   body_buffer: Vec<u8>,
   request: &mut Request<Vec<u8>>,

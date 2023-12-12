@@ -17,7 +17,7 @@ use crate::stream::errors::{CUSTOM_ERRORS_500, ERROR_200_OK};
 pub fn response_default_static_file(
   request: &Request<Vec<u8>>,
   cookie_value:String,
-  zero_path_buf: PathBuf,
+  zero_path_buf: &PathBuf,
   server_config: ServerConfig,
 ) -> Response<Vec<u8>>{
   let default_file_path = zero_path_buf
@@ -66,7 +66,7 @@ pub fn check_custom_errors(
   custom_error_string: String,
   request: &Request<Vec<u8>>,
   cookie_value:String,
-  zero_path_buf: PathBuf,
+  zero_path_buf: &PathBuf,
   server_config: ServerConfig,
   response: &mut Response<Vec<u8>>,
 ) {
@@ -79,7 +79,7 @@ pub fn check_custom_errors(
         *response = custom_response_4xx(
           request,
           cookie_value,
-          zero_path_buf.clone(),
+          zero_path_buf,
           server_config.clone(),
           StatusCode::BAD_REQUEST
         );
@@ -93,7 +93,7 @@ pub fn check_custom_errors(
         *response = custom_response_4xx(
           request,
           cookie_value,
-          zero_path_buf.clone(),
+          zero_path_buf,
           server_config.clone(),
           StatusCode::PAYLOAD_TOO_LARGE
         );
@@ -107,7 +107,7 @@ pub fn check_custom_errors(
         *response = custom_response_500(
           request,
           cookie_value,
-          zero_path_buf.clone(),
+          zero_path_buf,
           server_config.clone(),
         );
         return
@@ -118,7 +118,7 @@ pub fn check_custom_errors(
     *response = custom_response_500(
       request,
       cookie_value,
-      zero_path_buf.clone(),
+      zero_path_buf,
       server_config.clone(),
     )
   }

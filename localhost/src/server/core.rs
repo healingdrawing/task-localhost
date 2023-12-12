@@ -56,7 +56,7 @@ impl ServerConfig {
 /// and manage pseudo servers, because the task requires redirection
 /// 
 /// if no declared server name in request, so we need to use "default" server
-pub fn get_usize_unique_ports(server_configs: &Vec<ServerConfig>) -> Result<Vec<usize>, Box<dyn Error>>{
+pub async fn get_usize_unique_ports(server_configs: &Vec<ServerConfig>) -> Result<Vec<usize>, Box<dyn Error>>{
   let mut ports: HashSet<usize> = HashSet::new();
   for server_config in server_configs.iter(){
     for port in server_config.ports.iter(){
@@ -79,7 +79,7 @@ pub fn get_usize_unique_ports(server_configs: &Vec<ServerConfig>) -> Result<Vec<
 
 #[derive(Debug)]
 pub struct Server {
-  pub listener: Arc<TcpListener>,
+  // pub listener: &'a TcpListener,
   pub cookies: HashMap<String, Cookie>,
   pub cookies_check_time: SystemTime,
 }

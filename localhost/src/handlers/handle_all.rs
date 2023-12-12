@@ -17,7 +17,7 @@ use crate::handlers::response_4xx::custom_response_4xx;
 pub fn handle_all(
   request: &Request<Vec<u8>>,
   cookie_value:String,
-  zero_path_buf: PathBuf,
+  zero_path_buf: &PathBuf,
   server_config: ServerConfig,
 ) -> Response<Vec<u8>>{
   // todo: refactor path check to os separator instead of hardcoding of / ... probably

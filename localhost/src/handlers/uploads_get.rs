@@ -198,7 +198,7 @@ pub fn generate_uploads_html(absolute_path: &PathBuf) -> (String, String) {
 pub fn handle_uploads_get_uploaded_file(
   request: &Request<Vec<u8>>,
   cookie_value:String,
-  zero_path_buf: PathBuf,
+  zero_path_buf: &PathBuf,
   file_path: String,
   server_config: ServerConfig,
 ) -> Response<Vec<u8>>{

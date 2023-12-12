@@ -19,7 +19,7 @@ const ALLOWED_4XX_STATUS_CODES: [StatusCode; 5] = [
 pub fn custom_response_4xx(
   request: &Request<Vec<u8>>,
   cookie_value:String,
-  zero_path_buf: PathBuf,
+  zero_path_buf: &PathBuf,
   server_config: ServerConfig,
   status_code: StatusCode,
 ) -> Response<Vec<u8>>{

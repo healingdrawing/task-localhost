@@ -1,4 +1,4 @@
-use async_std::io::WriteExt;
+use futures::AsyncWriteExt;
 
 use async_std::net::TcpStream;
 

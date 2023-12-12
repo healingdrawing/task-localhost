@@ -13,7 +13,7 @@ use crate::handlers::response_500::custom_response_500;
 pub fn handle_cgi(
   request: &Request<Vec<u8>>,
   cookie_value:String,
-  zero_path_buf: PathBuf,
+  zero_path_buf: &PathBuf,
   script_file_name: String,
   check_file_path: String,
   server_config: ServerConfig,

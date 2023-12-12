@@ -14,7 +14,7 @@ use crate::handlers::uploads_get::handle_uploads_get_uploaded_file;
 pub fn handle_request(
   request: &Request<Vec<u8>>,
   cookie_value:String,
-  zero_path_buf: PathBuf,
+  zero_path_buf: &PathBuf,
   server_config: ServerConfig,
   global_error_string: &mut String, //at the moment not mutated here
 ) -> Response<Vec<u8>>{

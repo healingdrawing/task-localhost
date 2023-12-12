@@ -1,7 +1,7 @@
 use std::time::{Instant, Duration};
 use std::io::{self};
 
-use async_std::io::ReadExt;
+use futures::AsyncReadExt;
 use async_std::net::TcpStream;
 
 use crate::server::core::ServerConfig;
@@ -16,10 +16,9 @@ pub async fn read_with_timeout(
   stream: &mut TcpStream,
   headers_buffer: &mut Vec<u8>,
   body_buffer: &mut Vec<u8>,
-  server_config: &mut ServerConfig, // nightmare
-  server_configs: Vec<ServerConfig>,
+  server_configs: &Vec<ServerConfig>,
   global_error_string: &mut String,
-) {
+) -> ServerConfig {
   // println!("\nINSIDE read_with_timeout"); //todo: remove later
   
   // Start the timer
@@ -37,7 +36,7 @@ pub async fn read_with_timeout(
     if start_time.elapsed() >= timeout {
       eprintln!("ERROR: Headers read timed out");
       *global_error_string = ERROR_400_HEADERS_READ_TIMEOUT.to_string();
-      return;
+      return server_configs[0].clone();
     }
     
     match stream.read(&mut buf).await {
@@ -67,7 +66,7 @@ pub async fn read_with_timeout(
         // Other error occurred
         eprintln!("ERROR: Reading headers from stream: {}", e);
         *global_error_string = ERROR_400_HEADERS_READING_STREAM.to_string();
-        return;
+        return server_configs[0].clone();
       },
     }
     
@@ -81,7 +80,7 @@ pub async fn read_with_timeout(
   // response 413 error, if body is bigger.
   // Duplicated fragment of code, because of weird task requirements.
   
-  *server_config = server_config_from_headers_buffer_or_use_default(
+  let server_config = server_config_from_headers_buffer_or_use_default(
     headers_buffer,
     server_configs.clone()
   );
@@ -112,7 +111,7 @@ pub async fn read_with_timeout(
       if start_time.elapsed() >= timeout {
         eprintln!("ERROR: Sum chunk size read timed out");
         *global_error_string = ERROR_400_BODY_SUM_CHUNK_SIZE_READ_TIMEOUT.to_string();
-        return;
+        return server_config;
       }
       
       // Read from the stream one byte at a time
@@ -126,7 +125,7 @@ pub async fn read_with_timeout(
           if body_size > client_body_size {
             eprintln!("ERROR: Body size is bigger than client_body_size limit: {} > {}", body_size, client_body_size);
             *global_error_string = ERROR_413_BODY_SIZE_LIMIT.to_string();
-            return;
+            return server_config;
           }
           
           sum_chunk_size_buffer.extend_from_slice(&buf[..n]);
@@ -141,7 +140,7 @@ pub async fn read_with_timeout(
         Err(e) => { // Other error occurred
           eprintln!("ERROR: Reading sum chunk size from stream: {}", e);
           *global_error_string = ERROR_400_BODY_SUM_CHUNK_SIZE_READING_STREAM.to_string();
-          return;
+          return server_config;
         },
       }
       
@@ -153,7 +152,7 @@ pub async fn read_with_timeout(
           Err(e) =>{
             eprintln!("ERROR: Failed to parse sum_chunk_size_str: {}\n {}", sum_chunk_size_str, e);
             *global_error_string = ERROR_400_BODY_SUM_CHUNK_SIZE_PARSE.to_string();
-            return;
+            return server_config;
           }
         };
         
@@ -162,7 +161,7 @@ pub async fn read_with_timeout(
         {
           eprintln!("ERROR: Chunked body with zero sum chunk size");
           *global_error_string = ERROR_400_BODY_CHUNKED_BUT_ZERO_SUM_CHUNK_SIZE.to_string();
-          return;
+          return server_config;
         }
         break;
         
@@ -185,7 +184,7 @@ pub async fn read_with_timeout(
       if start_time.elapsed() >= timeout {
         eprintln!("ERROR: Chunk size read timed out");
         *global_error_string = ERROR_400_BODY_CHUNK_SIZE_READ_TIMEOUT.to_string();
-        return;
+        return server_config;
       }
       
       // Read from the stream one byte at a time
@@ -203,7 +202,7 @@ pub async fn read_with_timeout(
           if body_size > client_body_size {
             eprintln!("ERROR: Body size is bigger than client_body_size limit: {} > {}", body_size, client_body_size);
             *global_error_string = ERROR_413_BODY_SIZE_LIMIT.to_string();
-            return;
+            return server_config;
           }
           
           // Successfully read n bytes from stream
@@ -223,7 +222,7 @@ pub async fn read_with_timeout(
           // Other error occurred
           eprintln!("ERROR: Reading chunk size from stream: {}", e);
           *global_error_string = ERROR_400_BODY_CHUNK_SIZE_READING_STREAM.to_string();
-          return;
+          return server_config;
         },
       }
       
@@ -236,7 +235,7 @@ pub async fn read_with_timeout(
           Err(e) =>{
             eprintln!("ERROR: Failed to parse chunk_size_str: {}\n {}", chunk_size_str, e);
             *global_error_string = ERROR_400_BODY_CHUNK_SIZE_PARSE.to_string();
-            return;
+            return server_config;
           }
         };
         println!("chunk_size: {}", chunk_size); //todo: remove later
@@ -254,7 +253,7 @@ pub async fn read_with_timeout(
             if start_time.elapsed() >= timeout {
               println!("ERROR: Chunk body read timed out");
               *global_error_string = ERROR_400_BODY_CHUNK_READ_TIMEOUT.to_string();
-              return;
+              return server_config;
             }
             
             // Read from the stream one byte at a time
@@ -272,7 +271,7 @@ pub async fn read_with_timeout(
                 if body_size > client_body_size {
                   eprintln!("ERROR: Body size is bigger than client_body_size limit: {} > {}", body_size, client_body_size);
                   *global_error_string = ERROR_413_BODY_SIZE_LIMIT.to_string();
-                  return;
+                  return server_config;
                 }
                 
                 // Successfully read n bytes from stream
@@ -292,7 +291,7 @@ pub async fn read_with_timeout(
                 // Other error occurred
                 eprintln!("ERROR: Reading chunk from stream: {}", e);
                 *global_error_string = ERROR_400_BODY_CHUNK_READING_STREAM.to_string();
-                return;
+                return server_config;
               },
             }
             
@@ -316,7 +315,7 @@ pub async fn read_with_timeout(
               
               eprintln!("ERROR: Chunk is bigger than chunk_size");
               *global_error_string = ERROR_400_BODY_CHUNK_IS_BIGGER_THAN_CHUNK_SIZE.to_string();
-              return;
+              return server_config;
             }
             
           }
@@ -363,7 +362,7 @@ pub async fn read_with_timeout(
         Err(e) => {
           eprintln!("ERROR: Failed to parse content_length_str: {}\n {}", content_length_str, e);
           *global_error_string = ERROR_400_HEADERS_FAILED_TO_PARSE.to_string();
-          return;
+          return server_config;
         }
       }
     };
@@ -376,7 +375,7 @@ pub async fn read_with_timeout(
         } else if body_buffer.len() > content_length{
           eprintln!("ERROR: body_buffer.len() > content_length");
           *global_error_string = ERROR_400_BODY_BUFFER_LENGHT_IS_BIGGER_THAN_CONTENT_LENGTH.to_string();
-          return;
+          return server_config;
         }
       }
       
@@ -384,7 +383,7 @@ pub async fn read_with_timeout(
       if start_time.elapsed() >= timeout {
         eprintln!("ERROR: Body read timed out");
         *global_error_string = ERROR_400_BODY_READ_TIMEOUT.to_string();
-        return;
+        return server_config;
       }
       
       if content_length_header_not_found // potentilal case of dirty body
@@ -395,7 +394,7 @@ pub async fn read_with_timeout(
         } else {
           eprintln!("ERROR: Dirty body read timed out.\n = File: {}, Line: {}, Column: {}", file!(), line!(), column!()); //todo: remove later
           *global_error_string = ERROR_400_DIRTY_BODY_READ_TIMEOUT.to_string();
-          return;
+          return server_config;
         }
       }
       
@@ -414,7 +413,7 @@ pub async fn read_with_timeout(
           if body_size > client_body_size {
             eprintln!("ERROR: Body size is bigger than client_body_size limit: {} > {}", body_size, client_body_size);
             *global_error_string = ERROR_413_BODY_SIZE_LIMIT.to_string();
-            return;
+            return server_config;
           }
           
           // Successfully read n bytes from stream
@@ -434,12 +433,14 @@ pub async fn read_with_timeout(
           // Other error occurred
           eprintln!("ERROR: Reading from stream: {}", e);
           *global_error_string = ERROR_400_BODY_READING_STREAM.to_string();
-          return;
+          return server_config;
         },
       }
       
     }
     
   }
+
+  server_config
   
 }

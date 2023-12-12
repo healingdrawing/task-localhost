@@ -33,7 +33,7 @@ fn hardcoded_response_500(
 pub fn custom_response_500(
   request: &Request<Vec<u8>>,
   cookie_value:String,
-  zero_path_buf: PathBuf,
+  zero_path_buf: &PathBuf,
   server_config: ServerConfig,
 ) -> Response<Vec<u8>>{
 

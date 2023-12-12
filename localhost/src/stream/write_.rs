@@ -1,7 +1,7 @@
 use http::Response;
 use async_std::net::TcpStream;
 // use std::io::Write;
-use async_std::io::WriteExt;
+use futures::AsyncWriteExt;
 
 use crate::stream::write_error::write_critical_error_response_into_stream;
 
