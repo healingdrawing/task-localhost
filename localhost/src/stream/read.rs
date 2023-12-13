@@ -341,7 +341,9 @@ pub async fn read_with_timeout(
     let content_length_header_not_found = !String::from_utf8_lossy(&headers_buffer).contains("Content-Length: ");
     
     let content_length = if content_length_header_not_found {
-      usize::MAX-1
+      // usize::MAX-1
+      println!("ERROR: Content-Length header not found in headers_buffer of unchunked body. Continue with 0 content_length of \ndirty body\n.");
+      usize::MIN
     } else {
       // extract content length from headers_buffer and parse it to usize
       let headers_buffer_slice = headers_buffer.as_slice();
@@ -386,6 +388,9 @@ pub async fn read_with_timeout(
         eprintln!("ERROR: Body read timed out");
         *global_error_string = ERROR_400_BODY_READ_TIMEOUT.to_string();
         return server_config;
+      } else {
+        println!("body_buffer.len(): {}", body_buffer.len()); //todo: remove later
+        println!("time {} < timeout {}", start_time.elapsed().as_millis(), timeout.as_millis()); //todo: remove later
       }
       
       if content_length_header_not_found // potentilal case of dirty body
@@ -400,16 +405,16 @@ pub async fn read_with_timeout(
         }
       }
       
-      println!(" before \"match stream.read(&mut buf).await {{\"read from the stream one byte at a time"); //todo: remove later
+      println!(" before \"match stream.read(&mut buf).await {{\"read from the stream one byte at a time"); //todo: remove later FIRES ONCE
       // Read from the stream one byte at a time
       match stream.read(&mut buf).await {
         Ok(0) => {
           // EOF reached
-          println!("read EOF reached");
+          println!("unchunked body stream.read(&mut buf), read EOF reached");
           break;
         },
         Ok(n) => {
-          println!("read one byte at a time NEVER FIRES"); //FIX: remove later. NEVER FIRES
+          println!("read one byte NEVER FIRES"); //FIX: remove later. NEVER FIRES
           body_size += n;
           
           // Check if the body size is bigger than client_body_size
@@ -430,6 +435,7 @@ pub async fn read_with_timeout(
         },
         Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
           eprintln!("ERROR: Stream is not ready yet, try again later");
+          async_std::task::yield_now().await;
           // Stream is not ready yet, try again later
           continue;
         },
@@ -440,6 +446,8 @@ pub async fn read_with_timeout(
           return server_config;
         },
       }
+
+      println!(" AFTER \"match stream.read(&mut buf).await {{\"read from the stream one byte at a time"); //fix: remove later NEVER FIRES
       
     }
     
