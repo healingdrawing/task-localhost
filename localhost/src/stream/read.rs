@@ -19,7 +19,7 @@ pub async fn read_with_timeout(
   server_configs: &Vec<ServerConfig>,
   global_error_string: &mut String,
 ) -> ServerConfig {
-  // println!("\nINSIDE read_with_timeout"); //todo: remove later
+  println!("\nINSIDE read_with_timeout"); //todo: remove later
   
   // Start the timer
   let start_time = Instant::now();
@@ -83,7 +83,7 @@ pub async fn read_with_timeout(
   let server_config = server_config_from_headers_buffer_or_use_default(
     headers_buffer,
     server_configs.clone()
-  );
+  ).await;
   
   // check of the body length, according to server_config.client_body_size.
   let client_body_size = server_config.client_body_size;
@@ -367,6 +367,8 @@ pub async fn read_with_timeout(
       }
     };
     
+    println!("content_length: {}", content_length); //todo: remove later
+
     loop{
       // check the body_buffer length
       if content_length > 0{
@@ -398,6 +400,7 @@ pub async fn read_with_timeout(
         }
       }
       
+      println!(" before \"match stream.read(&mut buf).await {{\"read from the stream one byte at a time"); //todo: remove later
       // Read from the stream one byte at a time
       match stream.read(&mut buf).await {
         Ok(0) => {
@@ -406,7 +409,7 @@ pub async fn read_with_timeout(
           break;
         },
         Ok(n) => {
-          
+          println!("read one byte at a time NEVER FIRES"); //FIX: remove later. NEVER FIRES
           body_size += n;
           
           // Check if the body size is bigger than client_body_size
@@ -426,6 +429,7 @@ pub async fn read_with_timeout(
           }
         },
         Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+          eprintln!("ERROR: Stream is not ready yet, try again later");
           // Stream is not ready yet, try again later
           continue;
         },

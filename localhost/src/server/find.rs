@@ -3,7 +3,7 @@ use crate::server::core::ServerConfig;
 use crate::stream::parse::parse_request_line;
 
 
-pub fn server_config_from_headers_buffer_or_use_default(
+pub async fn server_config_from_headers_buffer_or_use_default(
   headers_buffer: &Vec<u8>,
   server_configs: Vec<ServerConfig>
 ) -> ServerConfig{
