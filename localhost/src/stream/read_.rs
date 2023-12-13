@@ -101,6 +101,8 @@ pub async fn read_with_timeout(
   // collect request body section
   // ------------------------------------
   
+  /*
+
   if is_chunked {
     println!("THE REQUEST IS CHUNKED");
     
@@ -336,14 +338,15 @@ pub async fn read_with_timeout(
     
     println!("THE REQUEST IS NOT CHUNKED");
     
+    let mut unchunked_buf:Vec<u8> = Vec::new();
     let dirty_timeout = timeout / 5;
     let dirty_start_time = Instant::now();
     let content_length_header_not_found = !String::from_utf8_lossy(&headers_buffer).contains("Content-Length: ");
     
     let content_length = if content_length_header_not_found {
-      // usize::MAX-1
-      println!("ERROR: Content-Length header not found in headers_buffer of unchunked body. Continue with 0 content_length of \ndirty body\n.");
-      usize::MIN
+      println!("ERROR: Content-Length header not found in headers_buffer of unchunked body. Continue with MAX-1 content_length of \ndirty body\n.");
+      usize::MAX-1
+      
     } else {
       // extract content length from headers_buffer and parse it to usize
       let headers_buffer_slice = headers_buffer.as_slice();
@@ -407,12 +410,8 @@ pub async fn read_with_timeout(
       
       println!(" before \"match stream.read(&mut buf).await {{\"read from the stream one byte at a time"); //todo: remove later FIRES ONCE
       // Read from the stream one byte at a time
-      match stream.read(&mut buf).await {
-        Ok(0) => {
-          // EOF reached
-          println!("unchunked body stream.read(&mut buf), read EOF reached");
-          break;
-        },
+      match stream.read_to_end(&mut unchunked_buf).await {
+        
         Ok(n) => {
           println!("read one byte NEVER FIRES"); //FIX: remove later. NEVER FIRES
           body_size += n;
@@ -453,6 +452,7 @@ pub async fn read_with_timeout(
     
   }
 
+*/
   server_config
   
 }
