@@ -38,7 +38,7 @@ pub async fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
         let mut stream = stream.unwrap();
         let timeout = Duration::from_millis(1000);
         append_to_file("incoming fires").await;
-        append_to_file(&format!("{:?}",stream)).await;
+        // append_to_file(&format!("{:?}",stream)).await;
         
         let mut server = Server { cookies: HashMap::new(), cookies_check_time: SystemTime::now() + Duration::from_secs(60), };
         
@@ -48,12 +48,13 @@ pub async fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
         
         println!("\nbefore read_with_timeout\nheaders_buffer: {:?}", headers_buffer);
         let mut response:Response<Vec<u8>> = Response::new(Vec::new());
+        
         let choosen_server_config = read_with_timeout(
           timeout, &mut stream, &mut headers_buffer, &mut body_buffer,
           &server_configs, &mut global_error_string
         ).await;
         
-        // NEVER FIRES, IT IS FREEZED ON read_with_timeout
+        //todo: NEVER FIRES, IT IS FREEZED ON read_with_timeout, until Ctrl+C
         println!("\nafter read_with_timeout\nheaders_buffer_string: {:?}\nbody_buffer_string: {:?}" , String::from_utf8(headers_buffer.clone()), String::from_utf8(body_buffer.clone()));
         
         let mut request = Request::new(Vec::new());

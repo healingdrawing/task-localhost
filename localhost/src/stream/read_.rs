@@ -7,6 +7,8 @@ use async_std::net::TcpStream;
 use crate::server::core::ServerConfig;
 use crate::server::find::server_config_from_headers_buffer_or_use_default;
 use crate::stream::errors::{ERROR_400_HEADERS_READ_TIMEOUT, ERROR_400_HEADERS_READING_STREAM, ERROR_400_BODY_SUM_CHUNK_SIZE_READ_TIMEOUT, ERROR_400_BODY_SUM_CHUNK_SIZE_READING_STREAM, ERROR_400_BODY_SUM_CHUNK_SIZE_PARSE, ERROR_400_BODY_CHUNKED_BUT_ZERO_SUM_CHUNK_SIZE, ERROR_400_BODY_CHUNK_SIZE_READ_TIMEOUT, ERROR_400_BODY_CHUNK_SIZE_READING_STREAM, ERROR_400_BODY_CHUNK_SIZE_PARSE, ERROR_400_BODY_CHUNK_READ_TIMEOUT, ERROR_400_BODY_CHUNK_READING_STREAM, ERROR_400_BODY_CHUNK_IS_BIGGER_THAN_CHUNK_SIZE, ERROR_400_HEADERS_FAILED_TO_PARSE, ERROR_400_BODY_BUFFER_LENGHT_IS_BIGGER_THAN_CONTENT_LENGTH, ERROR_400_BODY_READ_TIMEOUT, ERROR_400_DIRTY_BODY_READ_TIMEOUT, ERROR_400_BODY_READING_STREAM, ERROR_413_BODY_SIZE_LIMIT};
+use crate::stream::read_chunked::read_chunked;
+use crate::stream::read_unchunked::read_unchunked;
 
 /// Read from the stream until timeout or EOF
 /// 
@@ -87,7 +89,6 @@ pub async fn read_with_timeout(
   
   // check of the body length, according to server_config.client_body_size.
   let client_body_size = server_config.client_body_size;
-  let mut body_size = 0_usize;
   
   // not nice
   let dirty_string = String::from_utf8_lossy(&headers_buffer);
@@ -101,6 +102,19 @@ pub async fn read_with_timeout(
   // collect request body section
   // ------------------------------------
   
+  if is_chunked {
+    read_chunked(stream, body_buffer, timeout).await;
+  } else {
+    read_unchunked(
+      stream,
+      headers_buffer,
+      body_buffer,
+      client_body_size,
+      timeout,
+      global_error_string,
+    ).await;
+  }
+
   /*
 
   if is_chunked {
