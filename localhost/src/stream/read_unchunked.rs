@@ -27,21 +27,32 @@ pub async fn read_unchunked(
   
   println!("THE REQUEST IS NOT CHUNKED");
   
+  println!("\nstream: {:?}\ninside read body", stream); //todo: remove later
+
   // Start the timer for body read
   let start_time = Instant::now();
   let mut body_size = 0;
   
-  let mut buf:Vec<u8> = Vec::new();
   let dirty_timeout = timeout / 5;
   let dirty_start_time = Instant::now();
   
-  let content_length_header_not_found =
-  !String::from_utf8_lossy(&headers_buffer).contains("Content-Length: ")
-  || !String::from_utf8_lossy(&headers_buffer).contains("content-length: ");
+  let dirty_string = String::from_utf8_lossy(&headers_buffer);
+  let is_content_length = dirty_string.to_lowercase().contains("content-length: ");
+  
+  let content_length: usize = if let Some(index) = dirty_string.to_lowercase().find("content-length: ") {
+    let start = index + "content-length: ".len();
+    let end = dirty_string[start..].find("\r\n").unwrap_or_else(|| dirty_string[start..].len());
+    dirty_string[start..start + end].trim().parse().unwrap_or(0)
+  } else {
+    0
+  };
+
+  let content_length_header_not_found = !is_content_length;
   
   let content_length = if content_length_header_not_found {
-    println!("ERROR: Content-Length header not found in headers_buffer of unchunked body. Continue with MAX-1 content_length of \ndirty body\n.");
-    usize::MAX-1
+    println!("ERROR: Content-Length header not found in headers_buffer of unchunked body. Continue with 0 content_length of \ndirty body\n.");
+    // usize::MAX-1
+    0
     
   } else {
     // extract content length from headers_buffer and parse it to usize
@@ -71,6 +82,9 @@ pub async fn read_unchunked(
   println!("content_length: {}", content_length); //todo: remove later
   
   loop{
+    // async time sleep for 200 ms
+    // async_std::task::sleep(Duration::from_millis(200)).await;
+
     // check the body_buffer length
     if content_length > 0{
       if body_buffer.len() == content_length{
@@ -80,7 +94,11 @@ pub async fn read_unchunked(
         *global_error_string = ERROR_400_BODY_BUFFER_LENGHT_IS_BIGGER_THAN_CONTENT_LENGTH.to_string();
         return 
       }
-    }
+    } else {
+      eprintln!("ERROR: content_length == 0");
+        return
+      }
+    
     
     // Check if the timeout has expired
     if start_time.elapsed() >= timeout {
@@ -106,23 +124,23 @@ pub async fn read_unchunked(
     }
     
     println!(" before \"match stream.read(&mut buf).await {{\"read from the stream one byte at a time"); //todo: remove later FIRES ONCE
+
+    let mut buf = [0; 1];
+  
     // Read from the stream one byte at a time
-    match stream.read_to_end(&mut buf).await {
-      
+    match stream.read(&mut buf).await {
+      Ok(0) => {
+        // EOF reached
+        println!("read EOF reached");
+        break;
+      },
       Ok(n) => {
-        println!("read one byte NEVER FIRES"); //FIX: remove later. NEVER FIRES
-        body_size += n;
-        
-        // Check if the body size is bigger than client_body_size
-        if body_size > client_body_size {
-          eprintln!("ERROR: Body size is bigger than client_body_size limit: {} > {}", body_size, client_body_size);
-          *global_error_string = ERROR_413_BODY_SIZE_LIMIT.to_string();
-          return 
-        }
-        
         // Successfully read n bytes from stream
+        // println!("attempt to read {} bytes from stream", n);
         body_buffer.extend_from_slice(&buf[..n]);
-        
+        // println!("after read headers buffer size: {}", headers_buffer.len());
+        // println!("after read headers buffer: {:?}", headers_buffer);
+        // println!("after read headers buffer to string: {:?}", String::from_utf8(headers_buffer.clone()));
         // Check if the end of the stream has been reached
         if n < buf.len() {
           println!("read EOF reached relatively, because buffer not full after read");
@@ -130,16 +148,14 @@ pub async fn read_unchunked(
         }
       },
       Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
-        eprintln!("ERROR: Stream is not ready yet, try again later");
-        async_std::task::yield_now().await;
         // Stream is not ready yet, try again later
         continue;
       },
       Err(e) => {
         // Other error occurred
-        eprintln!("ERROR: Reading from stream: {}", e);
-        *global_error_string = ERROR_400_BODY_READING_STREAM.to_string();
-        return 
+        eprintln!("ERROR: Reading headers from stream: {}", e);
+        *global_error_string = ERROR_400_HEADERS_READING_STREAM.to_string();
+        break;
       },
     }
     

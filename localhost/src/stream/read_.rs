@@ -34,6 +34,8 @@ pub async fn read_with_timeout(
   // ------------------------------------
   
   loop {
+    println!("headers buffer step to read");
+
     // Check if the timeout has expired
     if start_time.elapsed() >= timeout {
       eprintln!("ERROR: Headers read timed out");
@@ -74,9 +76,12 @@ pub async fn read_with_timeout(
     
     
     if headers_buffer.ends_with(b"\r\n\r\n") {
+      println!("HEADERS BUFFER ENDS WITH \\r\\n\\r\\n");
       break;
     }
   }
+
+  println!("HEADERS_BUFFER_STRING: {:?}", String::from_utf8(headers_buffer.clone())); //todo: remove later
   
   // chose the server_config and check the server_config.client_body_size
   // response 413 error, if body is bigger.
@@ -92,19 +97,30 @@ pub async fn read_with_timeout(
   
   // not nice
   let dirty_string = String::from_utf8_lossy(&headers_buffer);
-  let is_chunked = 
-  dirty_string.contains("Transfer-Encoding: chunked")
-  || dirty_string.contains("Transfer-Encoding: Chunked")
-  || dirty_string.contains("transfer-encoding: chunked")
-  || dirty_string.contains("transfer-encoding: Chunked");
+  let is_chunked = dirty_string.to_lowercase().contains("transfer-encoding: chunked");
   
+  let is_content_length = dirty_string.to_lowercase().contains("content-length: ");
+  
+  let content_length: usize = if let Some(index) = dirty_string.to_lowercase().find("content-length: ") {
+    let start = index + "content-length: ".len();
+    let end = dirty_string[start..].find("\r\n").unwrap_or_else(|| dirty_string[start..].len());
+    dirty_string[start..start + end].trim().parse().unwrap_or(0)
+  } else {
+    0
+  };
+
+  println!("is_chunked: {}", is_chunked); //todo: remove later
+  println!("is_content_length: {}", is_content_length); //todo: remove later
+  println!("content_length: {}", content_length); //todo: remove later
+  println!("====\nstream: {:?}\nbefore dive into read body", stream); //todo: remove later
+
   // ------------------------------------
   // collect request body section
   // ------------------------------------
   
   if is_chunked {
     read_chunked(stream, body_buffer, timeout).await;
-  } else {
+  } else  {
     read_unchunked(
       stream,
       headers_buffer,
@@ -115,9 +131,9 @@ pub async fn read_with_timeout(
     ).await;
     println!("read_.rs level after read_unchunked"); //todo: remove later
   }
-
+  
   /*
-
+  
   if is_chunked {
     println!("THE REQUEST IS CHUNKED");
     
@@ -388,7 +404,7 @@ pub async fn read_with_timeout(
     };
     
     println!("content_length: {}", content_length); //todo: remove later
-
+    
     loop{
       // check the body_buffer length
       if content_length > 0{
@@ -460,17 +476,17 @@ pub async fn read_with_timeout(
           return server_config;
         },
       }
-
+      
       println!(" AFTER \"match stream.read(&mut buf).await {{\"read from the stream one byte at a time"); //fix: remove later NEVER FIRES
       
     }
     
   }
-
-*/
-
+  
+  */
+  
   // println!("server_config: {:?}", server_config); //todo: remove later. it is correct
   server_config
-
+  
   
 }
