@@ -34,8 +34,7 @@ pub async fn read_with_timeout(
   // ------------------------------------
   
   loop {
-    println!("headers buffer step to read");
-
+    
     // Check if the timeout has expired
     if start_time.elapsed() >= timeout {
       eprintln!("ERROR: Headers read timed out");

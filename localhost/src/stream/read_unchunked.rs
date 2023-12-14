@@ -28,7 +28,7 @@ pub async fn read_unchunked(
   println!("THE REQUEST IS NOT CHUNKED");
   
   println!("\nstream: {:?}\ninside read body", stream); //todo: remove later
-
+  
   // Start the timer for body read
   let start_time = Instant::now();
   let mut body_size = 0;
@@ -46,7 +46,7 @@ pub async fn read_unchunked(
   } else {
     0
   };
-
+  
   let content_length_header_not_found = !is_content_length;
   
   let content_length = if content_length_header_not_found {
@@ -81,23 +81,32 @@ pub async fn read_unchunked(
   
   println!("content_length: {}", content_length); //todo: remove later
   
+  // check content_length not more than client_body_size
+  if content_length > client_body_size {
+    eprintln!("ERROR: Content-Length header value is bigger than client_body_size limit: {} > {}", content_length, client_body_size);
+    *global_error_string = ERROR_413_BODY_SIZE_LIMIT.to_string();
+    return
+  }
+  
+  if is_content_length && content_length < 1 {
+    println!("There is no positive content_length value. Continue without reading body.");
+    return
+  }
+  
   loop{
-    // async time sleep for 200 ms
-    // async_std::task::sleep(Duration::from_millis(200)).await;
-
+    // async time sleep for 2 ms
+    async_std::task::sleep(Duration::from_millis(2)).await; //todo: remove later ?
+    
     // check the body_buffer length
-    if content_length > 0{
-      if body_buffer.len() == content_length{
-        break;
-      } else if body_buffer.len() > content_length{
-        eprintln!("ERROR: body_buffer.len() > content_length");
-        *global_error_string = ERROR_400_BODY_BUFFER_LENGHT_IS_BIGGER_THAN_CONTENT_LENGTH.to_string();
-        return 
-      }
-    } else {
-      eprintln!("ERROR: content_length == 0");
-        return
-      }
+    
+    if body_buffer.len() == content_length{
+      return
+    } else if body_buffer.len() > content_length{
+      eprintln!("ERROR: body_buffer.len() > content_length");
+      *global_error_string = ERROR_400_BODY_BUFFER_LENGHT_IS_BIGGER_THAN_CONTENT_LENGTH.to_string();
+      return 
+    }
+    
     
     
     // Check if the timeout has expired
@@ -114,8 +123,8 @@ pub async fn read_unchunked(
     if content_length_header_not_found // potentilal case of dirty body
     && dirty_start_time.elapsed() >= dirty_timeout
     {
-      if body_buffer.len() == 0{
-        break; // let is say that there is no body in this case, so continue
+      if body_buffer.len() < 1{
+        return // let is say that there is no body in this case, so continue
       } else {
         eprintln!("ERROR: Dirty body read timed out.\n = File: {}, Line: {}, Column: {}", file!(), line!(), column!()); //todo: remove later
         *global_error_string = ERROR_400_DIRTY_BODY_READ_TIMEOUT.to_string();
@@ -124,9 +133,9 @@ pub async fn read_unchunked(
     }
     
     println!(" before \"match stream.read(&mut buf).await {{\"read from the stream one byte at a time"); //todo: remove later FIRES ONCE
-
+    
     let mut buf = [0; 1];
-  
+    
     // Read from the stream one byte at a time
     match stream.read(&mut buf).await {
       Ok(0) => {
@@ -138,9 +147,9 @@ pub async fn read_unchunked(
         // Successfully read n bytes from stream
         // println!("attempt to read {} bytes from stream", n);
         body_buffer.extend_from_slice(&buf[..n]);
-        // println!("after read headers buffer size: {}", headers_buffer.len());
-        // println!("after read headers buffer: {:?}", headers_buffer);
-        // println!("after read headers buffer to string: {:?}", String::from_utf8(headers_buffer.clone()));
+        // println!("after read body buffer size: {}", body_buffer.len());
+        // println!("after read body buffer: {:?}", body_buffer);
+        // println!("after read body buffer to string: {:?}", String::from_utf8(body_buffer.clone()));
         // Check if the end of the stream has been reached
         if n < buf.len() {
           println!("read EOF reached relatively, because buffer not full after read");
@@ -153,8 +162,8 @@ pub async fn read_unchunked(
       },
       Err(e) => {
         // Other error occurred
-        eprintln!("ERROR: Reading headers from stream: {}", e);
-        *global_error_string = ERROR_400_HEADERS_READING_STREAM.to_string();
+        eprintln!("ERROR: Reading body from stream: {}", e);
+        *global_error_string = ERROR_400_BODY_READING_STREAM.to_string();
         break;
       },
     }
