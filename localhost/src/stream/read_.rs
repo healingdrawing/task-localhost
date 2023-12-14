@@ -7,7 +7,7 @@ use async_std::net::TcpStream;
 use crate::debug::append_to_file;
 use crate::server::core::ServerConfig;
 use crate::server::find::server_config_from_headers_buffer_or_use_default;
-use crate::stream::errors::{ERROR_400_HEADERS_READ_TIMEOUT, ERROR_400_HEADERS_READING_STREAM, ERROR_400_BODY_SUM_CHUNK_SIZE_READ_TIMEOUT, ERROR_400_BODY_SUM_CHUNK_SIZE_READING_STREAM, ERROR_400_BODY_SUM_CHUNK_SIZE_PARSE, ERROR_400_BODY_CHUNKED_BUT_ZERO_SUM_CHUNK_SIZE, ERROR_400_BODY_CHUNK_SIZE_READ_TIMEOUT, ERROR_400_BODY_CHUNK_SIZE_READING_STREAM, ERROR_400_BODY_CHUNK_SIZE_PARSE, ERROR_400_BODY_CHUNK_READ_TIMEOUT, ERROR_400_BODY_CHUNK_READING_STREAM, ERROR_400_BODY_CHUNK_IS_BIGGER_THAN_CHUNK_SIZE, ERROR_400_HEADERS_FAILED_TO_PARSE, ERROR_400_BODY_BUFFER_LENGHT_IS_BIGGER_THAN_CONTENT_LENGTH, ERROR_400_BODY_READ_TIMEOUT, ERROR_400_DIRTY_BODY_READ_TIMEOUT, ERROR_400_BODY_READING_STREAM, ERROR_413_BODY_SIZE_LIMIT, ERROR_500_INTERNAL_SERVER_ERROR, ERROR_400_BAD_REQUEST};
+use crate::stream::errors::{ERROR_400_HEADERS_READ_TIMEOUT, ERROR_400_HEADERS_READING_STREAM, ERROR_400_HEADERS_FAILED_TO_PARSE, ERROR_500_INTERNAL_SERVER_ERROR};
 use crate::stream::read_chunked::read_chunked;
 use crate::stream::read_unchunked::read_unchunked;
 
@@ -159,8 +159,6 @@ pub async fn read_with_timeout(
       stream,
       body_buffer,
       client_body_size,
-      has_content_length_header,
-      content_length,
       timeout,
       global_error_string,
     ).await;
