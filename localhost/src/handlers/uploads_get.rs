@@ -2,6 +2,7 @@ use std::{path::PathBuf, fs};
 
 use http::{Request, Response, StatusCode};
 
+use crate::debug::append_to_file;
 use crate::files::check::bad_file_name;
 use crate::handlers::response_::response_default_static_file;
 use crate::handlers::response_4xx::custom_response_4xx;
@@ -195,7 +196,7 @@ pub fn generate_uploads_html(absolute_path: &PathBuf) -> (String, String) {
 /// this function manages processing of this request.
 /// 
 /// Managed separately, because the uploads folder is dynamic. Not safe to use.
-pub fn handle_uploads_get_uploaded_file(
+pub async fn handle_uploads_get_uploaded_file(
   request: &Request<Vec<u8>>,
   cookie_value:String,
   zero_path_buf: &PathBuf,
@@ -295,7 +296,10 @@ pub fn handle_uploads_get_uploaded_file(
       Some(v) => v.to_string(),
       None => "text/plain".to_string(),
     };
-    // println!("\n-------\n\nmime_type {}\n\n----------\n", mime_type); //todo: remove dev print
+    
+    append_to_file(&format!(
+      "\n-------\n\nmime_type {}\n\n----------\n", mime_type
+    )).await;
     
     response.headers_mut().insert(
       "Content-Type",

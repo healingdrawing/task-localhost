@@ -36,7 +36,7 @@ pub async fn handle_request(
         "useless.py".to_string(),
         file_path.join(&std::path::MAIN_SEPARATOR.to_string()),
         server_config,
-      )
+      ).await
 
     },
     ["", "uploads"] => {
@@ -45,7 +45,7 @@ pub async fn handle_request(
         cookie_value,
         zero_path_buf,
         server_config,
-      )
+      ).await
       
     },
     ["", "uploads", file_path ] => {
@@ -55,7 +55,7 @@ pub async fn handle_request(
         zero_path_buf,
         file_path.to_string(),
         server_config,
-      )
+      ).await
     },
     _ => {
       // todo : implement the response for other cases
@@ -64,7 +64,7 @@ pub async fn handle_request(
         cookie_value,
         zero_path_buf,
         server_config,
-      )
+      ).await
     }
   };
   

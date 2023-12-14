@@ -49,7 +49,7 @@ pub async fn server_config_from_headers_buffer_or_use_default(
     },
   };
   
-  let (method, uri, version) = match parse_request_line(request_line.clone()){
+  let (method, uri, version) = match parse_request_line(request_line.clone()).await{
     Ok(v) => v,
     Err(e) => {
       eprintln!("ERROR: Failed to parse request_line: {}", e);
@@ -114,7 +114,7 @@ pub async fn server_config_from_headers_buffer_or_use_default(
     let header_name = match key {
       Some(v) => v,
       None => {
-        eprintln!("Invalid header name"); //todo: it looks weird, data must be valid
+        eprintln!("ERROR: Invalid header name"); //todo: it looks weird, data must be valid
         return server_config
       },
     };

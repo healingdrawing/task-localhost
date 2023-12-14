@@ -21,8 +21,9 @@ pub async fn read_chunked(
   global_error_string: &mut String,
 ) {
   
-  
-  println!("THE REQUEST IS CHUNKED");
+  append_to_file(
+    "===================\n= CHUNKED REQUEST =\n==================="
+  ).await;
   
   let start_time = Instant::now();
   
@@ -51,7 +52,7 @@ pub async fn read_chunked(
     // Read from the stream one byte at a time
     match stream.read(&mut buf).await {
       Ok(0) => {
-        append_to_file(&format!("read EOF reached. Read sum chunk size")).await;
+        append_to_file("read EOF reached. Read sum chunk size").await;
         break;
       },
       Ok(n) => { // Successfully read n bytes from stream
@@ -69,8 +70,8 @@ pub async fn read_chunked(
         
         // Check if the end of the stream has been reached
         if n < buf.len() {
-          append_to_file(&format!("read EOF reached relatively.\nBuffer not full after read. Read sum chunk size")).await;
-          return //todo: not obvious, probably
+          append_to_file("read EOF reached relatively.\nBuffer not full after read. Read sum chunk size").await;
+          return // todo: not obvious, probably
         }
       },
       Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
@@ -141,7 +142,7 @@ pub async fn read_chunked(
     match stream.read(&mut buf).await {
       Ok(0) => {
         // EOF reached
-        append_to_file(&format!("read EOF reached. Read chunk size")).await;
+        append_to_file("read EOF reached. Read chunk size").await;
         break;
       },
       Ok(n) => {
@@ -160,8 +161,8 @@ pub async fn read_chunked(
         
         // Check if the end of the stream has been reached
         if n < buf.len() {
-          append_to_file(&format!("read EOF reached relatively.\nBuffer not full after read. Read chunk size")).await;
-          return //todo: not obvious, probably
+          append_to_file("read EOF reached relatively.\nBuffer not full after read. Read chunk size").await;
+          return // todo: not obvious, probably
         }
       },
       Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
@@ -193,7 +194,7 @@ pub async fn read_chunked(
       
       // Check if the end of the stream has been reached
       if chunk_size == 0 {
-        append_to_file(&format!("chunked body read EOF reached")).await;
+        append_to_file("chunked body read EOF reached").await;
         return
       } else { // there is a chunk to read, according to chunk_size
         
@@ -205,7 +206,7 @@ pub async fn read_chunked(
           
           // Check if the timeout has expired
           if start_time.elapsed() >= timeout {
-            println!("ERROR: Chunk body read timed out");
+            eprintln!("ERROR: Chunk body read timed out");
             *global_error_string = ERROR_400_BODY_CHUNK_READ_TIMEOUT.to_string();
             return
           }
@@ -215,7 +216,7 @@ pub async fn read_chunked(
           // Read from the stream one byte at a time
           match stream.read(&mut buf).await {
             Ok(0) => {
-              append_to_file(&format!("read EOF reached")).await;
+              append_to_file("read EOF reached").await;
               break;
             },
             Ok(n) => {
@@ -234,8 +235,8 @@ pub async fn read_chunked(
               
               // Check if the end of the stream has been reached
               if n < buf.len() {
-                append_to_file(&format!("read EOF reached relatively, Buffer not full after read. Read chunk")).await;
-                return //todo: not obvious, probably
+                append_to_file("read EOF reached relatively, Buffer not full after read. Read chunk").await;
+                return // todo: not obvious, probably
               }
             },
             Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {

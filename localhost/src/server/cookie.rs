@@ -2,7 +2,7 @@ use std::time::{SystemTime, Duration};
 use http::Request;
 use uuid::Uuid;
 
-use crate::server::core::Server;
+use crate::{server::core::Server, debug::append_to_file};
 
 
 
@@ -203,7 +203,7 @@ impl Server {
         let expiration = SystemTime::UNIX_EPOCH + Duration::from_secs(cookie.expires);
         if expiration < now {
           expired_cookies.push(name.clone());
-          println!("EXPIRED COOKIE: {:?}", cookie); //todo: remove dev print
+          append_to_file(&format!( "EXPIRED COOKIE: {:?}", cookie )).await;
         }
       }
       // remove all expired cookies

@@ -10,17 +10,25 @@ pub async fn try_recreate_file_according_to_value_of_debug_boolean() -> io::Resu
 }
 
 // Function to append data to a file
-pub async fn append_to_file(data: &str) -> io::Result<()> {
+pub async fn append_to_file(data: &str){
   if DEBUG {
-    let file = OpenOptions::new()
+    let file = match OpenOptions::new()
     .create(true)
     .append(true)
-    .open(DEBUG_FILE)?;
+    .open(DEBUG_FILE){
+      Ok(file) => file,
+      Err(e) => {
+        eprintln!("ERROR: DEBUG: Problem opening debug file: {:?}", e);
+        return
+      }
+    };
     
     let mut writer = io::BufWriter::new(file);
-    writeln!(writer, "{}", data)?;
+    match writeln!(writer, "{}", data){
+      Ok(_) => {},
+      Err(e) => eprintln!("ERROR: DEBUG: Problem writing to debug file: {:?}", e),
+    };
   }
-  Ok(())
 
 }
 

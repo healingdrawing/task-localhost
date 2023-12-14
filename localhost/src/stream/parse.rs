@@ -53,7 +53,7 @@ pub async fn parse_raw_request(
     },
   };
   
-  let (method, uri, version) = match parse_request_line(request_line.clone()){
+  let (method, uri, version) = match parse_request_line(request_line.clone()).await{
     Ok(v) => v,
     Err(e) => {
       eprintln!("ERROR: Failed to parse request_line: {}", e);
@@ -134,12 +134,13 @@ pub async fn parse_raw_request(
 
 use std::str::FromStr;
 
-use crate::stream::errors::{ERROR_400_HEADERS_INVALID_REQUEST_LINE, ERROR_400_HEADERS_INVALID_METHOD, ERROR_400_HEADERS_INVALID_VERSION, ERROR_400_HEADERS_BUFFER_IS_EMPTY, ERROR_400_HEADERS_BUFFER_TO_STRING, ERROR_400_HEADERS_LINES_IS_EMPTY, ERROR_500_INTERNAL_SERVER_ERROR, ERROR_400_HEADERS_FAILED_TO_PARSE, ERROR_400_HEADERS_INVALID_HEADER_VALUE, ERROR_400_HEADERS_INVALID_HEADER_NAME};
+use crate::{stream::errors::{ERROR_400_HEADERS_INVALID_REQUEST_LINE, ERROR_400_HEADERS_INVALID_METHOD, ERROR_400_HEADERS_INVALID_VERSION, ERROR_400_HEADERS_BUFFER_IS_EMPTY, ERROR_400_HEADERS_BUFFER_TO_STRING, ERROR_400_HEADERS_LINES_IS_EMPTY, ERROR_500_INTERNAL_SERVER_ERROR, ERROR_400_HEADERS_FAILED_TO_PARSE, ERROR_400_HEADERS_INVALID_HEADER_VALUE, ERROR_400_HEADERS_INVALID_HEADER_NAME}, debug::append_to_file};
 /// parse the request line into its components
-pub fn parse_request_line(
+pub async fn parse_request_line(
   request_line: String
 ) -> Result<(Method, Uri, Version), Box<dyn Error>> {
-  // println!("raw request_line: {:?}", request_line); //todo: remove dev print
+  
+  append_to_file(&format!( "raw request_line: {:?}", request_line )).await;
   
   let parts:Vec<&str> = request_line.trim().split_whitespace().collect();
   if parts.len() != 3 {

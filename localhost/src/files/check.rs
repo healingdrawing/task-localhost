@@ -46,7 +46,7 @@ pub async fn all_files_exists(server_configs: &Vec<ServerConfig>) -> bool{
     let static_prefix =
     "static/".to_owned()+&server_config.static_files_prefix; // static files path prefix
     if !file_exists( &(static_prefix.to_owned() + "/" + &server_config.default_file)){
-      println!("ERROR: Default file {} does not exist", &server_config.default_file);
+      eprintln!("ERROR: Default file {} does not exist", &server_config.default_file);
       return false
     }
 

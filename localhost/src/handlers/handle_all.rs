@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use http::{Response, Request, StatusCode};
 
+use crate::debug::append_to_file;
 use crate::files::check::is_implemented_error_page;
 use crate::handlers::response_500::custom_response_500;
 use crate::server::core::ServerConfig;
@@ -14,7 +15,7 @@ use crate::handlers::response_4xx::custom_response_4xx;
 /// Also, in case of uri is directory, the task requires to return default file,
 /// according to server config. So in this case, there is no need to check the method,
 /// allowed for route.
-pub fn handle_all(
+pub async fn handle_all(
   request: &Request<Vec<u8>>,
   cookie_value:String,
   zero_path_buf: &PathBuf,
@@ -163,7 +164,7 @@ pub fn handle_all(
       Some(v) => v.to_string(),
       None => "text/plain".to_string(),
     };
-    // println!("\n-------\n\nmime_type {}\n\n----------\n", mime_type); //todo: remove dev print
+    append_to_file(&format!("\n-------\n\nmime_type {}\n\n----------\n", mime_type)).await;
     
     response.headers_mut().insert(
       "Content-Type",

@@ -27,7 +27,7 @@ use crate::stream::errors::ERROR_400_HEADERS_KEY_NOT_FOUND;
 /// 
 /// DELETE - to delete the file, using form from previous GET request.
 /// Press [Delete] button, to send the DELETE request to server.
-pub fn handle_uploads(
+pub async fn handle_uploads(
   request: &Request<Vec<u8>>,
   cookie_value:String,
   zero_path_buf: &PathBuf,

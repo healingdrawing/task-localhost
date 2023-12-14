@@ -10,7 +10,7 @@ use crate::handlers::response_500::custom_response_500;
 /// unsafe potentially , because you can pass any path to the script using
 /// 
 /// cgi/useless.py//some/path/here. but in exact this case allow only to check
-pub fn handle_cgi(
+pub async fn handle_cgi(
   request: &Request<Vec<u8>>,
   cookie_value:String,
   zero_path_buf: &PathBuf,
