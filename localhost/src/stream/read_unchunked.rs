@@ -14,6 +14,8 @@ pub async fn read_unchunked(
   headers_buffer: &mut Vec<u8>,
   body_buffer: &mut Vec<u8>,
   client_body_size: usize,
+  has_content_length_header: bool,
+  content_length: usize,
   timeout: Duration,
   global_error_string: &mut String,
 ) {
@@ -36,50 +38,7 @@ pub async fn read_unchunked(
   let dirty_timeout = timeout / 5;
   let dirty_start_time = Instant::now();
   
-  let dirty_string = String::from_utf8_lossy(&headers_buffer);
-  let is_content_length = dirty_string.to_lowercase().contains("content-length: ");
   
-  let content_length: usize = if let Some(index) = dirty_string.to_lowercase().find("content-length: ") {
-    let start = index + "content-length: ".len();
-    let end = dirty_string[start..].find("\r\n").unwrap_or_else(|| dirty_string[start..].len());
-    dirty_string[start..start + end].trim().parse().unwrap_or(0)
-  } else {
-    0
-  };
-  
-  let content_length_header_not_found = !is_content_length;
-  
-  let content_length = if content_length_header_not_found {
-    println!("ERROR: Content-Length header not found in headers_buffer of unchunked body. Continue with 0 content_length of \ndirty body\n.");
-    // usize::MAX-1
-    0
-    
-  } else {
-    // extract content length from headers_buffer and parse it to usize
-    let headers_buffer_slice = headers_buffer.as_slice();
-    let headers_str = String::from_utf8_lossy(headers_buffer_slice);
-    let content_length_header = 
-    headers_str.split("\r\n").find(|&s| s.starts_with("Content-Length: "));
-    
-    let content_length_str = match content_length_header {
-      Some(v) => v.trim_start_matches("Content-Length: "),
-      None => {
-        eprintln!("ERROR: Failed to get Content-Length header from headers_buffer of unchunked body. Continue with 0 content_length of \ndirty body\n.");
-        "0" // help to content_length to be
-      } 
-    };
-    
-    match content_length_str.parse() {
-      Ok(v) => v,
-      Err(e) => {
-        eprintln!("ERROR: Failed to parse content_length_str: {}\n {}", content_length_str, e);
-        *global_error_string = ERROR_400_HEADERS_FAILED_TO_PARSE.to_string();
-        return 
-      }
-    }
-  };
-  
-  println!("content_length: {}", content_length); //todo: remove later
   
   // check content_length not more than client_body_size
   if content_length > client_body_size {
@@ -88,8 +47,8 @@ pub async fn read_unchunked(
     return
   }
   
-  if is_content_length && content_length < 1 {
-    println!("There is no positive content_length value. Continue without reading body.");
+  if has_content_length_header && content_length < 1 {
+    eprintln!("ERROR: There is no positive content_length value. Continue without reading body.");
     return
   }
   
@@ -107,8 +66,6 @@ pub async fn read_unchunked(
       return 
     }
     
-    
-    
     // Check if the timeout has expired
     if start_time.elapsed() >= timeout {
       eprintln!("ERROR: Body read timed out");
@@ -116,11 +73,11 @@ pub async fn read_unchunked(
       *global_error_string = ERROR_400_BODY_READ_TIMEOUT.to_string();
       return 
     } else {
-      println!("body_buffer.len(): {}", body_buffer.len()); //todo: remove later
-      println!("time {} < timeout {}", start_time.elapsed().as_millis(), timeout.as_millis()); //todo: remove later
+      append_to_file(&format!("body_buffer.len(): {}", body_buffer.len())).await; //todo: remove later
+      append_to_file(&format!("time {} < timeout {}", start_time.elapsed().as_millis(), timeout.as_millis())).await; //todo: remove later
     }
     
-    if content_length_header_not_found // potentilal case of dirty body
+    if !has_content_length_header // potentilal case of dirty body
     && dirty_start_time.elapsed() >= dirty_timeout
     {
       if body_buffer.len() < 1{
@@ -132,8 +89,6 @@ pub async fn read_unchunked(
       }
     }
     
-    println!(" before \"match stream.read(&mut buf).await {{\"read from the stream one byte at a time"); //todo: remove later FIRES ONCE
-    
     let mut buf = [0; 1];
     
     // Read from the stream one byte at a time
@@ -141,7 +96,7 @@ pub async fn read_unchunked(
       Ok(0) => {
         // EOF reached
         println!("read EOF reached");
-        break;
+        return
       },
       Ok(n) => {
         // Successfully read n bytes from stream
@@ -153,7 +108,7 @@ pub async fn read_unchunked(
         // Check if the end of the stream has been reached
         if n < buf.len() {
           println!("read EOF reached relatively, because buffer not full after read");
-          break;
+          return
         }
       },
       Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
@@ -164,18 +119,10 @@ pub async fn read_unchunked(
         // Other error occurred
         eprintln!("ERROR: Reading body from stream: {}", e);
         *global_error_string = ERROR_400_BODY_READING_STREAM.to_string();
-        break;
+        return
       },
     }
     
-    println!(" AFTER \"match stream.read(&mut buf).await {{\"read from the stream one byte at a time"); //fix: remove later NEVER FIRES
-    
   }
-  
-  
-  
-  
-  // todo!("read_unchunked")
-  
   
 }
