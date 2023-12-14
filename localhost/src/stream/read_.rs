@@ -34,7 +34,7 @@ pub async fn read_with_timeout(
   // ------------------------------------
   
   loop {
-    
+
     // Check if the timeout has expired
     if start_time.elapsed() >= timeout {
       eprintln!("ERROR: Headers read timed out");
@@ -75,7 +75,7 @@ pub async fn read_with_timeout(
     
     
     if headers_buffer.ends_with(b"\r\n\r\n") {
-      println!("HEADERS BUFFER ENDS WITH \\r\\n\\r\\n");
+      println!("HEADERS BUFFER ENDS WITH \\r\\n\\r\\n"); //todo: remove later
       break;
     }
   }
