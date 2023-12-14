@@ -121,17 +121,26 @@ pub async fn run(
         
         match write_response_into_stream(&mut stream, response).await{
           Ok(_) => {},
-          Err(e) => eprintln!("ERROR: Failed to write response into stream: {}", e),
+          Err(e) =>{
+            eprintln!("ERROR: Failed to write response into stream: {}", e);
+            return // to force drop the task, just for case. It will exit anyways
+          },
         };
         
         match stream.flush().await{
           Ok(_) => {},
-          Err(e) => eprintln!("ERROR: Failed to flush stream: {}", e),
+          Err(e) => {
+            eprintln!("ERROR: Failed to flush stream: {}", e);
+            return // to force drop the task, just for case. It will exit anyways
+          },
         };
         
         match stream.shutdown(std::net::Shutdown::Both){
           Ok(_) => {},
-          Err(e) => eprintln!("ERROR: Failed to shutdown stream: {}", e),
+          Err(e) => {
+            eprintln!("ERROR: Failed to shutdown stream: {}", e);
+            return // to force drop the task, just for case. It will exit anyways
+          },
         };
         
       }).await;
