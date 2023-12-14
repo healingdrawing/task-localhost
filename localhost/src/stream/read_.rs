@@ -149,7 +149,6 @@ pub async fn read_with_timeout(
   } else  {
     read_unchunked(
       stream,
-      headers_buffer,
       body_buffer,
       client_body_size,
       has_content_length_header,

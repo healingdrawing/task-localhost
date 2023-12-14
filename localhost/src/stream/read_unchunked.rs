@@ -11,7 +11,6 @@ use crate::stream::errors::{ERROR_400_HEADERS_READ_TIMEOUT, ERROR_400_HEADERS_RE
 
 pub async fn read_unchunked(
   stream: &mut TcpStream,
-  headers_buffer: &mut Vec<u8>,
   body_buffer: &mut Vec<u8>,
   client_body_size: usize,
   has_content_length_header: bool,
