@@ -5,7 +5,7 @@ use async_std::io;
 use async_std::net::TcpStream;
 use futures::AsyncReadExt;
 
-use crate::debug::append_to_file;
+use crate::debug::{append_to_file, DEBUG};
 use crate::stream::errors::{ERROR_400_HEADERS_READ_TIMEOUT, ERROR_400_HEADERS_READING_STREAM, ERROR_400_BODY_SUM_CHUNK_SIZE_READ_TIMEOUT, ERROR_400_BODY_SUM_CHUNK_SIZE_READING_STREAM, ERROR_400_BODY_SUM_CHUNK_SIZE_PARSE, ERROR_400_BODY_CHUNKED_BUT_ZERO_SUM_CHUNK_SIZE, ERROR_400_BODY_CHUNK_SIZE_READ_TIMEOUT, ERROR_400_BODY_CHUNK_SIZE_READING_STREAM, ERROR_400_BODY_CHUNK_SIZE_PARSE, ERROR_400_BODY_CHUNK_READ_TIMEOUT, ERROR_400_BODY_CHUNK_READING_STREAM, ERROR_400_BODY_CHUNK_IS_BIGGER_THAN_CHUNK_SIZE, ERROR_400_HEADERS_FAILED_TO_PARSE, ERROR_400_BODY_BUFFER_LENGHT_IS_BIGGER_THAN_CONTENT_LENGTH, ERROR_400_BODY_READ_TIMEOUT, ERROR_400_DIRTY_BODY_READ_TIMEOUT, ERROR_400_BODY_READING_STREAM, ERROR_413_BODY_SIZE_LIMIT};
 
 
@@ -32,12 +32,9 @@ pub async fn read_unchunked(
   
   // Start the timer for body read
   let start_time = Instant::now();
-  let mut body_size = 0;
   
   let dirty_timeout = timeout / 5;
   let dirty_start_time = Instant::now();
-  
-  
   
   // check content_length not more than client_body_size
   if content_length > client_body_size {
@@ -52,8 +49,9 @@ pub async fn read_unchunked(
   }
   
   loop{
-    // async time sleep for 2 ms
-    async_std::task::sleep(Duration::from_millis(2)).await; //todo: remove later ?
+    // async time sleep for 2 ms, for some append_to_file() prints cases binded to time.
+    // with big body can easily break the reading timeouts. So, use carefully.
+    if DEBUG { async_std::task::sleep(Duration::from_millis(2)).await; }
     
     // check the body_buffer length
     

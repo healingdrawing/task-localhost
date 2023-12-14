@@ -145,7 +145,15 @@ pub async fn read_with_timeout(
   // ------------------------------------
   
   if is_chunked {
-    read_chunked(stream, body_buffer, timeout).await;
+    read_chunked(
+      stream,
+      body_buffer,
+      client_body_size,
+      has_content_length_header,
+      content_length,
+      timeout,
+      global_error_string,
+    ).await;
   } else  {
     read_unchunked(
       stream,
