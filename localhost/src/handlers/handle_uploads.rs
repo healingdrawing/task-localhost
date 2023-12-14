@@ -50,7 +50,7 @@ pub async fn handle_uploads(
       cookie_value,
       zero_path_buf,
       server_config
-    )
+    ).await
   }
   
   // methods allowed for this path, according to task, GET, POST, DELETE
@@ -70,7 +70,7 @@ pub async fn handle_uploads(
       zero_path_buf,
       server_config,
       http::StatusCode::METHOD_NOT_ALLOWED,
-    )
+    ).await
   } else if !server_config.uploads_methods.contains(&request_method_string){
     eprintln!("ERROR: Method {} is not allowed for uploads in server_config", request_method_string);
     return custom_response_4xx(
@@ -79,7 +79,7 @@ pub async fn handle_uploads(
       zero_path_buf,
       server_config,
       http::StatusCode::METHOD_NOT_ALLOWED,
-    );
+    ).await
   }
   
   
@@ -99,7 +99,7 @@ pub async fn handle_uploads(
             zero_path_buf,
             server_config,
             StatusCode::BAD_REQUEST,
-          );
+          ).await
         },
         ERROR_400_HEADERS_FAILED_TO_PARSE => {
           eprintln!("ERROR: Failed to parse header_value into file_name");
@@ -109,7 +109,7 @@ pub async fn handle_uploads(
             zero_path_buf,
             server_config,
             StatusCode::BAD_REQUEST,
-          );
+          ).await
         },
         _ => {
           eprintln!("ERROR: Failed to upload the file into uploads folder");
@@ -118,7 +118,7 @@ pub async fn handle_uploads(
             cookie_value,
             zero_path_buf,
             server_config,
-          );
+          ).await
         },
       };
 
@@ -134,7 +134,7 @@ pub async fn handle_uploads(
             zero_path_buf,
             server_config,
             StatusCode::BAD_REQUEST,
-          );
+          ).await
         },
         _ => {
           eprintln!("ERROR: Failed to delete the file from uploads folder");
@@ -143,7 +143,7 @@ pub async fn handle_uploads(
             cookie_value,
             zero_path_buf,
             server_config,
-          );
+          ).await
         }
       };
     },
@@ -154,7 +154,7 @@ pub async fn handle_uploads(
         cookie_value,
         zero_path_buf,
         server_config
-      )
+      ).await
     },
   }
   
@@ -167,7 +167,7 @@ pub async fn handle_uploads(
       cookie_value,
       zero_path_buf,
       server_config,
-    );
+    ).await
   }
 
   body_content.extend_from_slice(html.as_bytes());
@@ -190,7 +190,7 @@ pub async fn handle_uploads(
         cookie_value.clone(),
         zero_path_buf,
         server_config
-      )
+      ).await
     }
   };
   

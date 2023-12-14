@@ -30,7 +30,7 @@ fn hardcoded_response_500(
 
 /// return custom 500 error response.
 /// if error happens, then return hardcoded response with 500 status code
-pub fn custom_response_500(
+pub async fn custom_response_500(
   request: &Request<Vec<u8>>,
   cookie_value:String,
   zero_path_buf: &PathBuf,

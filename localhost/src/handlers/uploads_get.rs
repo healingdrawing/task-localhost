@@ -28,7 +28,7 @@ pub fn generate_uploads_html(absolute_path: &PathBuf) -> (String, String) {
   };
   
   for entry in entries {
-
+    
     let entry = match entry {
       Ok(v) => v,
       Err(e) => {
@@ -223,7 +223,7 @@ pub async fn handle_uploads_get_uploaded_file(
         zero_path_buf,
         server_config,
         StatusCode::FORBIDDEN,
-      );
+      ).await
     }
     
     return response_default_static_file(
@@ -231,7 +231,7 @@ pub async fn handle_uploads_get_uploaded_file(
       cookie_value,
       zero_path_buf,
       server_config,
-    );
+    ).await
   } else if !absolute_path_buf.is_file() {
     
     eprintln!("ERROR:\n-----------------------------------\nuploads absolute_path IS NOT A FILE \n-----------------------------------"); // todo: remove dev print
@@ -242,7 +242,7 @@ pub async fn handle_uploads_get_uploaded_file(
       zero_path_buf,
       server_config,
       StatusCode::NOT_FOUND,
-    )
+    ).await
   } // check if file exists or return 404
   
   // only GET method allowed for this path. filtering happens above
@@ -258,7 +258,7 @@ pub async fn handle_uploads_get_uploaded_file(
       zero_path_buf,
       server_config,
       http::StatusCode::METHOD_NOT_ALLOWED,
-    )
+    ).await
   }
   
   // read the file. if error, then return error 500 response
@@ -271,7 +271,7 @@ pub async fn handle_uploads_get_uploaded_file(
         cookie_value,
         zero_path_buf,
         server_config
-      )
+      ).await
     }
   };
   
@@ -287,32 +287,32 @@ pub async fn handle_uploads_get_uploaded_file(
         request,
         cookie_value.clone(),
         zero_path_buf,
-        server_config)
-      }
-    };
-    
-    // get file mime type using mime_guess, or use the text/plain
-    let mime_type = match mime_guess::from_path(absolute_path_buf.clone()).first(){
-      Some(v) => v.to_string(),
-      None => "text/plain".to_string(),
-    };
-    
-    append_to_file(&format!(
-      "\n-------\n\nmime_type {}\n\n----------\n", mime_type
-    )).await;
-    
-    response.headers_mut().insert(
-      "Content-Type",
-      match mime_type.parse(){
-        Ok(v) => v,
-        Err(e) => {
-          eprintln!("ERROR: Failed to parse mime type: {}", e);
-          "text/plain".parse().unwrap() // must be safe, otherwise rust must be r.i.p.
-        }
-      }
-    );
-    
-    response
-    
-  }
+        server_config
+      ).await
+    }
+  };
   
+  // get file mime type using mime_guess, or use the text/plain
+  let mime_type = match mime_guess::from_path(absolute_path_buf.clone()).first(){
+    Some(v) => v.to_string(),
+    None => "text/plain".to_string(),
+  };
+  
+  append_to_file(&format!(
+    "\n-------\n\nmime_type {}\n\n----------\n", mime_type
+  )).await;
+  
+  response.headers_mut().insert(
+    "Content-Type",
+    match mime_type.parse(){
+      Ok(v) => v,
+      Err(e) => {
+        eprintln!("ERROR: Failed to parse mime type: {}", e);
+        "text/plain".parse().unwrap() // must be safe, otherwise rust must be r.i.p.
+      }
+    }
+  );
+  
+  response
+  
+}

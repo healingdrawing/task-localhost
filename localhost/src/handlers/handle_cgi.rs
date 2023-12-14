@@ -65,7 +65,7 @@ pub async fn handle_cgi(
         cookie_value.clone(),
         zero_path_buf,
         server_config,
-      )
+      ).await
     }
     
   };

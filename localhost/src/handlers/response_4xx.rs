@@ -16,7 +16,7 @@ const ALLOWED_4XX_STATUS_CODES: [StatusCode; 5] = [
 /// According to task, the next custom error 4xx are required to handle:
 /// 400,403,404,405,413
 /// if error happens, then return custom_response_500
-pub fn custom_response_4xx(
+pub async fn custom_response_4xx(
   request: &Request<Vec<u8>>,
   cookie_value:String,
   zero_path_buf: &PathBuf,
@@ -32,7 +32,7 @@ pub fn custom_response_4xx(
       cookie_value,
       zero_path_buf,
       server_config,
-    );
+    ).await
   }
 
   let error_page_path = zero_path_buf
@@ -50,7 +50,7 @@ pub fn custom_response_4xx(
         cookie_value,
         zero_path_buf,
         server_config,
-      )
+      ).await
     }
   };
 
@@ -68,7 +68,7 @@ pub fn custom_response_4xx(
         cookie_value.clone(),
         zero_path_buf,
         server_config,
-      )
+      ).await
     }
   };
   

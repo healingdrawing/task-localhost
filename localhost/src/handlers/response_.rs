@@ -14,7 +14,7 @@ use crate::stream::errors::{CUSTOM_ERRORS_500, ERROR_200_OK};
 
 
 /// create response with static file, according to server config
-pub fn response_default_static_file(
+pub async fn response_default_static_file(
   request: &Request<Vec<u8>>,
   cookie_value:String,
   zero_path_buf: &PathBuf,
@@ -36,7 +36,7 @@ pub fn response_default_static_file(
         cookie_value,
         zero_path_buf,
         server_config,
-      )
+      ).await
     }
   };
   
@@ -54,7 +54,7 @@ pub fn response_default_static_file(
         cookie_value.clone(),
         zero_path_buf,
         server_config,
-      )
+      ).await
     }
   };
   
@@ -82,7 +82,7 @@ pub async fn check_custom_errors(
           zero_path_buf,
           server_config.clone(),
           StatusCode::BAD_REQUEST
-        );
+        ).await;
         return
       }
     }
@@ -96,7 +96,7 @@ pub async fn check_custom_errors(
           zero_path_buf,
           server_config.clone(),
           StatusCode::PAYLOAD_TOO_LARGE
-        );
+        ).await;
         return
       }
     }
@@ -109,7 +109,7 @@ pub async fn check_custom_errors(
           cookie_value,
           zero_path_buf,
           server_config.clone(),
-        );
+        ).await;
         return
       }
     }
@@ -120,7 +120,7 @@ pub async fn check_custom_errors(
       cookie_value,
       zero_path_buf,
       server_config.clone(),
-    )
+    ).await
   }
   
 }
