@@ -17,8 +17,15 @@ For details/restrictions see [task and audit questions](https://github.com/01-ed
 ### Run the project:
 - terminal: `./runme`
 
-### Development run the project(build and run):
+### Development run the project(build and run, does not work with priveleged port):
 - terminal: `./devrun`
+
+### Run with priveleged port (like 80) in settings:
+- terminal: `sudo ./runme`  
+
+It is not secure, and not recommended to use. But after that you can use `localhost` in the browser, without port number.  
+Otherwise you need to use `localhost:8080` in the browser.  
+Also `./devrun` script will not work with priveleged port. And you will see `Permission denied (os error 13) ... Failed to bind addr` error in the terminal.
 
 ### How server works:
 
@@ -46,9 +53,12 @@ According to the task requirements only one script enough to be implemented, and
 Upload and delete files functionality is not a part of the static site, so it is implemented separately, universally for all sites, and hardcoded into the `runme` file.  
 The `settings` file allows to control accessibility of the `/uploads` page for each server settings, using methods `GET`, `POST`, `DELETE`, to download, upload, delete permissions respectively.  
 - default `settings` file configuration, implements two different sites, with possibility to test the `redirect.html` page accessibility, depends on allowed methods.
+- to keep the flow more stable, the body of the request will be ignored, if the headers of not chunked request does not include the `Content-Length` header.  Lot of clients automatically add this header, so it is not a problem.
 
 ### Customization:
 
+- the reading timeout is hardcoded, to prevent any extra activity/experiments. To change it, discover the run function of the `localhost/src/server/flow.rs` file.  
+- the DEBUG boolean flag is hardcoded, to prevent any extra activity/experiments. To change it, discover the the `localhost/src/debug.rs` file. To use debug mode properly, you need increase the reading timeout, because debug implements the async sleep functionality, to monitor the flow of the server.  
 - to use the executable separately from the project(not recommended), you need to keep in one folder:
 - - the executable file `runme`.  
 - - the `static` folder, includes the sites files.  

@@ -5,7 +5,7 @@
 
 [[servers]]
 server_name = "default"
-ports = ["8080", "8081", "8082", "8082"]
+ports = ["80", "8080"]
 server_address = "127.0.0.1"
 client_body_size = 1024
 static_files_prefix = "default"
@@ -14,6 +14,18 @@ error_pages_prefix = "default/error"
 uploads_methods = ["GET","POST"]
 routes = { "redirect.html" = [] }
 
+[[servers]]
+server_name = "localhost"
+ports = ["8081", "8082", "8082"]
+server_address = "127.0.0.1"
+client_body_size = 1024
+static_files_prefix = "localhost"
+default_file = "empty.html"
+error_pages_prefix = "localhost/error"
+uploads_methods = []
+routes = {}
+
+# to call resolve using curl
 [[servers]]
 server_name = "mega.company"
 ports = ["8082", "8083", "8084", "8085"]

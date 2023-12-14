@@ -7,6 +7,7 @@ use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::time::{Duration, SystemTime};
 use http::{Response, Request};
+use std::error::Error;
 
 use crate::handlers::response_::check_custom_errors;
 use crate::handlers::handle_::handle_request;
@@ -18,15 +19,43 @@ use crate::stream::parse::parse_raw_request;
 use crate::stream::write_::write_response_into_stream;
 use crate::debug::append_to_file;
 
-pub async fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
-  let ports = get_usize_unique_ports(&server_configs).await.unwrap();
-  let server_address = "0.0.0.0";
+pub async fn run(
+  zero_path_buf:PathBuf,
+  server_configs: Vec<ServerConfig>
+) -> Result<(), Box<dyn Error>> {
+
+  let ports = match get_usize_unique_ports(&server_configs).await{
+    Ok(ports) => ports,
+    Err(e) => {
+      eprintln!("ERROR: Failed to get ports: {}", e);
+      return Err("Failed to get ports".into());
+    },
+  };
+  
+  let server_address = "0.0.0.0"; // to listen all interfaces
   
   for port in ports.clone() {
-    let addr: SocketAddr = format!("{}:{}", server_address, port).parse().unwrap();
-    let listener = TcpListener::bind(addr).await.unwrap();
+    let addr: SocketAddr = match format!(
+      "{}:{}",
+      server_address,
+      port,
+    ).parse(){
+      Ok(v) => v,
+      Err(e) => {
+        eprintln!("ERROR: Failed to parse 0.0.0.0:port into SocketAddr: {}", e);
+        return Err("Failed to parse 0.0.0.0:port into SocketAddr".into());
+      },
+    };
     
-    append_to_file(&format!("addr {}\n", addr)).await;
+    let listener = match TcpListener::bind(addr).await{
+      Ok(v) => v,
+      Err(e) => {
+        eprintln!("ERROR: Failed to bind addr: {}", e);
+        return Err("Failed to bind addr".into());
+      },
+    };
+    
+    append_to_file(&format!("addr {}", addr)).await;
     
     let zero_path_buf = zero_path_buf.clone();
     let server_configs = server_configs.clone();
@@ -35,8 +64,14 @@ pub async fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
     task::spawn(async move {
       listener.incoming().for_each_concurrent(None, |stream| async {
         
-        let mut stream = stream.unwrap();
-        let timeout = Duration::from_millis(1000);
+        let mut stream = match stream{
+          Ok(v) => v,
+          Err(e) => {
+            eprintln!("ERROR: Failed to get stream: {}", e);
+            return;
+          },
+        };
+        
         append_to_file(
           "==================\n= incoming fires =\n=================="
         ).await;
@@ -52,6 +87,10 @@ pub async fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
 
         let mut response:Response<Vec<u8>> = Response::new(Vec::new());
         
+        // hardcoded, but it's ok for this case. And less chance for user to break.
+        // Not bad to manage it as flag of executable.
+        let timeout = Duration::from_millis(1000);
+
         let choosen_server_config = read_with_timeout(
           timeout, &mut stream, &mut headers_buffer, &mut body_buffer,
           &server_configs, &mut global_error_string
@@ -101,4 +140,5 @@ pub async fn run(zero_path_buf:PathBuf ,server_configs: Vec<ServerConfig>) {
   }
   println!("Server is listening configured above http://ip:port pairs");
   async_std::task::sleep(Duration::from_secs(3600)).await;
+  Ok(())
 }

@@ -129,7 +129,10 @@ async fn main() {
           };
           
           println!("{:#?}", server_configs); //todo: remove this dev print
-          run( zero_path_buf.clone() ,server_configs.clone()).await;
+          match run( zero_path_buf.clone() ,server_configs.clone()).await{
+            Ok(_) => println!("Server run successfully"),
+            Err(e) => panic!("ERROR: Failed to run server: {}", e),
+          };
         },
         Err(e) => eprintln!("ERROR: Failed to use settings to fill server_configs:Vec<ServerConfig> : {}", e),
       }
