@@ -99,7 +99,7 @@ pub async fn run(
         
         // hardcoded, but it's ok for this case. And less chance for user to break.
         // Not bad to manage it as flag of executable.
-        let timeout = Duration::from_millis(5000);
+        let timeout = Duration::from_millis(3000);
 
         let choosen_server_config = read_with_timeout(
           timeout, &mut stream, &mut headers_buffer, &mut body_buffer,
@@ -128,8 +128,6 @@ pub async fn run(
         
         if !cookie_is_ok { global_error_string = ERROR_400_HEADERS_INVALID_COOKIE.to_string(); }
         
-        // let cookie_value = "key=gap;key2=gap2".to_string();// todo: remove this line
-
         if global_error_string == ERROR_200_OK.to_string() {
           response = handle_request(&request, cookie_value.clone(), &zero_path_buf, choosen_server_config.clone(), &mut global_error_string).await;
         }
