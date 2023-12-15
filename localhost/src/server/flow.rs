@@ -13,7 +13,7 @@ use std::error::Error;
 
 use crate::handlers::response_::check_custom_errors;
 use crate::handlers::handle_::handle_request;
-use crate::server::cookie::{self, Cookie};
+use crate::server::cookie::Cookie;
 use crate::server::core::{get_usize_unique_ports, Server};
 use crate::server::core::ServerConfig;
 use crate::stream::errors::{ERROR_200_OK, ERROR_400_HEADERS_INVALID_COOKIE};
