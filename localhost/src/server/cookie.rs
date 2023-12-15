@@ -49,16 +49,21 @@ impl Server {
     &mut self,
     request: &Request<Vec<u8>>
   ) -> (String, bool) {
-    
-    let cookie_header = match request.headers().get("Cookie"){
-      Some(v) => v,
+    append_to_file("EXTRACT COOKIES FROM REQUEST OR PROVIDE NEW").await;
+    let cookie_header_value = match request.headers().get("Cookie"){
+      Some(v) =>{
+        append_to_file(&format!( "Cookie header: {:?}", v )).await;
+        v
+      },
       None =>{ // no cookie header, new cookie will be generated
+        append_to_file("No \"Cookie\" header").await;
         let cookie = self.generate_unique_cookie_and_return();
+        append_to_file(&format!( "New cookie: {:?}", cookie )).await;
         return (self.send_cookie(cookie.name), true)
       }
     };
     
-    let cookie_header = match cookie_header.to_str(){
+    let cookie_header = match cookie_header_value.to_str(){
       Ok(v) => v,
       Err(e) => {
         eprintln!("ERROR: Failed to get cookie_header.to_str: {}", e);
