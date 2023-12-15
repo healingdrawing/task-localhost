@@ -109,10 +109,8 @@ pub async fn run(
         }
         
         append_to_file(&format!(
-          "\nafter parse_raw_request\nrequest: {:?}\nrequest.headers: {:?}\nrequest.body: {:?}" ,
-          request,
-          request.headers(),
-          String::from_utf8(request.body().clone())
+          "\nafter parse_raw_request\nrequest.headers: {:?}\n" ,
+          request.headers()
         )).await;
 
         server.check_expired_cookies().await;
@@ -121,17 +119,15 @@ pub async fn run(
         
         if !cookie_is_ok { global_error_string = ERROR_400_HEADERS_INVALID_COOKIE.to_string(); }
         
-        // let cookie_value = "gap".to_string();// todo: remove this line
+        // let cookie_value = "key=gap;key2=gap2".to_string();// todo: remove this line
 
         if global_error_string == ERROR_200_OK.to_string() {
           response = handle_request(&request, cookie_value.clone(), &zero_path_buf, choosen_server_config.clone(), &mut global_error_string).await;
         }
 
         append_to_file(&format!(
-          "\nafter handle_request\nresponse: {:?}\nresponse.headers: {:?}\nresponse.body: {:?}" ,
-          response,
-          response.headers(),
-          String::from_utf8(response.body().clone())
+          "\nafter handle_request\nresponse.headers: {:?}\n" ,
+          response.headers()          
         )).await;
         
         check_custom_errors(global_error_string, &request, cookie_value.clone(), &zero_path_buf, choosen_server_config.clone(), &mut response).await;

@@ -14,16 +14,29 @@ pub struct Cookie {
   pub expires: u64,
 }
 
+impl Cookie {
+  async fn is_expired(&self) -> bool {
+    let now = SystemTime::now();
+    let expiration = SystemTime::UNIX_EPOCH + Duration::from_secs(self.expires);
+    expiration < now
+  }
+
+  async fn to_string(&self) -> String {
+    // format!( "{}={}; Expires={}; HttpOnly; Path=/", self.name, self.value, self.expires )
+    format!( "{}={}", self.name, self.value )
+  }
+}
+
 impl Server {
   
-  fn generate_unique_cookie_and_return(&mut self) -> Cookie {
+  async fn generate_unique_cookie_and_return(&mut self) -> Cookie {
     let name = Uuid::new_v4().to_string();
     let value = Uuid::new_v4().to_string();
-    let cookie = self.set_cookie( name.clone(), value.clone(), Duration::from_secs(60) );
+    let cookie = self.set_cookie( name.clone(), value.clone(), Duration::from_secs(60) ).await;
     cookie
   }
   
-  pub fn set_cookie(&mut self, name: String, value: String, life_time: Duration) -> Cookie {
+  async fn set_cookie(&mut self, name: String, value: String, life_time: Duration) -> Cookie {
     let expiration = SystemTime::now() + life_time;
     let expires = match
     expiration.duration_since(SystemTime::UNIX_EPOCH){
@@ -36,11 +49,22 @@ impl Server {
     .as_secs();
     
     let cookie = Cookie { name: name.clone(), value, expires };
+
+    append_to_file(
+      &format!( "===\n self.cookies before insert:\n{:?}\n===", self.cookies )
+    ).await;
+
     self.cookies.insert( name.clone(), cookie.clone() );
+
+    append_to_file(
+      &format!( "===\n self.cookies after insert:\n{:?}\n===", self.cookies )
+    ).await;
+
+
     cookie
   }
   
-  pub fn get_cookie(&self, name: &str) -> Option<&Cookie>{ self.cookies.get(name) }
+  pub async fn get_cookie(&self, name: &str) -> Option<&Cookie>{ self.cookies.get(name) }
   
   /// extract cookies from request, if cookie not found, then generate new cookie for one minute.
   /// 
@@ -49,132 +73,106 @@ impl Server {
     &mut self,
     request: &Request<Vec<u8>>
   ) -> (String, bool) {
+
     append_to_file("EXTRACT COOKIES FROM REQUEST OR PROVIDE NEW").await;
     let cookie_header_value = match request.headers().get("Cookie"){
       Some(v) =>{
-        append_to_file(&format!( "Cookie header: {:?}", v )).await;
+        append_to_file(&format!( "Cookie header value: {:?}", v )).await;
         v
       },
       None =>{ // no cookie header, new cookie will be generated
         append_to_file("No \"Cookie\" header").await;
-        let cookie = self.generate_unique_cookie_and_return();
+        let cookie = self.generate_unique_cookie_and_return().await;
         append_to_file(&format!( "New cookie: {:?}", cookie )).await;
-        return (self.send_cookie(cookie.name), true)
+        return (self.send_cookie(cookie.name).await, true)
       }
     };
     
-    let cookie_header = match cookie_header_value.to_str(){
+    let cookie_header_value_str = match cookie_header_value.to_str(){
       Ok(v) => v,
       Err(e) => {
         eprintln!("ERROR: Failed to get cookie_header.to_str: {}", e);
-        let cookie = self.generate_unique_cookie_and_return();
-        return (self.send_cookie(cookie.name), false)
+        let cookie = self.generate_unique_cookie_and_return().await;
+        return (self.send_cookie(cookie.name).await, false)
       }
     }
     .trim();
     
     // split cookie header by "; " to get all cookie parts, like "name=value" or "name" for flags.
-    let cookie_parts:Vec<&str> = cookie_header.split("; ").collect();
+    let cookie_parts:Vec<&str> = cookie_header_value_str.split("; ").collect();
     let cookie_parts:Vec<&str> = cookie_parts.iter().map(|v| v.trim()).collect();
     
-    // check all cookie parts and find Expired name to check it
-    // if cookie expired, then do not write it in the server.cookies and return new cookie
-    let mut expires_not_found = true;
-    let mut global_expiration: u64 = 0; // use it for write parts in server.cookies
+    append_to_file(
+      &format!( "===\n incoming Cookie parts: {:?}\n===", cookie_parts )
+    ).await;
+
+    append_to_file(
+      &format!( "===\n server.cookies: {:?}\n===", self.cookies )
+    ).await;
+
+
+    // check all cookie parts, try to find them in server.cookies
+    // if cookie not found, then generate new cookie for one minute
+    // if cookie found, then check if it expired, if yes, then remove it from server.cookies and generate new cookie for one minute and return it as value for header
+    // if cookie not expired, then return it as value for header
+    // if found more then one cookie in server.cookies, then generate new cookie for one minute and return it as value for header
+    let mut cookie_found = false;
+    let mut broken_cookie_found = false;
+    let mut expired_cookie_found = false;
+    let mut more_then_one_cookie_found = false;
+    let mut found_cookie_name = String::new();
+
     for cookie_part in cookie_parts.iter(){
       let cookie_part: Vec<&str> = cookie_part.splitn(2, '=').collect();
       let part_name = cookie_part[0];
-      
-      if part_name == "Expires"{
-        expires_not_found = false;
-        let part_value = cookie_part[1];
-        let expiration = match part_value.parse::<u64>(){
-          Ok(v) => v,
-          Err(e) => {
-            eprintln!("ERROR: Failed to parse cookie expiration: {}", e);
-            let cookie = self.generate_unique_cookie_and_return();
-            return (self.send_cookie(cookie.name), false)
-          }
-        };
-        // check if cookie expired
-        let now = SystemTime::now();
-        let expires = SystemTime::UNIX_EPOCH + Duration::from_secs(expiration);
-        if expires < now{ // if cookie expired, then do not write it in the server.cookies and return new cookie
-          let cookie = self.generate_unique_cookie_and_return();
-          return (self.send_cookie(cookie.name), true)
-        }
+
+      if let Some(server_cookie) = self.cookies.get(part_name){
+        if cookie_found { more_then_one_cookie_found = true; }
+        cookie_found = true;
         
-        // check if cookie is too long living. Server provide only one minute cookies
-        let max_life_time = SystemTime::now() + Duration::from_secs(60);
-        if expires > max_life_time{
-          eprintln!("ERROR: Cookie life time is too long. Potential security risk");
-          let cookie = self.generate_unique_cookie_and_return();
-          return (self.send_cookie(cookie.name), false)
-        }
-        
-        global_expiration = expiration;
-        
-      }
-      
-    }
-    
-    // if expiration not found, generate new for one minute
-    if expires_not_found{
-      let new_expires  = SystemTime::now() + Duration::from_secs(60);
-      global_expiration = match
-      new_expires.duration_since(SystemTime::UNIX_EPOCH){
-        Ok(v) => v.as_secs(),
-        Err(e) => {
-          eprintln!("ERROR: Failed to get duration_since for cookie expiration: {}", e);
-          0
-        }
-      }
-    }
-    
-    if global_expiration > 0{
-      // parse common cookie parts and write them in server.cookies.
-      // All name=value pairs except "Expires", which managed above
-      for cookie_part in cookie_parts.iter(){
-        let cookie_part: Vec<&str> = cookie_part.splitn(2, '=').collect();
-        if cookie_part.len() == 2{
-          let part_name = cookie_part[0];
-          if part_name != "Expires"{
-            let value = cookie_part[1];
-            // write in server.cookies
-            let cookie = Cookie {
-              name: part_name.to_string(),
-              value: value.to_string(),
-              expires: global_expiration 
-            };
-            self.cookies.insert( part_name.to_string(), cookie );
+        // check if cookie is correct
+        if cookie_part.len() == 2 {
+          let part_value = cookie_part[1];
+          if part_value != server_cookie.value{
+            eprintln!("ERROR: Cookie value is not correct. Potential security risk");
+            broken_cookie_found = true;
+          } else if !more_then_one_cookie_found { // first cookie found, use it
+            found_cookie_name = part_name.to_string();
           }
         }
+        
+        // check if server cookie with the same name is expired
+        if server_cookie.is_expired().await{
+          expired_cookie_found = true;
+          self.cookies.remove(part_name);
+        }
+
       }
+
     }
-    // if cookie is correct, then return it as value for header
-    (cookie_header.to_string(), true)
+
+    if expired_cookie_found || !cookie_found
+    {
+      let cookie = self.generate_unique_cookie_and_return().await;
+      return (self.send_cookie(cookie.name).await, true)
+    } else if broken_cookie_found || more_then_one_cookie_found {
+      let cookie = self.generate_unique_cookie_and_return().await;
+      return (self.send_cookie(cookie.name).await, false)
+    } else {
+      return (self.send_cookie(found_cookie_name).await, true)
+    }
     
   }
   
   /// get cookie by name, if cookie not found, then generate new cookie for one minute
   /// 
   /// return header value for cookie as string "{}={}; Expires={}; HttpOnly; Path=/" to send in response
-  pub fn send_cookie(&mut self, name: String) -> String {
+  pub async fn send_cookie(&mut self, name: String) -> String {
     if let Some(cookie) = self.cookies.get(&name){
-      let name = cookie.name.clone();
-      let value = cookie.value.clone();
-      let expires = cookie.expires.clone();
-      let cookie = format!(
-        "{}={}; Expires={}; HttpOnly; Path=/", name, value, expires
-      );
-      return cookie
-      
+      return cookie.to_string().await;
     } else { // if cookie not found, then generate new cookie for one minute
-      let cookie = self.generate_unique_cookie_and_return();
-      return format!(
-        "{}={}; Expires={}; HttpOnly; Path=/", cookie.name, cookie.value, cookie.expires
-      );
-      
+      let cookie = self.generate_unique_cookie_and_return().await;
+      return cookie.to_string().await;
     }
     
   }
