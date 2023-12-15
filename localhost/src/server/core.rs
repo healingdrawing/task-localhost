@@ -1,7 +1,9 @@
+use async_std::sync::Mutex;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::error::Error;
+use std::sync::Arc;
 use std::time::SystemTime;
 
 use crate::server::cookie::Cookie;
@@ -78,6 +80,6 @@ pub async fn get_usize_unique_ports(server_configs: &Vec<ServerConfig>) -> Resul
 #[derive(Debug)]
 pub struct Server {
   // pub listener: &'a TcpListener,
-  pub cookies: HashMap<String, Cookie>,
+  pub cookies: Arc<Mutex<HashMap<String, Cookie>>>,
   pub cookies_check_time: SystemTime,
 }

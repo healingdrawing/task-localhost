@@ -1,3 +1,4 @@
+use async_std::sync::Mutex;
 use async_std::task;
 use futures::AsyncWriteExt;
 use async_std::net::TcpListener;
@@ -5,13 +6,14 @@ use futures::stream::StreamExt;
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use http::{Response, Request};
 use std::error::Error;
 
 use crate::handlers::response_::check_custom_errors;
 use crate::handlers::handle_::handle_request;
-use crate::server::cookie;
+use crate::server::cookie::{self, Cookie};
 use crate::server::core::{get_usize_unique_ports, Server};
 use crate::server::core::ServerConfig;
 use crate::stream::errors::{ERROR_200_OK, ERROR_400_HEADERS_INVALID_COOKIE};
@@ -63,6 +65,11 @@ pub async fn run(
     
     // Create an infinite stream of incoming connections for each port
     task::spawn(async move {
+
+      // also can be one for all tasks(move outside), but this looks like more safe/isolated
+      let cookies_storage: Arc<Mutex<HashMap<String, Cookie>>> =
+        Arc::new(Mutex::new(HashMap::new()));
+      
       listener.incoming().for_each_concurrent(None, |stream| async {
         
         let mut stream = match stream{
@@ -78,7 +85,9 @@ pub async fn run(
         ).await;
         // append_to_file(&format!("{:?}",stream)).await;
         
-        let mut server = Server { cookies: HashMap::new(), cookies_check_time: SystemTime::now() + Duration::from_secs(60), };
+        let mut server = Server {
+          cookies: cookies_storage.clone(),
+          cookies_check_time: SystemTime::now() + Duration::from_secs(60), };
         
         let mut headers_buffer: Vec<u8> = Vec::new();
         let mut body_buffer: Vec<u8> = Vec::new();
@@ -90,7 +99,7 @@ pub async fn run(
         
         // hardcoded, but it's ok for this case. And less chance for user to break.
         // Not bad to manage it as flag of executable.
-        let timeout = Duration::from_millis(1000);
+        let timeout = Duration::from_millis(5000);
 
         let choosen_server_config = read_with_timeout(
           timeout, &mut stream, &mut headers_buffer, &mut body_buffer,
@@ -136,7 +145,7 @@ pub async fn run(
           Ok(_) => {},
           Err(e) =>{
             eprintln!("ERROR: Failed to write response into stream: {}", e);
-            return // to force drop the task, just for case. It will exit anyways
+            return // to force drop the task stream, just for case. It will exit anyways
           },
         };
         
@@ -144,7 +153,7 @@ pub async fn run(
           Ok(_) => {},
           Err(e) => {
             eprintln!("ERROR: Failed to flush stream: {}", e);
-            return // to force drop the task, just for case. It will exit anyways
+            return // to force drop the task stream, just for case. It will exit anyways
           },
         };
         
@@ -152,7 +161,7 @@ pub async fn run(
           Ok(_) => {},
           Err(e) => {
             eprintln!("ERROR: Failed to shutdown stream: {}", e);
-            return // to force drop the task, just for case. It will exit anyways
+            return // to force drop the task stream, just for case. It will exit anyways
           },
         };
         

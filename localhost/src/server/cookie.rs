@@ -54,7 +54,9 @@ impl Server {
       &format!( "===\n self.cookies before insert:\n{:?}\n===", self.cookies )
     ).await;
 
-    self.cookies.insert( name.clone(), cookie.clone() );
+    let mut guard_cookies = self.cookies.lock().await;
+    guard_cookies.insert( cookie.name.clone(), cookie.clone() );
+    drop(guard_cookies);
 
     append_to_file(
       &format!( "===\n self.cookies after insert:\n{:?}\n===", self.cookies )
@@ -64,7 +66,20 @@ impl Server {
     cookie
   }
   
-  pub async fn get_cookie(&self, name: &str) -> Option<&Cookie>{ self.cookies.get(name) }
+  pub async fn get_cookie(&self, name: &str) -> Cookie{
+    let guard_cookies = self.cookies.lock().await;
+    match guard_cookies.get(name){
+      Some(v) => {
+        return v.clone();
+      },
+      None => {
+        drop(guard_cookies);
+        eprintln!("ERROR: Failed to get cookie by name: {}", name);
+        return Cookie { name: String::new(), value: String::new(), expires: 0}
+      },
+    };
+    
+  }
   
   /// extract cookies from request, if cookie not found, then generate new cookie for one minute.
   /// 
@@ -122,11 +137,13 @@ impl Server {
     let mut more_then_one_cookie_found = false;
     let mut found_cookie_name = String::new();
 
+    let mut guard_cookies = self.cookies.lock().await;
+
     for cookie_part in cookie_parts.iter(){
       let cookie_part: Vec<&str> = cookie_part.splitn(2, '=').collect();
       let part_name = cookie_part[0];
 
-      if let Some(server_cookie) = self.cookies.get(part_name){
+      if let Some(server_cookie) = guard_cookies.get(part_name){
         if cookie_found { more_then_one_cookie_found = true; }
         cookie_found = true;
         
@@ -134,7 +151,7 @@ impl Server {
         if cookie_part.len() == 2 {
           let part_value = cookie_part[1];
           if part_value != server_cookie.value{
-            eprintln!("ERROR: Cookie value is not correct. Potential security risk");
+            eprintln!("ERROR: Cookie\n{}\nfound in server cookies with different value\n{}\n. Potential security risk", cookie_part.join("="), server_cookie.to_string().await);
             broken_cookie_found = true;
           } else if !more_then_one_cookie_found { // first cookie found, use it
             found_cookie_name = part_name.to_string();
@@ -144,18 +161,21 @@ impl Server {
         // check if server cookie with the same name is expired
         if server_cookie.is_expired().await{
           expired_cookie_found = true;
-          self.cookies.remove(part_name);
+          guard_cookies.remove(part_name);
         }
 
       }
 
     }
 
+    drop(guard_cookies);
+
     if expired_cookie_found || !cookie_found
     {
       let cookie = self.generate_unique_cookie_and_return().await;
       return (self.send_cookie(cookie.name).await, true)
-    } else if broken_cookie_found || more_then_one_cookie_found {
+    } else if broken_cookie_found {
+      eprintln!("ERROR: Found broken cookie. Same name as server cookie, but different value. Potential security risk");
       let cookie = self.generate_unique_cookie_and_return().await;
       return (self.send_cookie(cookie.name).await, false)
     } else {
@@ -168,49 +188,42 @@ impl Server {
   /// 
   /// return header value for cookie as string "{}={}; Expires={}; HttpOnly; Path=/" to send in response
   pub async fn send_cookie(&mut self, name: String) -> String {
-    if let Some(cookie) = self.cookies.get(&name){
+    let guard_cookies = self.cookies.lock().await;
+
+    if let Some(cookie) = guard_cookies.get(&name){
       return cookie.to_string().await;
     } else { // if cookie not found, then generate new cookie for one minute
+      drop(guard_cookies);
       let cookie = self.generate_unique_cookie_and_return().await;
       return cookie.to_string().await;
     }
     
   }
   
-  /// if cookie expired, then remove it from cookies, and return true,
-  /// 
-  /// if cookie not found,then return true, as signal, to generate new cookie,
-  /// 
-  /// else return false
-  // pub fn is_cookie_expired(&mut self, name: &str) -> bool {
-  //   let now = SystemTime::now();
-  //   if let Some(cookie) = self.cookies.get(name){
-  //     let expiration = SystemTime::UNIX_EPOCH + Duration::from_secs(cookie.expires);
-  //     if expiration < now{
-  //       self.cookies.remove(name);
-  //       return true
-  //     }
-  //   } else {
-  //     return true
-  //   }
-  //   false
-  // }
-  
   /// remove all expired cookies. Used with timeout 60 sec, to not check every request
   pub async fn check_expired_cookies(&mut self){
     let now = SystemTime::now();
     if now > self.cookies_check_time {
+      let guard_cookies = self.cookies.lock().await;
+
       // collect all expired cookies
       let mut expired_cookies = Vec::new();
-      for (name, cookie) in self.cookies.iter(){
+      for (name, cookie) in guard_cookies.iter(){
         let expiration = SystemTime::UNIX_EPOCH + Duration::from_secs(cookie.expires);
         if expiration < now {
           expired_cookies.push(name.clone());
           append_to_file(&format!( "EXPIRED COOKIE: {:?}", cookie )).await;
         }
       }
+      drop(guard_cookies);
+
+      // rediclare as mutable, and perhaps, allow, in pause time, 
+      // to use it in different place. Not sure
+      let mut guard_cookies = self.cookies.lock().await;
       // remove all expired cookies
-      for name in expired_cookies.iter(){ self.cookies.remove(name); }
+      for name in expired_cookies.iter(){ guard_cookies.remove(name); }
+      drop(guard_cookies);
+
     }
     // set next check time, one minute from now
     self.cookies_check_time = now + Duration::from_secs(60);
