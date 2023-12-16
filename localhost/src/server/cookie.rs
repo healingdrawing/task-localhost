@@ -1,4 +1,5 @@
 use std::time::{SystemTime, Duration};
+use chrono::{DateTime, Utc};
 use http::Request;
 use uuid::Uuid;
 
@@ -20,10 +21,14 @@ impl Cookie {
     let expiration = SystemTime::UNIX_EPOCH + Duration::from_secs(self.expires);
     expiration < now
   }
-
+  
   async fn to_string(&self) -> String {
+    let datetime: DateTime<Utc> = DateTime::from_timestamp(self.expires as i64, 0)
+    .unwrap_or(Utc::now() + Duration::from_secs(60));
+    let expires_str = datetime.to_rfc2822();
     // format!( "{}={}; Expires={}; HttpOnly; Path=/", self.name, self.value, self.expires )
-    format!( "{}={}", self.name, self.value )
+    // format!( "{}={}", self.name, self.value )
+    format!("{}={}; Expires={}; HttpOnly; Path=/", self.name, self.value, expires_str)
   }
 }
 
@@ -49,20 +54,20 @@ impl Server {
     .as_secs();
     
     let cookie = Cookie { name: name.clone(), value, expires };
-
+    
     append_to_file(
       &format!( "===\n self.cookies before insert:\n{:?}\n===", self.cookies )
     ).await;
-
+    
     let mut guard_cookies = self.cookies.lock().await;
     guard_cookies.insert( cookie.name.clone(), cookie.clone() );
     drop(guard_cookies);
-
+    
     append_to_file(
       &format!( "===\n self.cookies after insert:\n{:?}\n===", self.cookies )
     ).await;
-
-
+    
+    
     cookie
   }
   
@@ -88,7 +93,7 @@ impl Server {
     &mut self,
     request: &Request<Vec<u8>>
   ) -> (String, bool) {
-
+    
     append_to_file("EXTRACT COOKIES FROM REQUEST OR PROVIDE NEW").await;
     let cookie_header_value = match request.headers().get("Cookie"){
       Some(v) =>{
@@ -120,12 +125,12 @@ impl Server {
     append_to_file(
       &format!( "===\n incoming Cookie parts: {:?}\n===", cookie_parts )
     ).await;
-
+    
     append_to_file(
       &format!( "===\n server.cookies: {:?}\n===", self.cookies )
     ).await;
-
-
+    
+    
     // check all cookie parts, try to find them in server.cookies
     // if cookie not found, then generate new cookie for one minute
     // if cookie found, then check if it expired, if yes, then remove it from server.cookies and generate new cookie for one minute and return it as value for header
@@ -136,13 +141,13 @@ impl Server {
     let mut expired_cookie_found = false;
     let mut more_then_one_cookie_found = false;
     let mut found_cookie_name = String::new();
-
+    
     let mut guard_cookies = self.cookies.lock().await;
-
+    
     for cookie_part in cookie_parts.iter(){
       let cookie_part: Vec<&str> = cookie_part.splitn(2, '=').collect();
       let part_name = cookie_part[0];
-
+      
       if let Some(server_cookie) = guard_cookies.get(part_name){
         if cookie_found { more_then_one_cookie_found = true; }
         cookie_found = true;
@@ -163,13 +168,13 @@ impl Server {
           expired_cookie_found = true;
           guard_cookies.remove(part_name);
         }
-
+        
       }
-
+      
     }
-
+    
     drop(guard_cookies);
-
+    
     if expired_cookie_found || !cookie_found
     {
       let cookie = self.generate_unique_cookie_and_return().await;
@@ -189,7 +194,7 @@ impl Server {
   /// return header value for cookie as string "{}={}; Expires={}; HttpOnly; Path=/" to send in response
   pub async fn send_cookie(&mut self, name: String) -> String {
     let guard_cookies = self.cookies.lock().await;
-
+    
     if let Some(cookie) = guard_cookies.get(&name){
       return cookie.to_string().await;
     } else { // if cookie not found, then generate new cookie for one minute
@@ -205,7 +210,7 @@ impl Server {
     let now = SystemTime::now();
     if now > self.cookies_check_time {
       let guard_cookies = self.cookies.lock().await;
-
+      
       // collect all expired cookies
       let mut expired_cookies = Vec::new();
       for (name, cookie) in guard_cookies.iter(){
@@ -216,14 +221,14 @@ impl Server {
         }
       }
       drop(guard_cookies);
-
+      
       // rediclare as mutable, and perhaps, allow, in pause time, 
       // to use it in different place. Not sure
       let mut guard_cookies = self.cookies.lock().await;
       // remove all expired cookies
       for name in expired_cookies.iter(){ guard_cookies.remove(name); }
       drop(guard_cookies);
-
+      
     }
     // set next check time, one minute from now
     self.cookies_check_time = now + Duration::from_secs(60);
