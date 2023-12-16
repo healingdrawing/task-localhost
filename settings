@@ -18,7 +18,7 @@ routes = { "redirect.html" = [] }
 server_name = "localhost"
 ports = ["8080"]
 server_address = "127.0.0.1"
-client_body_size = 1024
+client_body_size = 11
 static_files_prefix = "localhost"
 default_file = "empty.html"
 error_pages_prefix = "localhost/error"

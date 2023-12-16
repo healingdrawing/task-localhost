@@ -44,6 +44,7 @@ The `for_each_concurrent` method is used to handle multiple connections concurre
 The read and write of a client is inside the spawned task, which is spawned for each connection. So there is only one read or write per client per select (or equivalent).  
 
 The `read` implemented in `flow.rs ... read_with_timeout` function.  
+
 The `write` implemented in `flow.rs ... match write_response_into_stream` function.
 
 ---
@@ -58,7 +59,7 @@ The `unwrap`s are managed properly using `match` as replacement.
 > If an error is returned by the previous functions on a socket, is the client removed?
 
 The `match` is used to handle errors, and the client is removed.  
-The `flow.rs ... task::spawn` section. The end of this section implements the removing of the client, naturally, at the end of the spawned task. Additionally the `return` used to exit the spawned task in case of errors of the `write`.  
+The `flow.rs ... task::spawn` section. The end of this section implements the client removal, naturally, at the end of the spawned task. Additionally the `return` used to exit the spawned task in case of errors of the `write`.  
 
 ---
 
@@ -77,6 +78,7 @@ The `settings` file, configuration with `server_name = "localhost"`.
 > Setup multiple servers with different port.  
 
 The `settings` file, configuration with `server_name = "default"`. Port `8082`.  
+
 The `settings` file, configuration with `server_name = "mega.company"`. Port `8082`.  
 
 ---
@@ -84,12 +86,16 @@ The `settings` file, configuration with `server_name = "mega.company"`. Port `80
 > Setup multiple servers with different hostnames (for example: `curl --resolve test.com:80:127.0.0.1 http://test.com/`).  
 
 The `settings` file, configuration with `server_name = "mega.company"`.  
+
 Testing command: `curl --resolve mega.company:8082:127.0.0.2 http://mega.company:8082/uploads`  
-Showing the uploads page html content, because method `GET` is `ALLOWED` uploads in settings.  
+
+Shows the uploads page html content, because method `GET` is `ALLOWED` uploads in settings.  
 
 The `settings` file, configuration with `server_name = "micro.company"`.  
+
 Testing command: `curl --resolve micro.company:8082:127.0.0.2 http://micro.company:8082/uploads`  
-Showing the 405 status code `405.html` page content, because method `GET` is `NOT ALLOWED` for uploads in settings.  
+
+Shows the 405 status code `405.html` page content, because method `GET` is `NOT ALLOWED` for uploads in settings.  
 
 ---
 
@@ -98,4 +104,24 @@ Showing the 405 status code `405.html` page content, because method `GET` is `NO
 The `settings` file. Any configuration `error_pages_prefix` mandatory parameter.
 
 ---
+
+> Limit the client body (for example: curl -X POST -H "Content-Type: plain/text" --data "BODY with something shorter or longer than body limit").
+
+The `settings` file, configuration with `server_name = "localhost"` and `client_body_size = 11`.  
+
+Testing command: `curl -X POST -H "Content-Type: application/x-www-form-urlencoded" --data-raw $'hello world' http://localhost:8080/cgi/useless.py/useless_file`.  
+
+Shows
+```
+Hello from Rust and Python3: PATH_INFO: /home/user/git/task-localhost
+The "/home/user/git/task-localhost/cgi/useless_file" is File
+```
+
+Testing command: `curl -X POST -H "Content-Type: application/x-www-form-urlencoded" --data-raw $'hello big world' http://localhost:8080/cgi/useless.py/useless_file`.  
+
+Shows the 413 status code `413.html` page content, because the body size is bigger than `client_body_size` in settings.  
+
+---
+
+> Setup routes and ensure they are taken into account.  
 
