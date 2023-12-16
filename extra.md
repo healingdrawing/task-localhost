@@ -64,7 +64,7 @@ The `flow.rs ... task::spawn` section. The end of this section implements the re
 
 > Is writing and reading ALWAYS done through a select (or equivalent)?
 
-The writing and reading is ALWAYS done through a `equivalent of select`, inside the spawned task.
+The writing and reading is always done through a `equivalent of select`, inside the spawned task `for_each_concurrent` section.
 
 ---
 
