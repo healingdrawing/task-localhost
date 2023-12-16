@@ -49,11 +49,12 @@ curl -X POST http://localhost:8080/
 `
 - `cgi` functionality implemented in handlers separately, as old and unsafe technology, not recommended to use.  
 According to the task requirements only one script enough to be implemented, and link to it hardcoded in the `runme` file, to prevent any extra activity/experiments.  
-- `uploads` functionality implemented in handlers separately, and controlled using separated parameter in `settings` file, to prevent any extra activity/experiments. According to task, server should manage without problems static site.
-Upload and delete files functionality is not a part of the static site, so it is implemented separately, universally for all sites, and hardcoded into the `runme` file.  
+- `uploads` functionality implemented in handlers separately, and controlled using separated parameter in `settings` file, to prevent any extra activity/experiments.  
+According to task, server should manage without problems static site.
+Upload and delete files functionality is not a part of the static site, so it is implemented separately, universally for all sites, and hardcoded into `runme` file.  
 The `settings` file allows to control accessibility of the `/uploads` page for each server settings, using methods `GET`, `POST`, `DELETE`, to download, upload, delete permissions respectively.  
-- default `settings` file configuration, implements two different sites, with possibility to test the `redirect.html` page accessibility, depends on allowed methods.
-- to keep the flow more stable, the body of the request will be ignored, if the headers of not chunked request does not include the `Content-Length` header.  Lot of clients automatically add this header, so it is not a problem.
+- default `settings` file configuration, implements three different sites, with possibility to test the `redirect.html` page accessibility, depends on allowed methods, `curl --resolve` command, and one site to test the `empty.html` page using `siege` stress testing utility.  
+- to keep the flow more stable, the body of the request will be ignored, if the headers of not chunked request does not include the `Content-Length` header.  Lot of clients automatically add this header, so it is not a problem.  
 
 ### Customization:
 
