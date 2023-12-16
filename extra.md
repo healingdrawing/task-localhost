@@ -125,3 +125,45 @@ Shows the 413 status code `413.html` page content, because the body size is bigg
 
 > Setup routes and ensure they are taken into account.  
 
+According to the task, the routes can be configured using the one or multiple settings:
+> Setup routes with one or multiple of the following settings: ...
+
+The next settings are used to configure the routes:
+- Define a list of accepted HTTP methods for the route.  
+The `settings` file `routes` parameter.  
+- Define a default file for the route if the URL is a directory.  
+The `settings` file `default_file` parameter.  
+
+---
+
+> Setup a default file in case the path is a directory.
+
+The `settings` file configuration with `server_name = "default"` and `default_file = default.html` parameters.  
+
+Testing command: `curl http://127.0.0.2:8086/redirect.html`.  
+
+Shows the `redirect.html` page content.  
+
+Testing command: `curl http://127.0.0.2:8086/redirect.html/`.  
+
+Shows the default page `index.html` content, because path ends with `/` trailing slash, which was decided to be interpreted as a directory. That is common practice, but not a strict rule, and depends on the server implementation.  
+
+---
+
+> Setup a list of accepted methods for a route (for example: try to DELETE something with and without permission).  
+
+The `settings` file configuration with `server_name = "default"` and `routes = { "redirect.html" = [] }` parameters.
+
+Testing command: `curl http://127.0.0.1:8082/redirect.html`.  
+
+Shows status code 405 `405.html` page content, because the `GET` method is not allowed for the `redirect.html` in settings.  
+
+The `settings` file configuration with `server_name = "mega.company"` and `routes = { "redirect.html" = ["GET", "POST", "DELETE"] }` parameters.  
+
+Testing command: `curl http://127.0.0.2:8086/redirect.html`.  
+
+Shows the `redirect.html` page content, because the `GET` method is allowed for the `redirect.html` in settings.  
+
+---
+
+

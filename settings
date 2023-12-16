@@ -28,7 +28,7 @@ routes = {}
 # to call resolve using curl
 [[servers]]
 server_name = "mega.company"
-ports = ["8082", "8083", "8084", "8085"]
+ports = ["8082", "8083", "8084", "8085", "8086"]
 server_address = "127.0.0.2"
 client_body_size = 2048000
 static_files_prefix = "site1"
