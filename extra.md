@@ -55,3 +55,16 @@ The `unwrap`s are managed properly using `match` as replacement.
 
 ---
 
+> If an error is returned by the previous functions on a socket, is the client removed?
+
+The `match` is used to handle errors, and the client is removed.  
+The `flow.rs ... task::spawn` section. The end of this section implements the removing of the client, naturally, at the end of the spawned task. Additionally the `return` used to exit the spawned task in case of errors of the `write`.  
+
+---
+
+> Is writing and reading ALWAYS done through a select (or equivalent)?
+
+The writing and reading is ALWAYS done through a `equivalent of select`, inside the spawned task.
+
+---
+
