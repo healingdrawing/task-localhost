@@ -68,3 +68,34 @@ The writing and reading is always done through a `equivalent of select`, inside 
 
 ---
 
+> Setup a single server with a single port.  
+
+The `settings` file, configuration with `server_name = "localhost"`.
+
+---
+
+> Setup multiple servers with different port.  
+
+The `settings` file, configuration with `server_name = "default"`. Port `8082`.  
+The `settings` file, configuration with `server_name = "mega.company"`. Port `8082`.  
+
+---
+
+> Setup multiple servers with different hostnames (for example: `curl --resolve test.com:80:127.0.0.1 http://test.com/`).  
+
+The `settings` file, configuration with `server_name = "mega.company"`.  
+Testing command: `curl --resolve mega.company:8082:127.0.0.2 http://mega.company:8082/uploads`  
+Showing the uploads page html content, because method `GET` is `ALLOWED` uploads in settings.  
+
+The `settings` file, configuration with `server_name = "micro.company"`.  
+Testing command: `curl --resolve micro.company:8082:127.0.0.2 http://micro.company:8082/uploads`  
+Showing the 405 status code `405.html` page content, because method `GET` is `NOT ALLOWED` for uploads in settings.  
+
+---
+
+> Setup custom error pages.  
+
+The `settings` file. Any configuration `error_pages_prefix` mandatory parameter.
+
+---
+
