@@ -89,7 +89,7 @@ The `settings` file, configuration with `server_name = "mega.company"`.
 
 Testing command: `curl --resolve mega.company:8082:127.0.0.2 http://mega.company:8082/uploads`  
 
-Shows the uploads page html content, because method `GET` is `ALLOWED` uploads in settings.  
+Shows the uploads page html content, because method `GET` is `ALLOWED` for uploads in settings.  
 
 The `settings` file, configuration with `server_name = "micro.company"`.  
 
