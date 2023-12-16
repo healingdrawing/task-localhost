@@ -26,7 +26,7 @@ I/O multiplexing is a method that allows a program to monitor multiple I/O chann
 > Is the server using only one select **(or equivalent)** to read the client requests and write answers?
 
 In the context of networking, `select` is a function that is used for I/O multiplexing, which allows a program to monitor multiple I/O channels (like network sockets) at the same time.  
-Implemented `equivalent of select`. The `flow.rs ... listener.incoming().for_each_concurrent(None, |stream| async {` section, takes the incoming connection  selected from incomings connections queue ```incoming()``` which is non-blocking iterator, and manages stream i/o, inside the spawned task.  
+Implemented `equivalent of select`. The `flow.rs ... listener.incoming().for_each_concurrent(None, |stream| async {` section, takes the incoming connection  selected from incomings connections queue `incoming()` which is non-blocking iterator, and manages stream i/o, inside the spawned task.  
 
 ---
 
