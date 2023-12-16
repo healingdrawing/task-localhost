@@ -50,4 +50,8 @@ The `write` implemented in `flow.rs ... match write_response_into_stream` functi
 
 > Are the return values for I/O functions checked properly?  
 
-The return values for I/O functions checked properly.  The `unwrap`s are managed properly using `match`.
+The return values for I/O functions checked properly.  
+The `unwrap`s are managed properly using `match` as replacement.  
+
+---
+
