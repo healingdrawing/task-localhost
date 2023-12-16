@@ -99,5 +99,15 @@ So you must provide the correct settings file configuration to error pages folde
 
 Otherwise do not expect server will work/initalize properly.
 
-## Authors
+## Audit and tests  
+To satisfy the task description requirement
+> You can use the language you prefer to write tests, as long as they are exhaustive and the auditor can check their behavior.  
+was choosen the next approach:  
+- the testing process is manual
+- the language of the tests description is English
+- the tools used for testing are `curl` and `siege` utilities, and the browser
+- the audit and tests description is located in the `extra.md` file in the repository root folder  
+[extra.md](extra.md)  
+
+## Authors  
 - [healingdrawing](https://healingdrawing.github.io)
