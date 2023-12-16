@@ -5,7 +5,7 @@
 
 [[servers]]
 server_name = "default"
-ports = ["80", "8080"]
+ports = ["80","8082", "8082"]
 server_address = "127.0.0.1"
 client_body_size = 1024
 static_files_prefix = "default"
@@ -16,7 +16,7 @@ routes = { "redirect.html" = [] }
 
 [[servers]]
 server_name = "localhost"
-ports = ["8081", "8082", "8082"]
+ports = ["8080"]
 server_address = "127.0.0.1"
 client_body_size = 1024
 static_files_prefix = "localhost"
