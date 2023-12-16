@@ -138,7 +138,7 @@ The `settings` file `default_file` parameter.
 
 > Setup a default file in case the path is a directory.
 
-The `settings` file configuration with `server_name = "default"` and `default_file = default.html` parameters.  
+The `settings` file configuration with `server_name = "default"` and `default_file = "default.html"` parameters.  
 
 Testing command: `curl http://127.0.0.2:8086/redirect.html`.  
 
