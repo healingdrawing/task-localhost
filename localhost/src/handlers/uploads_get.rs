@@ -1,6 +1,6 @@
 use std::{path::PathBuf, fs};
 
-use http::{Request, Response, StatusCode};
+use http::{Request, Response, StatusCode, HeaderValue};
 
 use crate::debug::append_to_file;
 use crate::files::check::bad_file_name;
@@ -308,7 +308,7 @@ pub async fn handle_uploads_get_uploaded_file(
       Ok(v) => v,
       Err(e) => {
         eprintln!("ERROR: Failed to parse mime type: {}", e);
-        "text/plain".parse().unwrap() // must be safe, otherwise rust must be r.i.p.
+        HeaderValue::from_static("text/plain")
       }
     }
   );

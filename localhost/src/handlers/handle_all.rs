@@ -1,13 +1,13 @@
 use std::path::PathBuf;
 
-use http::{Response, Request, StatusCode};
+use http::{Response, Request, StatusCode, HeaderValue};
 
 use crate::debug::append_to_file;
 use crate::files::check::is_implemented_error_page;
 use crate::handlers::response_500::custom_response_500;
-use crate::server::core::ServerConfig;
 use crate::handlers::response_::{response_default_static_file, force_status};
 use crate::handlers::response_4xx::custom_response_4xx;
+use crate::server::core::ServerConfig;
 
 
 /// handle all requests, except cgi, and except uploads.
@@ -173,7 +173,7 @@ pub async fn handle_all(
       Ok(v) => v,
       Err(e) => {
         eprintln!("ERROR: Failed to parse mime type: {}", e);
-        "text/plain".parse().unwrap() // must be safe, otherwise, rust must be r.i.p.
+        HeaderValue::from_static("text/plain")
       }
     }
   );

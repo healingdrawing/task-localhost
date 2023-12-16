@@ -70,12 +70,3 @@ pub async fn handle_request(
   
   response
 }
-
-// todo: remove dev gap
-// fn dummy_200_response() -> Response<Vec<u8>>{
-//   let body = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nHello, World! dummy_200_response\n\n";
-//   Response::builder()
-//   .status(StatusCode::OK)
-//   .body(body.as_bytes().to_vec())
-//   .unwrap()
-// }
