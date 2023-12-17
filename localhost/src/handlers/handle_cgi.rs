@@ -4,6 +4,7 @@ use http::{Request, Response, StatusCode};
 
 use crate::server::core::ServerConfig;
 use crate::handlers::response_500::custom_response_500;
+use crate::handlers::response_4xx::custom_response_4xx;
 
 /// run python script , and check the path is file,folder or not exist/wrong path
 /// 
@@ -19,8 +20,31 @@ pub async fn handle_cgi(
   server_config: ServerConfig,
 ) -> Response<Vec<u8>>{
   
+  // check if method is GET or POST or DELETE, or return 405
+  if request.method() != "GET" && request.method() != "POST" && request.method() != "DELETE"{
+    eprintln!("ERROR: Method {} is not allowed for cgi", request.method());
+    return custom_response_4xx(
+      request,
+      cookie_value.clone(),
+      zero_path_buf,
+      server_config,
+      StatusCode::METHOD_NOT_ALLOWED,
+    ).await
+  }
+
   let script_path = "cgi/".to_owned() + &script_file_name;
   
+  // check if script still exist, else return 500, because before server start, we check mandatory files
+  if !zero_path_buf.join(&script_path).exists(){
+    eprintln!("ERROR: script_path {:?} is not exist.\nThe file structure was damaged after the server started.", zero_path_buf.join(&script_path));
+    return custom_response_500(
+      request,
+      cookie_value.clone(),
+      zero_path_buf,
+      server_config,
+    ).await
+  }
+
   // Set the system PATH_INFO or send request path_info into python3 script as argument
   let output = Command::new("python3")
   .arg(script_path)
