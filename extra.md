@@ -9,6 +9,7 @@ The `status code 403` is custom status(there is no strict standard for 403 case)
 section, implemeted for case of access with directory uri with `not GET method`, as a way to enforce that only GET requests are allowed for directory URIs. This status code is commonly used when the server does not wish to reveal exactly why the request has been refused, or when no other response is applicable.  
 
 Testing command: `curl -X POST http://localhost:8080/`  
+Testing command: `curl -X DELETE http://localhost:8080/`  
 
 Shows the `403.html` page content.  
 
@@ -16,11 +17,15 @@ Shows the `403.html` page content.
 
 To simulate this status code, first run the server, then damage the files, which already checked before server run, and then try to access to damaged file.  
 The simpliest way to do this, just rename the  
-`static/site1/index.html`  
-file to  
-`static/site1/_index.html`.  
-Then try to access to the `index.html` page, using the next command:
-`curl http://127.0.0.2:8088/`  
+`cgi/useless.py` file into `cgi/_useless.py`.  
+Then try to access to use damaged file, with one of the commands:
+
+- `curl http://localhost:8080/cgi/useless.py/useless_file` for `GET` method.  
+
+- `curl -X POST http://localhost:8080/cgi/useless.py/useless_file` for `POST` method.  
+
+- `curl -X DELETE http://localhost:8080/cgi/useless.py/useless_file` for `DELETE` method.  
+
 It will return the `500.html` page content, but not `404.html` page content, because the file checked before server stated. And this means the server was damaged after start.  
 
 ## Audit materials:
@@ -203,7 +208,7 @@ Shows the `index.html` page content.
 
 The `status code 400` testing command: `curl -X GET -H "Content-Length: 1" -H "Content-Type: application/x-www-form-urlencoded" --data-raw $'hello world' http://127.0.0.2:8088/`.  
 
-Shows the `400.html` page content. The reason is the data of the data of the body is bigger then the `Content-Length` header value. This is a simulation of the `GET` request with the body(which is not common practice).  
+Shows the `400.html` page content. The reason is the body data is bigger then the `Content-Length` header value. This is a simulation of the `GET` request with the body(which is not common practice).  
 
 The `status code 403` has [custom implementation](#status-code-403).  
 
@@ -225,3 +230,56 @@ The simulation of the `status code 500` has [custom implementation](#status-code
 
 > Are the POST requests working properly?  
 
+The `status code 200` testing command: `curl -X POST http://127.0.0.2:8087/redirect.html`.  
+
+Shows the `redirect.html` page content.  
+
+The `status code 400` testing command: `curl -X POST -H "Content-Length: 1" -H "Content-Type: application/x-www-form-urlencoded" --data-raw $'hello world' http://127.0.0.2:8088/`.  
+
+Shows the `400.html` page content. The reason is the body data is bigger then the `Content-Length` header value.  
+
+The `status code 403` has [custom implementation](#status-code-403).  
+
+The `status code 404` testing command: `curl -X POST http://127.0.0.2:8088/no.html`  
+
+Shows the `404.html` page content. The reason is the `no.html` file not a part of the server configuration.  
+
+The `status code 405` testing command: `curl -X POST http://127.0.0.1:8088/redirect.html`  
+
+Shows the `405.html` page content. The reason is the `POST` method is not allowed for the `redirect.html` in server configuration.  
+
+The `status code 413` testing command: `curl -X POST -H "Content-Length: 15" -H "Content-Type: application/x-www-form-urlencoded" --data-raw $'hello big world' http://127.0.0.2:8088/`  
+
+Shows the `413.html` page content. The reason is the length of the body `hello big world`(15) is bigger then the `client_body_size` (11) from server configuration.  
+
+The simulation of the `status code 500` has [custom implementation](#status-code-500).  
+
+---  
+
+> Are the DELETE requests working properly?  
+
+The `status code 200` testing command: `curl -X DELETE http://127.0.0.2:8087/redirect.html`.  
+
+Shows the `redirect.html` page content.  
+
+The `status code 400` testing command: `curl -X DELETE -H "Content-Length: 1" -H "Content-Type: application/x-www-form-urlencoded" --data-raw $'hello world' http://127.0.0.2:8088/`.  
+
+Shows the `400.html` page content. The reason is the body data is bigger then the `Content-Length` header value.  
+
+The `status code 403` has [custom implementation](#status-code-403).  
+
+The `status code 404` testing command: `curl -X DELETE http://127.0.0.2:8088/no.html`  
+
+Shows the `404.html` page content. The reason is the `no.html` file not a part of the server configuration.  
+
+The `status code 405` testing command: `curl -X DELETE http://127.0.0.1:8088/redirect.html`  
+
+Shows the `405.html` page content. The reason is the `DELETE` method is not allowed for the `redirect.html` in server configuration.  
+
+The `status code 413` testing command: `curl -X DELETE -H "Content-Length: 15" -H "Content-Type: application/x-www-form-urlencoded" --data-raw $'hello big world' http://127.0.0.2:8088/`  
+
+Shows the `413.html` page content. The reason is the length of the body `hello big world`(15) is bigger then the `client_body_size` (11) from server configuration.  
+
+The simulation of the `status code 500` has [custom implementation](#status-code-500).  
+
+---  
