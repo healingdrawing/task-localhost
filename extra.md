@@ -15,7 +15,7 @@ Shows the `403.html` page content.
 
 ### Status code 500  
 
-To simulate this status code, first run the server, then damage the files, which already checked before server run, and then try to access to damaged file.  
+To simulate this status code, first run the server, then damage the file, which already checked before server run, and then try to access to damaged file.  
 The simpliest way to do this, just rename the  
 `cgi/useless.py` file into `cgi/_useless.py`.  
 Then try to access to use damaged file, with one of the commands:
@@ -283,3 +283,16 @@ Shows the `413.html` page content. The reason is the length of the body `hello b
 The simulation of the `status code 500` has [custom implementation](#status-code-500).  
 
 ---  
+
+> Test a WRONG request, is the server still working properly?  
+
+Testing command: `curl -X WRONG http://127.0.0.1:8088/redirect.html`  
+or  
+Testing command: `curl -X PUT http://127.0.0.1:8088/redirect.html`  
+
+Shows the `405.html` Method Not Allowed page content.  
+
+---
+
+
+
