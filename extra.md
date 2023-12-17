@@ -319,3 +319,38 @@ The web page is hardcoded into the `runme` file, and universal for all sites.
 
 ---
 
+> A working session and cookies system is present on the server?  
+
+A working session and cookies is present on the server. The `localhost/src/server/cookie.rs` file, can be discovered for some details.    
+Implementation is for static site pages, and does not provide any real benefits for the user/client. It just demonstrates the basic session and cookies functionality.  
+
+The next implementation is used:
+- client make request to server.  
+- if client has no cookie, provided by server, the server generates the cookie, and sends it to client. The copy of the cookie stored in the server's memory.  
+- if client has cookie, provided by server before, the server checks the cookie.  
+- if cookie provided by server is valid and not expired, the server includes the cookie into the response headers.  
+- if cookie provided by server is expired, the server generates the new cookie, and sends it to client. The copy of the cookie stored in the server's memory.  
+- if cookie provided by server is invalid, the server generates the new cookie, and sends it to client. The copy of the cookie stored in the server's memory.  
+
+Also to prevent the trashing of memory, next implementation is used:
+- when expired cookie detected, the cookie is removed from the server's memory.  
+- after every 10 seconds in time of new request, the server checks the cookies in the server's memory, and removes expired cookies. Then waits for next 10 seconds.  
+- cookie created by server has Expiration time, which is 60 seconds, from moment of creation.  
+- cookie sent to client has `Expires` property according to the Expiration time. So a client does not send to the server an expired cookie.
+- cookie storage created separately for each spawned task, this allow to prevent some extra iterations to remove expired cookies from the server's memory.  
+
+To show the implementation:  
+- open the browser and go to the `http://127.0.0.1:8080/empty.html`.  
+- open cookie tab in browser developer tools.  
+- refresh the page.  
+- check the cookie. There will be visible the cookie, provided by server(with expiration date).  
+- refresh the page.  
+- check the cookie. There will be visible the same cookie, provided by server(with expiration date).  
+- wait for one minute at least.  
+- refresh the page.  
+- check the cookie. There will be visible the new cookie, provided by server(with new expiration date).  
+
+So the session and cookies system is present on the server.  
+
+---
+
