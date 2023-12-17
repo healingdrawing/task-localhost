@@ -58,7 +58,7 @@ pub async fn handle_request(
       ).await
     },
     _ => {
-      // todo : implement the response for other cases
+      // response for other cases
       handle_all(
         request,
         cookie_value,

@@ -172,10 +172,6 @@ pub async fn handle_uploads(
 
   body_content.extend_from_slice(html.as_bytes());
 
-  // body_content.extend_from_slice(
-  //   generate_uploads_html( &absolute_path, ).as_bytes(),
-  // );
-
   let response = match Response::builder()
   .status(StatusCode::OK)
   .header("Content-Type", "text/html")
