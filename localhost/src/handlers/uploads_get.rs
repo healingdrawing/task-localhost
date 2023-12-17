@@ -217,6 +217,7 @@ pub async fn handle_uploads_get_uploaded_file(
     
     // implement 403 error check if method is not GET, to satisfy task requirements
     if request.method().to_string() != "GET" {
+      eprint!("ERROR: Status code 403 FORBIDDEN. CUSTOM IMPLEMENTATION.\nOnly the \"GET\" method is allowed to access the directory.");
       return custom_response_4xx(
         request,
         cookie_value,

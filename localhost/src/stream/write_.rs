@@ -17,7 +17,7 @@ pub async fn write_response_into_stream(stream: &mut TcpStream, response: Respon
     | http::StatusCode::PAYLOAD_TOO_LARGE // 413
     | http::StatusCode::METHOD_NOT_ALLOWED // 405
     | http::StatusCode::NOT_FOUND // 404
-    | http::StatusCode::FORBIDDEN // 403 //todo: implement it. ERROR_403_FORBIDDEN
+    | http::StatusCode::FORBIDDEN // 403 FORBIDDEN
     | http::StatusCode::BAD_REQUEST // 400
     => {
       status = parts.status;
