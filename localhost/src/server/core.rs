@@ -79,7 +79,6 @@ pub async fn get_usize_unique_ports(server_configs: &Vec<ServerConfig>) -> Resul
 
 #[derive(Debug)]
 pub struct Server {
-  // pub listener: &'a TcpListener,
   pub cookies: Arc<Mutex<HashMap<String, Cookie>>>,
   pub cookies_check_time: SystemTime,
 }
