@@ -47,3 +47,26 @@ default_file = "index.html"
 error_pages_prefix = "site1/error"
 uploads_methods = []
 routes = { "redirect.html" = [] }
+
+# for testing methods using curl for audit
+[[servers]]
+server_name = "test.methods.big"
+ports = ["8087"]
+server_address = "127.0.0.2"
+client_body_size = 2048000
+static_files_prefix = "site1"
+default_file = "index.html"
+error_pages_prefix = "site1/error"
+uploads_methods = []
+routes = { "redirect.html" = ["GET", "POST", "DELETE"] }
+
+[[servers]]
+server_name = "test.methods.tiny"
+ports = ["8088"]
+server_address = "127.0.0.2"
+client_body_size = 11
+static_files_prefix = "site1"
+default_file = "index.html"
+error_pages_prefix = "site1/error"
+uploads_methods = []
+routes = { "redirect.html" = [] }

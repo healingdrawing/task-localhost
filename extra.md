@@ -1,5 +1,30 @@
 [Back to README.md](README.md)  
 
+## Custom materials:
+
+### Status code 403  
+
+The `status code 403` is custom status(there is no strict standard for 403 case). As discribed in
+[README.md -> Details and restrictions ](README.md#details-and-restrictions)
+section, implemeted for case of access with directory uri with `not GET method`, as a way to enforce that only GET requests are allowed for directory URIs. This status code is commonly used when the server does not wish to reveal exactly why the request has been refused, or when no other response is applicable.  
+
+Testing command: `curl -X POST http://localhost:8080/`  
+
+Shows the `403.html` page content.  
+
+### Status code 500  
+
+To simulate this status code, first run the server, then damage the files, which already checked before server run, and then try to access to damaged file.  
+The simpliest way to do this, just rename the  
+`static/site1/index.html`  
+file to  
+`static/site1/_index.html`.  
+Then try to access to the `index.html` page, using the next command:
+`curl http://127.0.0.2:8088/`  
+It will return the `500.html` page content, but not `404.html` page content, because the file checked before server stated. And this means the server was damaged after start.  
+
+## Audit materials:
+
 Audit materials for `localhost` project copied in December 2023, from the [https://github.com/01-edu/public/tree/master/subjects/localhost/audit](https://github.com/01-edu/public/tree/master/subjects/localhost/audit), marked as blockquote.  
 Horizontal lines added to separate the audit material sections.
 
@@ -166,4 +191,37 @@ Shows the `redirect.html` page content, because the `GET` method is allowed for 
 
 ---
 
+> Are the GET requests working properly?  
+
+The `status code 200` testing command: `curl http://127.0.0.1:8088/`.  
+
+Shows the `default.html` page content.  This case implements replacing the server configuration with the `default` server configuration(the first one in the list as task requires), if no correct configs found. The reason is the port `8088` is not configured for ip `127.0.0.1` in settings. It just uses the default server configuration to serve the request.  Will not be repeated for other cases to prevent extra messy.  
+
+The `status code 200` testing command: `curl http://127.0.0.2:8088/`.  
+
+Shows the `index.html` page content.  
+
+The `status code 400` testing command: `curl -X GET -H "Content-Length: 1" -H "Content-Type: application/x-www-form-urlencoded" --data-raw $'hello world' http://127.0.0.2:8088/`.  
+
+Shows the `400.html` page content. The reason is the data of the data of the body is bigger then the `Content-Length` header value. This is a simulation of the `GET` request with the body(which is not common practice).  
+
+The `status code 403` has [custom implementation](#status-code-403).  
+
+The `status code 404` testing command: `curl http://127.0.0.2:8088/no.html`  
+
+Shows the `404.html` page content. The reason is the `no.html` file not a part of the server configuration.  
+
+The `status code 405` testing command: `curl http://127.0.0.1:8088/redirect.html`  
+
+Shows the `405.html` page content. The reason is the `GET` method is not allowed for the `redirect.html` in server configuration.  
+
+The `status code 413` testing command: `curl -X GET -H "Content-Length: 15" -H "Content-Type: application/x-www-form-urlencoded" --data-raw $'hello big world' http://127.0.0.2:8088/`  
+
+Shows the `413.html` page content. The reason is the length of the body `hello big world`(15) is bigger then the `client_body_size` (11) from server configuration.  
+
+The simulation of the `status code 500` has [custom implementation](#status-code-500).  
+
+---  
+
+> Are the POST requests working properly?  
 
