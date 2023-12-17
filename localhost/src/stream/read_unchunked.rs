@@ -36,16 +36,6 @@ pub async fn read_unchunked(
     // async time sleep for 2 ms, for some append_to_file() prints cases binded to time.
     // with big body can easily break the reading timeouts. So, use carefully.
     if DEBUG { async_std::task::sleep(Duration::from_millis(2)).await; }
-
-    // check the body_buffer length
-    
-    if body_buffer.len() == content_length{
-      return
-    } else if body_buffer.len() > content_length{
-      eprintln!("ERROR: body_buffer.len() > content_length");
-      *global_error_string = ERROR_400_BODY_BUFFER_LENGHT_IS_BIGGER_THAN_CONTENT_LENGTH.to_string();
-      return 
-    }
     
     // Check if the timeout has expired
     if start_time.elapsed() >= timeout {
@@ -58,7 +48,7 @@ pub async fn read_unchunked(
       append_to_file(&format!("time {} < timeout {}", start_time.elapsed().as_millis(), timeout.as_millis())).await;
     }
     
-    let mut buf = [0; 1];
+    let mut buf = [0; 1024];
     
     // Read from the stream one byte at a time
     match stream.read(&mut buf).await {
@@ -73,9 +63,19 @@ pub async fn read_unchunked(
         // println!("after read body buffer size: {}", body_buffer.len());
         // println!("after read body buffer: {:?}", body_buffer);
         // println!("after read body buffer to string: {:?}", String::from_utf8(body_buffer.clone()));
+        
+        // check the body_buffer length
+        if body_buffer.len() > content_length{
+          eprintln!("ERROR: body_buffer.len() > content_length");
+          *global_error_string = ERROR_400_BODY_BUFFER_LENGHT_IS_BIGGER_THAN_CONTENT_LENGTH.to_string();
+          return 
+        }
+        
         // Check if the end of the stream has been reached
         if n < buf.len() {
           append_to_file("read EOF reached relatively, because buffer not full after read").await;
+          return
+        } else if body_buffer.len() == content_length{
           return
         }
       },
