@@ -1,5 +1,10 @@
 [Back to README.md](README.md)  
 
+## First steps:  
+- start the server: `sudo ./runme` (if priveleged port used in `settings`) or `./runme`.  
+- confirm the server started successfully.  
+- follow the steps below to test the server, according to the audit materials.  
+
 ## Custom materials:
 
 ### Status code 403  
@@ -294,5 +299,23 @@ Shows the `405.html` Method Not Allowed page content.
 
 ---
 
+> Upload some files to the server and get them back to test they were not corrupted.  
 
+- open the browser and go to the `http://127.0.0.2:8086/uploads`.  
+
+This configuration allows you to see/download/upload/delete files.  
+
+The reason is `uploads_methods = ["GET","POST","DELETE"]` parameter.  
+
+- open the browser and go to the `http://127.0.0.1:8082/uploads`.  
+
+This configuration allows you to see/download/upload files. Attempt to delete files will return the `405.html` page content.  
+
+The reason is `uploads_methods = ["GET","POST"]` parameter.  
+Attempt to upload big file will return the `413.html` page content.  
+The reason is `client_body_size = 1024` parameter.  
+
+The web page is hardcoded into the `runme` file, and universal for all sites.  
+
+---
 
