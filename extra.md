@@ -473,3 +473,14 @@ Shows the next result:
 
 ---  
 
+> Check if there is no memory leak (you could use some tools like top).  
+
+Rust's ownership and borrowing system aimed to prevent memory leaks in the code.  
+Also the code design aimed to prevent memory leaks. Every concurency spawned task automatically removed when task completed, and memory allocated for the task is freed, independant of the task result.  
+The expired cookie is removed every incoming connection. Additionally cookies storage is cleaned (check "expires" for cookies) every next incoming connection after 10 seconds pause.  
+
+---  
+
+> Check if there is no hanging connection.  
+
+The `flow.rs ... task::spawn` section. The end of this section implements the client removal, naturally, at the end of the spawned task. Additionally the `return` used to exit the spawned task in case of errors of the `write`. After that the task is removed, and the connection is closed, independant of the task result.  
