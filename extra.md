@@ -354,3 +354,35 @@ So the session and cookies system is present on the server.
 
 ---
 
+> Is the browser connecting with the server with no issues?  
+
+Open the browser and go to the `http://127.0.0.2:8086/uploads`.  
+Shows the `uploads.html` page content. You can test `GET`, `POST`, `DELETE` methods.  
+This configuration allows you to see/download/upload/delete files.  
+
+---
+
+> Are the request and response headers correct? (It should serve a full static website without any problem).  
+
+Open the browser and go to the `http://127.0.0.2:8086/`.  
+Shows the `index.html` page content. On this page you can test redirect link, link to another configuration/site, and link to the `uploads.html` page.  
+
+---
+
+> Try a wrong URL on the server, is it handled properly?  
+
+Open the browser and go to the `http://127.0.0.2:8086/no.html`.  
+Shows the `404.html` page. So it works as expected, because there is no `no.html` file in the server configuration.  
+
+---
+
+> Try to list a directory, is it handled properly?  
+
+Open the browser and go to the `http://127.0.0.2:8086/no.html/`.
+Shows the `index.html` page content. The reason is the path ends with `/` trailing slash, which was decided to be interpreted as a directory, and the `index.html` file is configured as a default file for the directory using `default_file = "index.html"` parameter in settings.  
+So it is handled properly, according to the server configuration.  
+
+---
+
+> Try a redirected URL, is it handled properly?  
+
