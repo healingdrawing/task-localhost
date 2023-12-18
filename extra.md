@@ -386,3 +386,11 @@ So it is handled properly, according to the server configuration.
 
 > Try a redirected URL, is it handled properly?  
 
+Open the browser and go to the `http://127.0.0.1:8086/redirected`.  
+Shows the universal for any sites redirect to `/uploads` hardcoded on server side.  
+
+Open the browser and go to the `http://127.0.0.2:8086/redirect.html`.  
+Shows the redirect from `redirect.html` to `index.html` page.  
+
+---  
+
