@@ -417,3 +417,59 @@ The cgi works as expected, according to chosen approach of implementation.
 
 ---  
 
+> Configure multiple ports and websites and ensure it is working as expected.  
+
+The `settings` file includes the multiple ports and websites configuration.  
+The sites are working as expected(tested in the previous sections).  
+
+---  
+
+> Configure the same port multiple times. The server should find the error.  
+
+The `settings` file configuration with `server_name = "default"`
+and `ports = ["80","8082", "8082"]` parameters implements attempt to configure the same port multiple times.  
+
+On server initialization the ports are checked, and the next message is shown:  
+```
+=== Config "default" ports changed ===
+from ["80", "8082", "8082"]
+  to ["8082", "80"]
+```
+This demonstrates the server found the error and fixed it.  
+
+---  
+
+> Configure multiple servers at the same time with different configurations but with common ports. Ask why the server should work if one of the configurations isn't working.  
+
+The `settings` file configuration with `server_name = "default"` and `server_address = "127.0.0.1"` listen to the port `8082`.  
+
+The `settings` file configuration with `server_name = "micro.company"` and `server_address = "127.0.0.2"` listen to the port `8082`.  
+
+Server will works because only the port `8082` is the same, but other parameters are different. So, inside one thread, for the one port, the multiple tasks will be spawned, and each task will concurently and independently handle the connections for the different server configuration.  
+
+---  
+
+> Use siege with a GET method on an empty page, availability should be at least 99.5% with the command siege -b [IP]:[PORT].  
+
+Testing command: `siege -b http://127.0.0.1:8080/empty.html`.  
+
+Shows the next result:  
+```
+"transactions":                       189394,
+"availability":                       100.00,
+"elapsed_time":                       241.91,
+"data_transferred":                    29.62,
+"response_time":                        0.03,
+"transaction_rate":                   782.91,
+"throughput":                           0.12,
+"concurrency":                         24.93,
+"successful_transactions":            189394,
+"failed_transactions":                     0,
+"longest_transaction":                  1.28,
+"shortest_transaction":                 0.00
+```
+
+![siege](_extra/siege.png)
+
+---  
+

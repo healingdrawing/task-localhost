@@ -53,6 +53,7 @@ According to the task requirements only one script enough to be implemented, and
 According to task, server should manage without problems static site.
 Upload and delete files functionality is not a part of the static site, so it is implemented separately, universally for all sites, and hardcoded into `runme` file.  
 The `settings` file allows to control accessibility of the `/uploads` page for each server settings, using methods `GET`, `POST`, `DELETE`, to download, upload, delete permissions respectively.  
+- in case of `duplicated pairs for ip:port are used in settings`, as part of different configurations, the configuration added next in the `settings` file will override the previous one.  
 - default `settings` file configuration, implements three different sites, with possibility to test the `redirect.html` page accessibility, depends on allowed methods, `curl --resolve` command, and one site to test the `empty.html` page using `siege` stress testing utility.  
 - to keep the flow more stable, the body of the request will be ignored, if the headers of not chunked request does not include the `Content-Length` header.  Lot of clients automatically add this header, so it is not a problem.  
 
@@ -67,7 +68,7 @@ The `settings` file allows to control accessibility of the `/uploads` page for e
 - - the `uploads` folder, used to manage file uploads/deletions/shows for servers.  
 It is not a static part of the project, and managed separately, to prevent extra activity. This folder includes `.gitignore` file, to prevent uploading files to the repository. Checking for `.gitignore` file is hardcoded into the `runme` file.  
 For any configuration you can use `/uploads` to uploads page, which is hardcoded into the `runme` file.
-- - the `settings` file, configured properly.  
+- - the `settings` file, which is configured properly.  
 Follow the examples in the `settings` file on your own risk, or do not touch it(it is educational project, aimed to satisfy task requirements in strictly limited time period).  
 
 So finally it should looks like:
