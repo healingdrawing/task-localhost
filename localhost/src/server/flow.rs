@@ -5,7 +5,7 @@ use async_std::net::TcpListener;
 use futures::stream::StreamExt;
 use std::collections::HashMap;
 use std::net::SocketAddr;
-use std::path::PathBuf;
+use async_std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use http::{Response, Request};

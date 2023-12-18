@@ -1,4 +1,6 @@
-use std::{path::PathBuf, fs};
+use async_std::fs;
+use async_std::path::PathBuf;
+use async_std::stream::StreamExt; // for `next`
 
 use http::{Request, Response, StatusCode, HeaderValue};
 
@@ -14,12 +16,12 @@ use crate::stream::errors::{ERROR_200_OK, ERROR_500_INTERNAL_SERVER_ERROR};
 /// html is generated in code. Not templates etc.
 /// 
 /// To decrease dependencies and avoid any extra activities.
-pub fn generate_uploads_html(absolute_path: &PathBuf) -> (String, String) {
+pub async fn generate_uploads_html(absolute_path: &PathBuf) -> (String, String) {
   let mut html = String::new();
   html.push_str("<h1>Uploads</h1>");
   html.push_str("<ul>");
   
-  let entries = match fs::read_dir(absolute_path) {
+  let mut entries = match fs::read_dir(absolute_path).await {
     Ok(v) => v,
     Err(e) => {
       eprintln!("ERROR: Failed to read uploads folder: {}", e);
@@ -27,7 +29,7 @@ pub fn generate_uploads_html(absolute_path: &PathBuf) -> (String, String) {
     },
   };
   
-  for entry in entries {
+  while let Some(entry) = entries.next().await {
     
     let entry = match entry {
       Ok(v) => v,
@@ -38,7 +40,7 @@ pub fn generate_uploads_html(absolute_path: &PathBuf) -> (String, String) {
     };
     
     let path = entry.path();
-    if path.is_file() {
+    if path.is_file().await {
       
       let file_name = match path.file_name() {
         Some(v) => v,
@@ -213,7 +215,7 @@ pub async fn handle_uploads_get_uploaded_file(
   let absolute_path_buf = zero_path_buf.join("uploads").join(file_path);
   
   // check if path is directory, then return default file as task requires
-  if path_str.ends_with("/") || absolute_path_buf.is_dir() {
+  if path_str.ends_with("/") || absolute_path_buf.is_dir().await {
     
     // implement 403 error check if method is not GET, to satisfy task requirements
     if request.method().to_string() != "GET" {
@@ -233,7 +235,7 @@ pub async fn handle_uploads_get_uploaded_file(
       zero_path_buf,
       server_config,
     ).await
-  } else if !absolute_path_buf.is_file() {
+  } else if !absolute_path_buf.is_file().await {
     
     eprintln!("ERROR:\n-----------------------------------\nuploads absolute_path IS NOT A FILE \n-----------------------------------"); // todo: remove dev print
     

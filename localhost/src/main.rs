@@ -28,6 +28,7 @@ pub mod handlers{
   pub mod handle_;
   pub mod handle_cgi;
   pub mod handle_uploads;
+  pub mod handle_redirected;
   pub mod handle_all;
   pub mod response_;
   pub mod response_500;
@@ -42,7 +43,9 @@ pub mod files{
   pub mod check;
 }
 
-use std::{env, path::PathBuf};
+use std::env;
+use async_std::path::PathBuf;
+
 use std::error::Error;
 use config::{File, FileFormat};
 
@@ -61,7 +64,7 @@ pub async fn get_zero_path() -> Result<PathBuf, Box<dyn Error>>{
     false => return Err("Failed to pop current exe path".into()),
   }; // Remove the executable name from the path
   
-  Ok(exe_path)
+  Ok(exe_path.into())
 }
 
 #[async_std::main]

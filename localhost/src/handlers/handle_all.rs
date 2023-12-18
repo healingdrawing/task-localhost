@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use async_std::path::PathBuf;
 
 use http::{Response, Request, StatusCode, HeaderValue};
 
@@ -56,7 +56,7 @@ pub async fn handle_all(
   let absolute_path_buf = zero_path_buf.join(relative_static_path_string);
   
   // check if path is directory, then return default file as task requires
-  if path_str.ends_with("/") || absolute_path_buf.is_dir() {
+  if path_str.ends_with("/") || absolute_path_buf.is_dir().await {
     
     // implement 403 error check if method is not GET, to satisfy task requirements
     if request.method().to_string() != "GET" {
@@ -76,7 +76,7 @@ pub async fn handle_all(
       zero_path_buf,
       server_config,
     ).await
-  } else if !absolute_path_buf.is_file() {
+  } else if !absolute_path_buf.is_file().await {
     
     eprintln!("ERROR:\n------------\nIS NOT A FILE\n-------------");
     

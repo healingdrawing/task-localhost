@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use async_std::path::PathBuf;
 
 use http::{Response, Request, StatusCode};
 
@@ -41,7 +41,7 @@ pub async fn handle_uploads(
   
   let absolute_path = zero_path_buf.join("uploads");
   
-  if !absolute_path.is_dir() {
+  if !absolute_path.is_dir().await {
     
     eprintln!("ERROR: absolute_path {:?} is not a folder.\nThe file structure was damaged after the server started.", absolute_path);
     
@@ -89,7 +89,7 @@ pub async fn handle_uploads(
     "GET" => { /* do nothing unique. The html page is generated below */ },
     "POST" => {
       
-      match upload_the_file_into_uploads_folder(request, &absolute_path).as_str(){
+      match upload_the_file_into_uploads_folder(request, &absolute_path).await.as_str(){
         ERROR_200_OK => {/* do nothing. file uploaded successfully */},
         ERROR_400_HEADERS_KEY_NOT_FOUND => {
           eprintln!("ERROR: Header \"X-File-Name\" not found in request");
@@ -124,7 +124,7 @@ pub async fn handle_uploads(
 
     },
     "DELETE" => {
-      match delete_the_file_from_uploads_folder(request, &absolute_path).as_str(){
+      match delete_the_file_from_uploads_folder(request, &absolute_path).await.as_str(){
         ERROR_200_OK => {/* do nothing. file deleted successfully */},
         ERROR_400_BAD_REQUEST => {
           eprintln!("ERROR: Failed to parse body into file_name");
@@ -159,7 +159,7 @@ pub async fn handle_uploads(
   }
   
   // generate html page with list of files in uploads folder
-  let (html, status) = generate_uploads_html( &absolute_path, );
+  let (html, status) = generate_uploads_html( &absolute_path, ).await;
   if status != ERROR_200_OK {
     eprintln!("ERROR: Failed to generate html page with list of files in uploads folder");
     return custom_response_500(

@@ -1,4 +1,5 @@
-use std::{process::Command, path::PathBuf};
+use std::process::Command;
+use async_std::path::PathBuf;
 
 use http::{Request, Response, StatusCode};
 
@@ -35,7 +36,7 @@ pub async fn handle_cgi(
   let script_path = "cgi/".to_owned() + &script_file_name;
   
   // check if script still exist, else return 500, because before server start, we check mandatory files
-  if !zero_path_buf.join(&script_path).exists(){
+  if !zero_path_buf.join(&script_path).exists().await{
     eprintln!("ERROR: script_path {:?} is not exist.\nThe file structure was damaged after the server started.", zero_path_buf.join(&script_path));
     return custom_response_500(
       request,

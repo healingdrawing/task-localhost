@@ -1,11 +1,12 @@
-use std::{path::PathBuf, fs};
+use async_std::fs;
+use async_std::path::PathBuf;
 
 use http::Request;
 
 use crate::stream::errors::{ERROR_200_OK, ERROR_400_BAD_REQUEST};
 use crate::stream::errors::ERROR_500_INTERNAL_SERVER_ERROR;
 
-pub fn delete_the_file_from_uploads_folder(
+pub async fn delete_the_file_from_uploads_folder(
   request: &Request<Vec<u8>>,
   absolute_path: &PathBuf
 ) -> String {
@@ -26,8 +27,8 @@ pub fn delete_the_file_from_uploads_folder(
   
   let file_path = absolute_path.join(file_name);
   // check if file exists, then delete
-  if file_path.is_file() {
-    match fs::remove_file(file_path){
+  if file_path.is_file().await {
+    match fs::remove_file(file_path).await{
       Ok(_v) => (),
       Err(_e) => return ERROR_500_INTERNAL_SERVER_ERROR.to_string(),
     };

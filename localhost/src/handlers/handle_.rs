@@ -1,10 +1,11 @@
 use http::{Request, Response};
-use std::path::PathBuf;
+use async_std::path::PathBuf;
 
 use crate::server::core::ServerConfig;
 use crate::handlers::handle_cgi::handle_cgi;
 use crate::handlers::handle_all::handle_all;
 use crate::handlers::handle_uploads::handle_uploads;
+use crate::handlers::handle_redirected::handle_redirected;
 use crate::handlers::uploads_get::handle_uploads_get_uploaded_file;
 
 
@@ -47,6 +48,15 @@ pub async fn handle_request(
         server_config,
       ).await
       
+    },
+    ["", "redirected"] => {
+      handle_redirected(
+        request,
+        cookie_value,
+        zero_path_buf,
+        server_config,
+      ).await
+
     },
     ["", "uploads", file_path ] => {
       handle_uploads_get_uploaded_file(

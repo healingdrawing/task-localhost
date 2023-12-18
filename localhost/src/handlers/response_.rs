@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use async_std::path::PathBuf;
 
 use http::{Response, Request, StatusCode};
 
