@@ -1,7 +1,10 @@
 # you should not play with this file without strong needs
-# this file always must be on the same level as executable
-# the "default" server also will be used if no hits of other server ip:port happens
-# so DO NOT CHANGE THE "default"
+# This file always must be on the same level as executable.
+# The "default" server also will be used if no hits of other server ip:port happens
+# in process of choosing configuration, based on request.
+# So, DO NOT CHANGE THE "default" without strong needs.
+# And keep in mind that this weird configuration (for me it looks ugly)
+# aimed just to satisfy the task requirements and audit questions, not more.
 
 [[servers]]
 server_name = "default"
