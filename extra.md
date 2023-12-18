@@ -394,3 +394,26 @@ Shows the redirect from `redirect.html` to `index.html` page.
 
 ---  
 
+> Check the implemented CGI, does it works properly with chunked and unchunked data?  
+
+Testing commands:
+- (`no body` case) `curl http://localhost:8080/cgi/useless.py/useless_file`.  
+or
+- (`unchunked body` case) `curl -X POST -H "Content-Type: application/x-www-form-urlencoded" --data-raw $'hello world' http://localhost:8080/cgi/useless.py/useless_file`.  
+or
+- (`chunked body` case) `curl -X POST http://localhost:8082/cgi/useless.py/useless_file -H "Transfer-Encoding: chunked" --data-raw $'5\r\nhello\r\n5\r\nworld\r\n0\r\n\r\n'`
+
+Shows output:  
+```
+Hello from Rust and Python3: PATH_INFO: /home/user/git/task-localhost
+The "/home/user/git/task-localhost/cgi/useless_file" is File
+```
+
+Testing command: `curl -X POST http://localhost:8080/cgi/useless.py/useless_file -H "Transfer-Encoding: chunked" --data-raw $'5\r\nhello\r\n5\r\nworld\r\n0\r\n\r\n'`  
+
+Shows `413.html` page content(Payload Too Large). The reason is the length of the chunked body (25 bytes) is bigger then the `client_body_size` (11) from server configuration.  
+
+The cgi works as expected, according to chosen approach of implementation.  
+
+---  
+
