@@ -23,7 +23,7 @@ For details/restrictions see [task and audit questions](https://github.com/01-ed
 ### Run with priveleged port (like 80) in settings:
 - terminal: `sudo ./runme`  
 
-It is not secure, and not recommended to use. But after that you can use `localhost` in the browser, without port number.  
+It is not secure, and not recommended to use. But after that, with port `80` used inside `settings` file correct configuration, you can use `localhost` in the browser, without port number.  
 Otherwise you need to use `localhost:8080` in the browser.  
 Also `./devrun` script will not work with priveleged port. And you will see `Permission denied (os error 13) ... Failed to bind addr` error in the terminal.
 
