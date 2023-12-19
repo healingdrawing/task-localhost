@@ -31,7 +31,7 @@ Then try to access to use damaged file, with one of the commands:
 
 - `curl -X DELETE http://localhost:8080/cgi/useless.py/useless_file` for `DELETE` method.  
 
-It will return the `500.html` page content, but not `404.html` page content, because the file checked before server stated. And this means the server was damaged after start.  
+It will return the `500.html` page content, but not `404.html` page content. The reason is the file `useless.py` checked before server stated. And this means the server was damaged after start.  
 
 ## Audit materials:
 
@@ -124,13 +124,13 @@ The `settings` file, configuration with `server_name = "mega.company"`.
 
 Testing command: `curl --resolve mega.company:8082:127.0.0.2 http://mega.company:8082/uploads`  
 
-Shows the uploads page html content, because method `GET` is `ALLOWED` for uploads in settings.  
+Shows the uploads page html content. The reason is the `GET` method is `ALLOWED` for uploads in settings.  
 
 The `settings` file, configuration with `server_name = "micro.company"`.  
 
 Testing command: `curl --resolve micro.company:8082:127.0.0.2 http://micro.company:8082/uploads`  
 
-Shows the 405 status code `405.html` page content, because method `GET` is `NOT ALLOWED` for uploads in settings.  
+Shows the 405 status code `405.html` page content. The reason is the `GET` method is `NOT ALLOWED` for uploads in settings.  
 
 ---
 
@@ -154,7 +154,7 @@ The "/home/user/git/task-localhost/cgi/useless_file" is File
 
 Testing command: `curl -X POST -H "Content-Type: application/x-www-form-urlencoded" --data-raw $'hello big world' http://localhost:8080/cgi/useless.py/useless_file`.  
 
-Shows the 413 status code `413.html` page content, because the body size is bigger than `client_body_size` in settings.  
+Shows the 413 status code `413.html` page content. The reason is the body size is greater than `client_body_size` in settings.  
 
 ---
 
