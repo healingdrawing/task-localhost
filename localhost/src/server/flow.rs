@@ -168,6 +168,6 @@ pub async fn run(
     
   }
   println!("Server is listening configured above http://ip:port pairs");
-  async_std::task::sleep(Duration::from_secs(3600)).await;
+  async_std::task::sleep(Duration::from_secs(u64::MAX)).await;
   Ok(())
 }
