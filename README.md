@@ -74,8 +74,8 @@ The `settings` file allows to control accessibility of the `/uploads` page for e
 
 ### Customization:  
 
-- the reading timeout is hardcoded, to prevent any extra activity/experiments. To change it, discover the run function of the `localhost/src/server/flow.rs` file.  
-- the DEBUG boolean flag is hardcoded, to prevent any extra activity/experiments. To change it, discover the the `localhost/src/debug.rs` file. To use debug mode properly, you need increase the reading timeout, because debug implements the async sleep functionality, to monitor the flow of the server.  
+- the reading timeout is hardcoded, to prevent any extra activity/experiments. To change it, discover the `run` function of the `localhost/src/server/flow.rs` file.  
+- the `DEBUG` boolean flag is hardcoded, to prevent any extra activity/experiments. To change it, discover the the `localhost/src/debug.rs` file. To use debug mode properly, you need increase the reading timeout, because debug implements the async sleep functionality, to monitor the flow of the server.  
 - to use the executable separately from the project(not recommended), you need to keep in one folder:
 - - the executable file `runme`.  
 - - the `static` folder, includes the sites files.  
@@ -113,7 +113,7 @@ The expectable structure of the site can be f.e. next:
 According to task, the next error pages must be implemented: 400, 403, 404, 405, 413, 500.  
 So you must provide the correct settings file configuration to error pages folder. And the error pages folder must contain properly created files: `400.html`, `403.html`, `404.html`, `405.html`, `413.html`, `500.html`.  
 
-Otherwise do not expect server will work/initalize properly.
+Otherwise, do not expect the server to run/initialize properly.  
 
 ## Audit and tests  
 To satisfy the task description requirement
