@@ -1,7 +1,7 @@
 [Back to README.md](README.md)  
 
 ## First steps:  
-- start the server: `sudo ./runme` (if priveleged port used in `settings`) or `./runme`.  
+- start the server: `sudo ./runme` (in case of priveleged port used in `settings` or MacOS) or `./runme`.  
 - confirm the server started successfully.  
 - follow the steps below to test the server, according to the audit materials.  
 
