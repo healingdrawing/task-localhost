@@ -99,7 +99,7 @@ pub async fn run(
         
         // hardcoded, but it's ok for this case. And less chance for user to break.
         // Not bad to manage it as flag of executable.
-        let timeout = Duration::from_millis(3000);
+        let timeout = Duration::from_millis(30000);
 
         let choosen_server_config = read_with_timeout(
           timeout, &mut stream, &mut headers_buffer, &mut body_buffer,
