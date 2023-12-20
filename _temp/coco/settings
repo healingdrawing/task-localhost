@@ -1,0 +1,22 @@
+# you should not play with this file without strong needs
+# this file always must be on the same level as executable
+# the "default" server also will be used if no hits of other server ip:port happens
+# so DO NOT CHANGE THE NAME "default"
+
+[[servers]]
+server_name = "default"
+ports = ["8080", "8081", "8082", "8082"]
+server_address = "127.0.0.1"
+default_file = "default.html"
+error_pages = { "404" = "/404.html", "500" = "/500.html" }
+client_body_size = 1024
+routes = { "/api" = { methods = ["GET", "POST"] } }
+
+[[servers]]
+server_name = "server1"
+ports = ["8082", "8083", "8084", "8085"]
+server_address = "127.0.0.2"
+default_file = "index1.html"
+error_pages = { "404" = "/4041.html", "500" = "/5001.html" }
+client_body_size = 2048
+routes = { "/api" = { methods = ["GET", "POST"] } }

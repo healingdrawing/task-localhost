@@ -1,0 +1,1 @@
+curl --resolve mega.company:8082:127.0.0.2 http://mega.company:8082

@@ -1,0 +1,75 @@
+# you should not play with this file without strong needs
+# This file always must be on the same level as executable.
+# The "default" server also will be used if no hits of other server ip:port happens
+# in process of choosing configuration, based on request.
+# So, DO NOT CHANGE THE "default" without strong needs.
+# And keep in mind that this weird configuration (for me it looks ugly)
+# aimed just to satisfy the task requirements and audit questions, not more.
+
+[[servers]]
+server_name = "default"
+ports = ["80","8082", "8082"]
+server_address = "127.0.0.1"
+client_body_size = 1024
+static_files_prefix = "default"
+default_file = "default.html"
+error_pages_prefix = "default/error"
+uploads_methods = ["GET","POST"]
+routes = { "redirect.html" = [] }
+
+[[servers]]
+server_name = "localhost"
+ports = ["8080"]
+server_address = "127.0.0.1"
+client_body_size = 11
+static_files_prefix = "localhost"
+default_file = "empty.html"
+error_pages_prefix = "localhost/error"
+uploads_methods = []
+routes = {}
+
+# to call resolve using curl
+[[servers]]
+server_name = "mega.company"
+ports = ["8082", "8083", "8084", "8085", "8086"]
+server_address = "127.0.0.2"
+client_body_size = 2048000
+static_files_prefix = "site1"
+default_file = "index.html"
+error_pages_prefix = "site1/error"
+uploads_methods = ["GET","POST","DELETE"]
+routes = { "redirect.html" = ["GET", "POST", "DELETE"] }
+
+[[servers]]
+server_name = "micro.company"
+ports = ["8082", "8083", "8084", "8085"]
+server_address = "127.0.0.2"
+client_body_size = 2048000
+static_files_prefix = "site1"
+default_file = "index.html"
+error_pages_prefix = "site1/error"
+uploads_methods = []
+routes = { "redirect.html" = [] }
+
+# for testing methods using curl for audit
+[[servers]]
+server_name = "test.methods.big"
+ports = ["8087"]
+server_address = "127.0.0.2"
+client_body_size = 2048000
+static_files_prefix = "site1"
+default_file = "index.html"
+error_pages_prefix = "site1/error"
+uploads_methods = []
+routes = { "redirect.html" = ["GET", "POST", "DELETE"] }
+
+[[servers]]
+server_name = "test.methods.tiny"
+ports = ["8088"]
+server_address = "127.0.0.2"
+client_body_size = 11
+static_files_prefix = "site1"
+default_file = "index.html"
+error_pages_prefix = "site1/error"
+uploads_methods = []
+routes = { "redirect.html" = [] }
