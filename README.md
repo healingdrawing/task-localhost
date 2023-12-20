@@ -29,12 +29,12 @@ Also `./devrun` script will not work with priveleged port. And you will see `Per
 
 ## Usage (macOS)
 
-### Add alias to allow `127.0.0.2` ip address, to demonstrate the configurations properly on MacOS:
+### Add alias to allow `127.0.0.2` ip address, to demonstrate the configurations properly on macOS:
 - terminal: `sudo ifconfig lo0 127.0.0.1 up` just to be sure default ip is up.  
 - terminal: `sudo ifconfig lo0 alias 127.0.0.2 up`  without this `127.0.0.2` is dead.  
 
 Command above works only for current session. Next time/reboot you need to repeat it.  
-The `lo0` interface is a software loopback interface that can be used for testing and communication between processes on the same machine. The command above is used to add an extra alias (127.0.0.2) for the loopback interface. Default loopback interface on MacOS is `127.0.0.1`.  
+The `lo0` interface is a software loopback interface that can be used for testing and communication between processes on the same machine. The command above is used to add an extra alias (127.0.0.2) for the loopback interface. Default loopback interface on macOS is `127.0.0.1`.  
 
 ### Build the project:
 - terminal: `./do`  
