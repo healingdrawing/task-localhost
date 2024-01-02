@@ -31,7 +31,7 @@ Then try to access to use damaged file, with one of the commands:
 
 - `curl -X DELETE http://localhost:8080/cgi/useless.py/useless_file` for `DELETE` method.  
 
-It will return the `500.html` page content, but not `404.html` page content. The reason is the file `useless.py` checked before server stated. And this means the server was damaged after start.  
+It will return the `500.html` page content, but not `404.html` page content. The reason is the file `useless.py` checked before server started. And this means the server was damaged after start.  
 
 ## Audit materials:
 
