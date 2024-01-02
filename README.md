@@ -8,7 +8,7 @@ Rust web server, HTTP/1.1 protocol compatible, able to run Python3 CGI scripts.
 
 For details/restrictions see [task and audit questions](https://github.com/01-edu/public/tree/master/subjects/localhost)
 
-## Usage (non-macOS)
+## Usage (linux)
 - open terminal in the repository root folder(the `README.md` location)
 
 ### Build the project:
